@@ -1,0 +1,116 @@
+"""Service layer for Note operations."""
+
+from uuid import UUID
+
+from infrastructure import get_logger
+from shared import Game
+
+from ..domain.models import Note
+from ..domain.schemas import NoteCreate, NoteUpdate
+from ..ports.repository import NoteRepository
+
+logger = get_logger(__name__)
+
+
+class NoteService:
+    """Service for business logic related to notes.
+
+    This service orchestrates repository operations and contains
+    domain logic that doesn't belong in the repository or API layers.
+    """
+
+    def __init__(self, repository: NoteRepository):
+        """Initialize service with repository.
+
+        Args:
+            repository: Note repository implementation.
+        """
+        self.repository = repository
+
+    async def create_note(self, note_data: NoteCreate) -> Note:
+        """Create a new note.
+
+        Args:
+            note_data: Note creation data.
+
+        Returns:
+            Note: Created note.
+        """
+        note = Note(
+            title=note_data.title,
+            content=note_data.content,
+            game_context=note_data.game_context,
+        )
+        created_note = await self.repository.create(note)
+        logger.info(
+            "note_created",
+            note_id=str(created_note.id),
+            game_context=created_note.game_context,
+        )
+        return created_note
+
+    async def get_note(self, note_id: UUID) -> Note | None:
+        """Get a note by ID.
+
+        Args:
+            note_id: Note ID.
+
+        Returns:
+            Note | None: Note if found, None otherwise.
+        """
+        return await self.repository.get_by_id(note_id)
+
+    async def list_notes(self, game: Game | None = None) -> list[Note]:
+        """List all notes, optionally filtered by game.
+
+        Args:
+            game: Optional game filter.
+
+        Returns:
+            list[Note]: List of notes.
+        """
+        return await self.repository.get_all(game)
+
+    async def update_note(self, note_id: UUID, note_data: NoteUpdate) -> Note | None:
+        """Update an existing note.
+
+        Args:
+            note_id: Note ID.
+            note_data: Note update data.
+
+        Returns:
+            Note | None: Updated note if found, None otherwise.
+        """
+        note = await self.repository.get_by_id(note_id)
+        if not note:
+            return None
+
+        # Update fields if provided
+        if note_data.title is not None:
+            note.title = note_data.title
+        if note_data.content is not None:
+            note.content = note_data.content
+        if note_data.game_context is not None:
+            note.game_context = note_data.game_context
+
+        updated_note = await self.repository.update(note)
+        logger.info(
+            "note_updated",
+            note_id=str(updated_note.id),
+            game_context=updated_note.game_context,
+        )
+        return updated_note
+
+    async def delete_note(self, note_id: UUID) -> bool:
+        """Delete a note.
+
+        Args:
+            note_id: Note ID.
+
+        Returns:
+            bool: True if deleted, False if not found.
+        """
+        deleted = await self.repository.delete(note_id)
+        if deleted:
+            logger.info("note_deleted", note_id=str(note_id))
+        return deleted
