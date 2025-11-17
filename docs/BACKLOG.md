@@ -2,12 +2,28 @@
 
 This document outlines the planned work for Phases 1-6 of Path of Mirrors. Each phase builds on the previous one, gradually transforming the application from a data ingestion pipeline into a complete economic intelligence platform.
 
-**Current Phase:** Phase 0 (see [SPRINT.md](SPRINT.md) for detailed tasks)
+**Current Phase:** Phase 1 (see [SPRINT.md](SPRINT.md) for detailed tasks)
+
+---
+
+## Deferred from Phase 0
+
+The following items were deferred from Phase 0 and should be addressed as needed:
+
+- **Task 1.6:** Backend Tests (>80% coverage for contexts)
+- **Task 2.4:** Game Selector UI Component (context exists, UI component pending)
+- **Task 2.6:** Frontend Tests (>80% coverage for components)
+- **Task 3.2:** CI/CD Pipeline (GitHub Actions for automated testing/linting)
+- **Task 4.1:** E2E Smoke Test (Manual testing completed, automated pending)
+- **Task 4.2:** Documentation Review (Living document, ongoing)
+
+These can be added incrementally during Phase 1+ when capacity allows.
 
 ---
 
 ## Table of Contents
 
+- [Deferred from Phase 0](#deferred-from-phase-0)
 - [Phase 1: Upstream Foundation](#phase-1-upstream-foundation)
 - [Phase 2: Market Intelligence](#phase-2-market-intelligence)
 - [Phase 3: Crafting Assistant](#phase-3-crafting-assistant)
