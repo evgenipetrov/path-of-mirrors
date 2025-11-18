@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Path of Mirrors - Development Startup Script
+# Path of Mirrors - Start Development Environment
 # Starts all services: PostgreSQL, Redis, Backend, and Frontend
 
 set -e

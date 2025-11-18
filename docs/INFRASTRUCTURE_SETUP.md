@@ -80,9 +80,9 @@ Migration workflow verified:
 ### 7. Development Scripts
 
 All scripts working and documented:
-- `./scripts/dev.sh` - Start all services
-- `./scripts/stop.sh` - Stop all services
-- `./scripts/restart.sh` - Restart everything
+- `./scripts/start-dev.sh` - Start all services
+- `./scripts/stop-dev.sh` - Stop all services
+- `./scripts/restart-dev.sh` - Restart everything
 - Comprehensive README in `scripts/README.md`
 
 ## Infrastructure Components
@@ -126,7 +126,7 @@ npm run generate:api  # Regenerate from http://localhost:8000/openapi.json
 ### Starting Development
 
 ```bash
-./scripts/dev.sh
+./scripts/start-dev.sh
 ```
 
 This starts:

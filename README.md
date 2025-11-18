@@ -40,6 +40,8 @@ Path of Mirrors is a full-stack web application designed to provide economic int
 
 ## Quick Start
 
+> **⚡ Want to get started fast?** See [docs/QUICKSTART.md](docs/QUICKSTART.md) for essential commands only.
+
 ### Prerequisites
 
 - Docker & Docker Compose
@@ -54,7 +56,7 @@ git clone <repository-url>
 cd path-of-mirrors
 
 # Start everything (backend + frontend)
-./scripts/dev.sh
+./scripts/start-dev.sh
 ```
 
 This will:
@@ -126,16 +128,16 @@ The `scripts/` directory contains convenient startup scripts:
 
 ```bash
 # Start all services (backend + frontend)
-./scripts/dev.sh
+./scripts/start-dev.sh
 
 # Stop all services
-./scripts/stop.sh
+./scripts/stop-dev.sh
 
 # Restart all services
-./scripts/restart.sh
+./scripts/restart-dev.sh
 ```
 
-**What `dev.sh` does:**
+**What `start-dev.sh` does:**
 1. Starts Docker services (PostgreSQL, Redis, Backend)
 2. Waits for health checks to pass
 3. Installs frontend dependencies (if needed)
@@ -239,9 +241,9 @@ path-of-mirrors/
 │   ├── orval.config.ts         # API client generator config
 │   └── package.json
 ├── scripts/
-│   ├── dev.sh                  # Start all services
-│   ├── stop.sh                 # Stop all services
-│   ├── restart.sh              # Restart all services
+│   ├── start-dev.sh                  # Start all services
+│   ├── stop-dev.sh                 # Stop all services
+│   ├── restart-dev.sh              # Restart all services
 │   └── README.md               # Scripts documentation
 ├── docs/
 │   ├── PRODUCT.md              # Product vision
@@ -495,9 +497,11 @@ This is a Phase 0 project. Future phases will include:
 
 ## Documentation
 
+- **[Quick Start Guide](docs/QUICKSTART.md)** - Get running in 5 minutes ⚡
 - [Product Vision](docs/PRODUCT.md) - Feature roadmap and business logic
 - [Architecture Guide](docs/ARCHITECTURE.md) - Technical design decisions
 - [Sprint Planning](docs/SPRINT.md) - Development progress
+- [Scripts Reference](scripts/README.md) - All development scripts
 
 ## Support
 
