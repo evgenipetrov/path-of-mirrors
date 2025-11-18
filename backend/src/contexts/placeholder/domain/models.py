@@ -20,7 +20,7 @@ class Note(Base):
     __tablename__ = "notes"
 
     # Primary key
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4, init=False)
+    id: Mapped[UUID] = mapped_column(primary_key=True, insert_default=uuid4, init=False)
 
     # Fields (required fields must come before optional fields for dataclass)
     title: Mapped[str] = mapped_column(String(255))

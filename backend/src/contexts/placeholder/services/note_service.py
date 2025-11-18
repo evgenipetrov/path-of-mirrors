@@ -85,13 +85,11 @@ class NoteService:
         if not note:
             return None
 
-        # Update fields if provided
-        if note_data.title is not None:
-            note.title = note_data.title
-        if note_data.content is not None:
-            note.content = note_data.content
-        if note_data.game_context is not None:
-            note.game_context = note_data.game_context
+        # Update only fields that were explicitly provided in the request
+        # This allows setting fields to None explicitly
+        update_data = note_data.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(note, field, value)
 
         updated_note = await self.repository.update(note)
         logger.info(

@@ -5,7 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.config import settings
 from ..core.db.database import async_get_db
-from ..core.exceptions.http_exceptions import ForbiddenException, RateLimitException, UnauthorizedException
+from ..core.exceptions.http_exceptions import (
+    ForbiddenException,
+    RateLimitException,
+    UnauthorizedException,
+)
 from ..core.logger import logging
 from ..core.security import TokenType, oauth2_scheme, verify_token
 from ..core.utils.rate_limit import rate_limiter

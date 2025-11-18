@@ -36,7 +36,8 @@ export function Notes() {
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null)
 
   // Fetch notes for current game context
-  const { data: notes = [], isLoading, error } = useListNotesApiNotesGet({ game })
+  const { data: notesData, isLoading, error } = useListNotesApiNotesGet({ game })
+  const notes = Array.isArray(notesData) ? notesData : []
 
   // Mutations with cache invalidation and toast notifications
   const createMutation = useCreateNoteApiNotesPost({

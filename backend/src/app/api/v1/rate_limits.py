@@ -9,7 +9,12 @@ from ...core.db.database import async_get_db
 from ...core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ...crud.crud_rate_limit import crud_rate_limits
 from ...crud.crud_tier import crud_tiers
-from ...schemas.rate_limit import RateLimitCreate, RateLimitCreateInternal, RateLimitRead, RateLimitUpdate
+from ...schemas.rate_limit import (
+    RateLimitCreate,
+    RateLimitCreateInternal,
+    RateLimitRead,
+    RateLimitUpdate,
+)
 from ...schemas.tier import TierRead
 
 router = APIRouter(tags=["rate_limits"])

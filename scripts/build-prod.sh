@@ -97,34 +97,19 @@ main() {
         log_warning "Skipping tests (--skip-tests)"
     fi
 
-    # Build frontend
-    log_step "📦 Building frontend..."
-    cd frontend
+    # Build Docker images using docker-compose
+    log_step "🐳 Building Docker images..."
 
-    # Clean previous build
-    rm -rf dist/
+    docker compose -f docker-compose.prod.yml build
 
-    # Install dependencies if needed
-    if [ ! -d "node_modules" ]; then
-        log_info "Installing dependencies..."
-        npm install
-    fi
-
-    # Build
-    npm run build
-    local frontend_size=$(get_size "dist")
-    log_success "Frontend built to frontend/dist/ ($frontend_size)"
-    cd ..
-
-    # Build backend Docker image
-    log_step "🐳 Building backend Docker image..."
-
-    # Build with production tag
-    docker build -t path-of-mirrors-backend:latest ./backend
+    # Tag images with timestamp
     docker tag path-of-mirrors-backend:latest path-of-mirrors-backend:$(date +%Y%m%d-%H%M%S)
+    docker tag path-of-mirrors-frontend:latest path-of-mirrors-frontend:$(date +%Y%m%d-%H%M%S)
 
     local backend_size=$(get_image_size "path-of-mirrors-backend:latest")
+    local frontend_size=$(get_image_size "path-of-mirrors-frontend:latest")
     log_success "Backend image built: path-of-mirrors-backend:latest ($backend_size)"
+    log_success "Frontend image built: path-of-mirrors-frontend:latest ($frontend_size)"
 
     # Calculate build time
     local end_time=$(date +%s)
@@ -135,16 +120,15 @@ main() {
     # Success summary
     log_step "✅ Build Complete!"
     echo ""
-    echo "Artifacts:"
-    echo -e "  ${GREEN}Frontend:${NC}     frontend/dist/ ($frontend_size)"
+    echo "Docker Images:"
+    echo -e "  ${GREEN}Frontend:${NC}     path-of-mirrors-frontend:latest ($frontend_size)"
     echo -e "  ${GREEN}Backend:${NC}      path-of-mirrors-backend:latest ($backend_size)"
     echo ""
     echo "Build time: ${minutes}m ${seconds}s"
     echo ""
     echo "Next steps:"
-    echo -e "  ${BLUE}Test frontend:${NC}  cd frontend && npm run preview"
-    echo -e "  ${BLUE}Test backend:${NC}   docker run -p 8000:8000 path-of-mirrors-backend:latest"
-    echo -e "  ${BLUE}Deploy:${NC}         See docs/DEPLOYMENT.md (coming soon)"
+    echo -e "  ${BLUE}Start production:${NC}  ./scripts/start-prod.sh"
+    echo -e "  ${BLUE}View images:${NC}       docker images | grep path-of-mirrors"
     echo ""
 }
 

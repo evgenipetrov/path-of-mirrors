@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import structlog
 from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 from .logging import get_logger
 
@@ -18,7 +18,11 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
     Adds a unique request ID to each request and logs request/response details.
     """
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: RequestResponseEndpoint,
+    ) -> Response:
         """Process request and add logging.
 
         Args:

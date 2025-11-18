@@ -77,7 +77,7 @@ main() {
 
         if [ "$WITH_COVERAGE" = true ]; then
             log_info "Running with coverage report..."
-            if docker compose exec -T backend uv run pytest --cov=src --cov-report=term-missing tests/; then
+            if docker compose exec -T backend uv run --extra dev pytest --cov=src --cov-report=term-missing tests/; then
                 backend_result=$?
                 log_success "Backend tests passed with coverage"
             else
@@ -85,10 +85,10 @@ main() {
                 log_error "Backend tests failed"
             fi
         else
-            if docker compose exec -T backend uv run pytest tests/ -v; then
+            if docker compose exec -T backend uv run --extra dev pytest tests/ -v; then
                 backend_result=$?
                 # Extract test count from pytest output
-                backend_passed=$(docker compose exec -T backend uv run pytest tests/ --co -q 2>/dev/null | wc -l || echo "0")
+                backend_passed=$(docker compose exec -T backend uv run --extra dev pytest tests/ --co -q 2>/dev/null | wc -l || echo "0")
                 log_success "Backend tests passed"
             else
                 backend_result=$?

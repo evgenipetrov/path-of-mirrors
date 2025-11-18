@@ -186,21 +186,23 @@ main() {
         fi
     fi
 
+    # Stop Docker services
+    log_step "🛑 Stopping Docker services..."
+    docker compose down
+    log_success "Services stopped"
+
     # Success message
     log_step "✅ Setup complete!"
     echo ""
     log_success "Your Path of Mirrors development environment is ready!"
     echo ""
-    echo "Access your application:"
-    echo -e "  ${GREEN}Frontend:${NC}  http://localhost:5173"
-    echo -e "  ${GREEN}Backend:${NC}   http://localhost:8000"
-    echo -e "  ${GREEN}API Docs:${NC}  http://localhost:8000/docs"
-    echo ""
     echo "Next steps:"
-    echo -e "  1. Start frontend: ${BLUE}cd frontend && npm run dev${NC}"
-    echo -e "  2. View logs:      ${BLUE}./scripts/view-logs.sh${NC}"
-    echo -e "  3. Run tests:      ${BLUE}./scripts/run-tests.sh${NC}"
-    echo -e "  4. Stop services:  ${BLUE}./scripts/stop-dev.sh${NC}"
+    echo -e "  1. Start development: ${BLUE}./scripts/start-dev.sh${NC}"
+    echo -e "  2. Run tests:         ${BLUE}./scripts/run-tests.sh${NC}"
+    echo -e "  3. Build production:  ${BLUE}./scripts/build-prod.sh${NC}"
+    echo ""
+    log_info "The setup script has stopped all containers."
+    log_info "Use ./scripts/start-dev.sh to start the development environment."
     echo ""
 }
 

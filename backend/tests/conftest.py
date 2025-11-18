@@ -10,11 +10,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 
-from src.app.core.config import settings
-from src.app.main import app
+from src.infrastructure import settings
+
+# Import the new app (for Notes API and new architecture tests)
+# Old app tests should use src.app.main directly in their own test files
+from src.main import app
 
 DATABASE_URI = settings.POSTGRES_URI
-DATABASE_PREFIX = settings.POSTGRES_SYNC_PREFIX
+# Construct sync prefix from async prefix (replace asyncpg with psycopg2)
+DATABASE_PREFIX = "postgresql+psycopg2://"
 
 sync_engine = create_engine(DATABASE_PREFIX + DATABASE_URI)
 local_session = sessionmaker(autocommit=False, autoflush=False, bind=sync_engine)

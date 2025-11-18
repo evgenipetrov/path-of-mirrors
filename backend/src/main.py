@@ -3,10 +3,9 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
-
-from fastapi import Depends, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from contexts.placeholder.api.routes import router as notes_router
@@ -52,17 +51,23 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 # Create FastAPI application
-app = FastAPI(
-    title=settings.APP_NAME,
-    description=settings.APP_DESCRIPTION,
-    version=settings.APP_VERSION,
-    contact={
+contact_info = {
+    key: value
+    for key, value in {
         "name": settings.CONTACT_NAME,
         "email": settings.CONTACT_EMAIL,
-    },
-    license_info={
-        "name": settings.LICENSE_NAME,
-    },
+    }.items()
+    if value
+}
+
+license_info = {"name": settings.LICENSE_NAME} if settings.LICENSE_NAME else None
+
+app = FastAPI(
+    title=settings.APP_NAME,
+    description=settings.APP_DESCRIPTION or "Path of Mirrors API",
+    version=settings.APP_VERSION or "0.1.0",
+    contact=contact_info or None,
+    license_info=license_info,
     lifespan=lifespan,
 )
 
@@ -98,7 +103,7 @@ async def health_check() -> dict[str, str]:
 @app.get("/ready", tags=["health"])
 async def readiness_check(
     db: AsyncSession = Depends(get_db),
-) -> dict[str, str | dict[str, bool]]:
+) -> JSONResponse:
     """Readiness check endpoint that verifies database and Redis connectivity.
 
     Returns 200 if all dependencies are healthy, 503 otherwise.
@@ -140,8 +145,6 @@ async def readiness_check(
 
     # FastAPI will use the status code from Response if we return one
     # For now, we'll handle this in a simpler way
-    from fastapi.responses import JSONResponse
-
     return JSONResponse(content=response, status_code=status_code)
 
 
