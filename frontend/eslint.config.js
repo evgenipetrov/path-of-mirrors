@@ -11,6 +11,9 @@ export default defineConfig(
     ignores: [
       'dist',
       'coverage',
+      'playwright-report',
+      'test-results',
+      'e2e',
       'src/components/ui',
       'src/hooks/api/generated/**',
       'src/routeTree.gen.ts',

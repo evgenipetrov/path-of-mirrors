@@ -18,6 +18,9 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
+        'e2e/**',
+        'playwright-report/**',
+        'test-results/**',
         'src/test-setup.ts',
         'src/test-utils.tsx',
         '**/*.d.ts',
