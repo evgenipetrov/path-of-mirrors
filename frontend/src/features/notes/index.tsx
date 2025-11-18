@@ -12,6 +12,16 @@ import {
 } from '@/hooks/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { NotesTable } from './components/notes-table'
 import { createNotesColumns } from './components/notes-columns'
 import { NoteFormDialog } from './components/note-form-dialog'
@@ -22,6 +32,8 @@ export function Notes() {
   const queryClient = useQueryClient()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingNote, setEditingNote] = useState<Note | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [noteToDelete, setNoteToDelete] = useState<string | null>(null)
 
   // Fetch notes for current game context
   const { data: notes = [], isLoading, error } = useListNotesApiNotesGet({ game })
@@ -30,12 +42,13 @@ export function Notes() {
   const createMutation = useCreateNoteApiNotesPost({
     mutation: {
       onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: ['listNotesApiNotesGet'] })
+        await queryClient.invalidateQueries({ queryKey: ['/api/notes'] })
         toast.success('Note created successfully')
         setIsFormOpen(false)
       },
-      onError: (error: any) => {
-        toast.error(error?.response?.data?.detail?.[0]?.msg || 'Failed to create note')
+      onError: (error: unknown) => {
+        const errorMsg = error instanceof Error ? error.message : 'Failed to create note'
+        toast.error(errorMsg)
       },
     },
   })
@@ -43,13 +56,14 @@ export function Notes() {
   const updateMutation = useUpdateNoteApiNotesNoteIdPut({
     mutation: {
       onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: ['listNotesApiNotesGet'] })
+        await queryClient.invalidateQueries({ queryKey: ['/api/notes'] })
         toast.success('Note updated successfully')
         setEditingNote(null)
         setIsFormOpen(false)
       },
-      onError: (error: any) => {
-        toast.error(error?.response?.data?.detail?.[0]?.msg || 'Failed to update note')
+      onError: (error: unknown) => {
+        const errorMsg = error instanceof Error ? error.message : 'Failed to update note'
+        toast.error(errorMsg)
       },
     },
   })
@@ -57,11 +71,14 @@ export function Notes() {
   const deleteMutation = useDeleteNoteApiNotesNoteIdDelete({
     mutation: {
       onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: ['listNotesApiNotesGet'] })
+        await queryClient.invalidateQueries({ queryKey: ['/api/notes'] })
         toast.success('Note deleted successfully')
+        setDeleteDialogOpen(false)
+        setNoteToDelete(null)
       },
-      onError: (error: any) => {
-        toast.error(error?.response?.data?.detail?.[0]?.msg || 'Failed to delete note')
+      onError: (error: unknown) => {
+        const errorMsg = error instanceof Error ? error.message : 'Failed to delete note'
+        toast.error(errorMsg)
       },
     },
   })
@@ -76,9 +93,14 @@ export function Notes() {
     setIsFormOpen(true)
   }
 
-  const handleDelete = async (noteId: string) => {
-    if (confirm('Are you sure you want to delete this note?')) {
-      await deleteMutation.mutateAsync({ noteId })
+  const handleDelete = (noteId: string) => {
+    setNoteToDelete(noteId)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (noteToDelete) {
+      await deleteMutation.mutateAsync({ noteId: noteToDelete })
     }
   }
 
@@ -158,6 +180,27 @@ export function Notes() {
           onSubmit={handleSubmit}
           isLoading={createMutation.isPending || updateMutation.isPending}
         />
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Note</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this note? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   )

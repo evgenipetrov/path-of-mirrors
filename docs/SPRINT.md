@@ -1,10 +1,10 @@
 # Sprint: Phase 1 - Polish & Foundation
 
-**Sprint Goal:** Polish the admin template integration, customize branding, and lay groundwork for data ingestion pipeline.
+**Sprint Goal:** Polish the admin template with POE branding, ensure Notes feature quality, and verify development tooling.
 
-**Sprint Duration:** 1-2 weeks
+**Sprint Duration:** 1 week
 **Sprint Status:** 🚧 In Progress (0%)
-**Start Date:** 2025-11-17
+**Start Date:** 2025-11-18
 
 ---
 
@@ -14,22 +14,23 @@ Phase 1 Sprint is complete when:
 
 - ✅ Admin template is customized with POE branding
 - ✅ Game selector UI component is implemented
+- ✅ Navigation cleaned up with proper POE-themed structure
 - ✅ Notes feature is fully functional end-to-end
-- ✅ Basic test coverage added for critical paths
-- ✅ poe.ninja API integration proof-of-concept working
-- ✅ Database schema designed for item/price data
-- ✅ Documentation updated with new architecture decisions
+- ✅ Basic test coverage added for Notes feature
+- ✅ All linters verified and working (backend + frontend)
+- ✅ Test runners verified and working with coverage
+- ✅ Documentation updated with testing guidelines
 
 ---
 
 ## Sprint Focus
 
-This sprint focuses on **polishing what we have** and **proving out the data pipeline concept** before diving deep into implementation. We want to:
+This sprint focuses on **polishing what we have** and **verifying our development tooling** is production-ready. We want to:
 
 1. Make the admin template feel like "Path of Mirrors" not "Shadcn Admin"
 2. Ensure the notes feature works flawlessly (our reference implementation)
-3. Validate that we can fetch and parse poe.ninja data
-4. Design the database schema for Phase 1 properly
+3. Verify all our development scripts work correctly (linters, tests, coverage)
+4. Establish testing patterns and quality standards for future development
 
 ---
 
@@ -165,139 +166,102 @@ This sprint focuses on **polishing what we have** and **proving out the data pip
 
 ---
 
-### Epic 3: poe.ninja Integration PoC (6-8 hours)
+### Epic 3: Development Tooling Verification (3-4 hours)
 
-#### Task 3.1: Research poe.ninja API
-**Effort:** 1.5 hours
-**Status:** 📋 Not Started
-**Priority:** High
-
-**Description:**
-- Document poe.ninja API endpoints
-- Understand data structure for items, currency, builds
-- Identify rate limits and best practices
-- Create API documentation in `docs/POE_NINJA_API.md`
-
-**Acceptance Criteria:**
-- [ ] API endpoints documented with examples
-- [ ] Data structures understood and documented
-- [ ] Rate limits identified
-- [ ] Authentication requirements (if any) documented
-
-**API Endpoints to Document:**
-- Economy snapshots: `/api/data/itemoverview`
-- Currency rates: `/api/data/currencyoverview`
-- Build ladders: (TBD - needs research)
-
----
-
-#### Task 3.2: Create poe.ninja Adapter
-**Effort:** 3 hours
-**Status:** 📋 Not Started
-**Priority:** High
-**Dependencies:** Task 3.1
-
-**Description:**
-- Create `contexts/upstream/` bounded context
-- Implement poe.ninja client with httpx
-- Add error handling and retries
-- Add rate limiting
-- Parse item data into Python dataclasses
-
-**Acceptance Criteria:**
-- [ ] Can fetch economy snapshot for POE1
-- [ ] Can fetch economy snapshot for POE2
-- [ ] Data parsed into structured models
-- [ ] Errors handled gracefully
-- [ ] Rate limiting prevents API abuse
-
-**Files to create:**
-- `backend/src/contexts/upstream/adapters/poe_ninja_adapter.py`
-- `backend/src/contexts/upstream/domain/models.py`
-- `backend/src/contexts/upstream/ports/provider.py`
-
----
-
-#### Task 3.3: Display Sample Data in Frontend
-**Effort:** 2 hours
-**Status:** 📋 Not Started
-**Priority:** Medium
-**Dependencies:** Task 3.2
-
-**Description:**
-- Create Items page (placeholder)
-- Add API endpoint to fetch sample poe.ninja data
-- Display in a simple table
-- Show we can ingest and display real POE data
-
-**Acceptance Criteria:**
-- [ ] Items page shows table of items from poe.ninja
-- [ ] Data includes item name, price, change %
-- [ ] Refreshes on game context switch
-- [ ] Proves out the full data flow
-
----
-
-### Epic 4: Database Schema Design (2-3 hours)
-
-#### Task 4.1: Design Item/Price Schema
-**Effort:** 1.5 hours
-**Status:** 📋 Not Started
-**Priority:** Medium
-
-**Description:**
-- Design PostgreSQL schema for items table
-- Design schema for price_history table
-- Plan for partitioning by date
-- Document schema in `docs/DATABASE_SCHEMA.md`
-
-**Acceptance Criteria:**
-- [ ] Schema supports both POE1 and POE2
-- [ ] Supports time-series price data
-- [ ] Optimized for trend queries
-- [ ] Migration plan documented
-
-**Schema considerations:**
-- Game context (poe1/poe2)
-- Item base type, variant, links, etc.
-- Price in chaos equivalent
-- Date/time of snapshot
-- Indexes for performance
-
----
-
-#### Task 4.2: Create Alembic Migration
+#### Task 3.1: Verify Linters & Formatters
 **Effort:** 1 hour
 **Status:** 📋 Not Started
-**Priority:** Low
-**Dependencies:** Task 4.1
+**Priority:** High
 
 **Description:**
-- Create Alembic migration for items/prices tables
-- Test migration up/down
-- Add sample data seeding script
+- Run `./scripts/check-code.sh` and verify all tools work
+- Ensure ruff (check + format) works for backend
+- Ensure mypy type checking works for backend
+- Ensure eslint works for frontend
+- Ensure TypeScript type checking works for frontend
+- Document any configuration issues
 
 **Acceptance Criteria:**
-- [ ] Migration creates tables successfully
-- [ ] Migration is reversible
-- [ ] Sample data can be seeded for testing
+- [ ] `./scripts/check-code.sh` runs successfully
+- [ ] `./scripts/check-code.sh --fix` auto-fixes issues
+- [ ] Backend linters catch common Python issues
+- [ ] Frontend linters catch common TypeScript/React issues
+- [ ] All linter configs documented in code style conventions
+
+**Files to verify:**
+- `backend/pyproject.toml` (ruff config)
+- `backend/mypy.ini` or inline config
+- `frontend/.eslintrc.cjs`
+- `frontend/tsconfig.json`
+
+---
+
+#### Task 3.2: Verify Test Runners & Coverage
+**Effort:** 1.5 hours
+**Status:** 📋 Not Started
+**Priority:** High
+
+**Description:**
+- Run `./scripts/run-tests.sh` and verify both backend/frontend work
+- Set up pytest-cov for backend coverage reporting
+- Set up vitest coverage for frontend
+- Establish minimum coverage thresholds (70% recommended)
+- Document coverage gaps and improvement plan
+
+**Acceptance Criteria:**
+- [ ] `./scripts/run-tests.sh` runs all tests
+- [ ] `./scripts/run-tests.sh --coverage` shows coverage reports
+- [ ] Backend coverage report generated (HTML + terminal)
+- [ ] Frontend coverage report generated (HTML + terminal)
+- [ ] Coverage thresholds documented
+
+**Coverage tools to set up:**
+- Backend: `pytest-cov` (already in pyproject.toml)
+- Frontend: `@vitest/coverage-v8` (needs installation)
+
+---
+
+#### Task 3.3: Document Testing & Quality Guidelines
+**Effort:** 1 hour
+**Status:** 📋 Not Started
+**Priority:** Medium
+**Dependencies:** Task 3.1, Task 3.2
+
+**Description:**
+- Create `docs/TESTING.md` with testing best practices
+- Document how to run tests locally
+- Document how to check coverage
+- Document pre-commit checklist
+- Add testing examples for common patterns
+
+**Acceptance Criteria:**
+- [ ] `docs/TESTING.md` created with comprehensive guide
+- [ ] Examples for backend unit tests (pytest)
+- [ ] Examples for frontend component tests (vitest + RTL)
+- [ ] Pre-commit checklist documented
+- [ ] Coverage interpretation guidelines included
+
+**Topics to cover:**
+- How to write unit tests (backend + frontend)
+- How to run tests locally
+- How to check coverage reports
+- Testing best practices (arrange-act-assert, mocking, etc.)
+- Pre-commit workflow
 
 ---
 
 ## Sprint Metrics
 
-**Total Estimated Effort:** 17-23 hours
+**Total Estimated Effort:** 10-14 hours
 
 **Breakdown by Epic:**
-- Epic 1 (UI Polish): 4-6 hours (29%)
-- Epic 2 (Notes Polish): 3-4 hours (18%)
-- Epic 3 (poe.ninja PoC): 6-8 hours (38%)
-- Epic 4 (Database Design): 2-3 hours (15%)
+- Epic 1 (UI Polish & Branding): 5.5 hours (44%)
+- Epic 2 (Notes Feature Polish): 3 hours (24%)
+- Epic 3 (Tooling Verification): 3.5 hours (28%)
 
 **Priority Distribution:**
-- High Priority: 12-16 hours (70%)
-- Medium Priority: 4-6 hours (24%)
-- Low Priority: 1 hour (6%)
+- High Priority: 8.5 hours (68%)
+- Medium Priority: 4 hours (32%)
 
 ---
 
@@ -309,11 +273,9 @@ This sprint focuses on **polishing what we have** and **proving out the data pip
 - Task 1.3: Clean Up Navigation & Pages
 - Task 2.1: End-to-End Testing & Fixes
 - Task 2.2: Add Basic Tests
-- Task 3.1: Research poe.ninja API
-- Task 3.2: Create poe.ninja Adapter
-- Task 3.3: Display Sample Data in Frontend
-- Task 4.1: Design Item/Price Schema
-- Task 4.2: Create Alembic Migration
+- Task 3.1: Verify Linters & Formatters
+- Task 3.2: Verify Test Runners & Coverage
+- Task 3.3: Document Testing & Quality Guidelines
 
 ### In Progress 🚧
 *(None yet)*
@@ -321,19 +283,28 @@ This sprint focuses on **polishing what we have** and **proving out the data pip
 ### Done ✅
 *(None yet)*
 
+### Deferred to Future Sprint 🔮
+- Epic: poe.ninja Integration PoC (6-8 hours)
+  - Research poe.ninja API
+  - Create poe.ninja Adapter
+  - Display Sample Data in Frontend
+- Epic: Database Schema Design (2-3 hours)
+  - Design Item/Price Schema
+  - Create Alembic Migration
+
 ---
 
 ## Success Criteria
 
 At the end of this sprint, we should have:
 
-1. **A polished UI** that looks and feels like "Path of Mirrors"
+1. **A polished UI** that looks and feels like "Path of Mirrors" not "Shadcn Admin"
 2. **A working game selector** that persists and filters data correctly
 3. **A fully tested Notes feature** as our reference implementation
-4. **Proof that we can fetch poe.ninja data** and display it
-5. **A solid database schema** ready for Phase 1 implementation
+4. **Verified development tooling** - all linters, tests, and coverage tools working
+5. **Quality standards established** - testing patterns and guidelines documented
 
-This sets us up perfectly for Phase 1 proper, where we'll build out the full data ingestion pipeline.
+This sets us up perfectly for future sprints where we'll build out the data ingestion pipeline with confidence in our development workflow.
 
 ---
 
@@ -341,24 +312,35 @@ This sets us up perfectly for Phase 1 proper, where we'll build out the full dat
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|------------|--------|------------|
-| poe.ninja API changes format | Low | High | Document format, add tests, version API calls |
-| Rate limiting blocks development | Medium | Medium | Implement caching, use sample data for dev |
-| Database schema needs rework | Medium | Medium | Start simple, iterate based on real data |
-| Testing setup takes longer than expected | Medium | Low | Defer to Phase 1 if needed, focus on manual testing |
+| Frontend tests not yet set up | High | Medium | Start with backend tests, add frontend tests incrementally |
+| Coverage tools need configuration | Medium | Medium | Use default configs first, customize as needed |
+| Branding assets not available | Medium | Medium | Use placeholders, finalize design later |
+| Testing takes longer than expected | Medium | Low | Focus on critical paths first, expand coverage later |
 
 ---
 
 ## Next Sprint Preview
 
-After this sprint, Phase 1 proper will focus on:
+After this sprint, future development will focus on:
 
-1. **Full Data Ingestion** - ARQ jobs to fetch daily snapshots
-2. **Historical Storage** - 28-day rolling window
-3. **Basic Analytics** - Price trends, popular items
-4. **Market Dashboard** - Real-time market intelligence UI
+1. **poe.ninja Integration** - Research API, create adapter, display sample data
+2. **Database Schema Design** - Design and migrate items/prices tables
+3. **Data Ingestion Pipeline** - ARQ jobs to fetch daily snapshots
+4. **Market Intelligence UI** - Dashboard with price trends and analytics
 
 ---
 
-**Last Updated:** 2025-11-17
+**Last Updated:** 2025-11-18
 **Sprint Owner:** TBD
 **Status:** 🚧 In Progress (0%)
+
+---
+
+## Notes
+
+**Scope Changes:**
+- Deferred Epic 3 (poe.ninja Integration) and Epic 4 (Database Schema) to future sprint
+- Added Epic 3 (Development Tooling Verification) to ensure quality infrastructure
+- Reduced sprint duration from 1-2 weeks to 1 week
+- Reduced total effort from 17-23 hours to 10-14 hours
+- Focused on polishing existing work and establishing quality standards

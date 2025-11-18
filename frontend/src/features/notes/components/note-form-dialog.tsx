@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -34,16 +34,6 @@ export function NoteFormDialog({
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
 
-  useEffect(() => {
-    if (note) {
-      setTitle(note.title)
-      setContent(note.content || '')
-    } else {
-      setTitle('')
-      setContent('')
-    }
-  }, [note])
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onSubmit({
@@ -51,10 +41,26 @@ export function NoteFormDialog({
       content: content || null,
       game_context: gameContext,
     })
+    // Reset form after submit
+    setTitle('')
+    setContent('')
+  }
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && note) {
+      // Opening dialog with existing note - populate form
+      setTitle(note.title)
+      setContent(note.content || '')
+    } else if (!newOpen) {
+      // Closing dialog - reset form
+      setTitle('')
+      setContent('')
+    }
+    onOpenChange(newOpen)
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[525px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
@@ -94,7 +100,7 @@ export function NoteFormDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
               disabled={isLoading}
             >
               Cancel

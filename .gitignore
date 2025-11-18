@@ -68,3 +68,6 @@ redis_data/
 # Backups
 *-backup-*/
 *.backup
+
+# Samples and reference code
+_samples/
