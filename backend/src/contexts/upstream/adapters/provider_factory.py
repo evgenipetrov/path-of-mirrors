@@ -48,6 +48,5 @@ def get_provider(game: Game) -> BaseProvider:
             # This should never happen due to enum constraints,
             # but included for completeness
             raise ValueError(
-                f"Unsupported game: {game}. "
-                f"Supported games: {[g.value for g in Game]}"
+                f"Unsupported game: {game}. Supported games: {[g.value for g in Game]}"
             )

@@ -8,6 +8,7 @@
 #   --help        Show this help message
 #   --force       Skip confirmation prompt
 #   --seed        Seed sample data after reset
+#   --greenfield  Clean and regenerate migrations (for development)
 
 set -e
 set -u
@@ -24,6 +25,7 @@ NC='\033[0m' # No Color
 # Configuration
 FORCE=false
 SEED=false
+GREENFIELD=false
 
 # Helper functions
 log_info() {
@@ -48,7 +50,7 @@ log_step() {
 }
 
 show_help() {
-    head -n 11 "$0" | tail -n 9 | sed 's/^# //'
+    head -n 12 "$0" | tail -n 10 | sed 's/^# //'
     exit 0
 }
 
@@ -80,9 +82,9 @@ main() {
     docker volume rm path-of-mirrors_postgres_data 2>/dev/null || true
     log_success "Database volume removed"
 
-    # Start services
-    log_step "🚀 Starting services..."
-    docker compose up -d
+    # Start services with fresh build
+    log_step "🚀 Building and starting services..."
+    docker compose up -d --build
 
     # Wait for PostgreSQL
     log_info "Waiting for PostgreSQL to be ready..."
@@ -120,9 +122,20 @@ main() {
         sleep 1
     done
 
+    # Clean old migrations if greenfield mode
+    if [ "$GREENFIELD" = true ]; then
+        log_step "🧹 Cleaning old migrations (greenfield mode)..."
+        find backend/alembic/versions -name "*.py" -type f ! -name "__init__.py" -delete 2>/dev/null || true
+        log_success "Old migrations removed"
+
+        log_step "📝 Generating fresh migration..."
+        docker compose exec -T backend bash -c "cd /app && uv run alembic revision --autogenerate -m 'initial schema'"
+        log_success "Fresh migration generated"
+    fi
+
     # Run migrations
     log_step "🗄️  Running database migrations..."
-    docker compose exec -T backend bash -c "cd src && uv run alembic upgrade head"
+    docker compose exec -T backend bash -c "cd /app && uv run alembic upgrade head"
     log_success "Migrations complete"
 
     # Seed data if requested
@@ -140,6 +153,9 @@ main() {
     log_step "✅ Database reset complete!"
     echo ""
     log_info "Your database has been reset with a fresh schema"
+    if [ "$GREENFIELD" = true ]; then
+        log_info "Fresh migrations generated (greenfield mode)"
+    fi
     if [ "$SEED" = true ]; then
         log_info "Sample data has been loaded"
     fi
@@ -163,6 +179,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --seed)
             SEED=true
+            shift
+            ;;
+        --greenfield)
+            GREENFIELD=true
             shift
             ;;
         *)

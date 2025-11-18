@@ -36,6 +36,8 @@ RUN uv sync --frozen
 # Copy application code
 COPY --chown=appuser:appuser src/ ./src/
 COPY --chown=appuser:appuser tests/ ./tests/
+COPY --chown=appuser:appuser alembic/ ./alembic/
+COPY --chown=appuser:appuser alembic.ini ./alembic.ini
 
 # Add src to PYTHONPATH so imports work correctly
 ENV PYTHONPATH=/app/src
@@ -54,6 +56,8 @@ RUN uv sync --frozen --no-dev
 
 # Copy application code
 COPY src/ ./src/
+COPY alembic/ ./alembic/
+COPY alembic.ini ./alembic.ini
 
 # Add src to PYTHONPATH so imports work correctly
 ENV PYTHONPATH=/app/src

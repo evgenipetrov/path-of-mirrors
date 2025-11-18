@@ -1,0 +1,6 @@
+# Migrations directory
+#
+# During greenfield development, migration files are gitignored.
+# We reset the database frequently and regenerate migrations as needed.
+#
+# This will change once we reach production.

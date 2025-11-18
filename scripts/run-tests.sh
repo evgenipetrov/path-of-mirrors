@@ -56,24 +56,39 @@ show_help() {
 
 # Main test function
 main() {
-    log_step "🧪 Running Tests"
-
     local total_passed=0
     local total_failed=0
     local backend_passed=0
     local frontend_passed=0
     local start_time=$(date +%s)
+    local started_services=false
 
     # Run backend tests
     if [ "$RUN_BACKEND" = true ]; then
-        log_step "Backend Tests (pytest)"
+        # Start backend if not running
+        if ! docker compose ps backend | grep -q "Up" 2>/dev/null; then
+            log_step "🐳 Starting services for testing..."
+            docker compose up -d
+            started_services=true
 
-        # Check if backend is running
-        if ! docker compose ps backend | grep -q "Up"; then
-            log_error "Backend container is not running"
-            log_info "Start services with: ./scripts/dev.sh"
-            exit 1
+            # Wait for services to be ready
+            log_info "Waiting for services to be ready..."
+            sleep 5
+
+            # Wait for PostgreSQL
+            local max_attempts=30
+            local attempt=0
+            while [ $attempt -lt $max_attempts ]; do
+                if docker compose exec -T postgres pg_isready -U postgres > /dev/null 2>&1; then
+                    break
+                fi
+                attempt=$((attempt + 1))
+                sleep 1
+            done
+            log_success "Services ready"
         fi
+
+        log_step "🧪 Running Backend Tests (pytest)"
 
         if [ "$WITH_COVERAGE" = true ]; then
             log_info "Running with coverage report..."
@@ -144,6 +159,13 @@ main() {
                 total_passed=$((total_passed + frontend_passed))
             fi
         fi
+    fi
+
+    # Cleanup - stop services if we started them
+    if [ "$started_services" = true ]; then
+        log_step "🛑 Stopping services..."
+        docker compose down
+        log_success "Services stopped"
     fi
 
     # Calculate duration

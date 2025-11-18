@@ -280,3 +280,6 @@ path-of-mirrors/
 ├── docs/                       # Documentation (single source of truth)
 └── docker-compose.yml          # Local development services
 ```
+- Always use uv to execute python commands.
+- _samples folder in repo root is just that - samples. it is gitignored, so never use it to implement tests or imports.
+- use different files for different models/classes, so they can be easily found

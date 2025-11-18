@@ -110,9 +110,9 @@ main() {
         log_info "Frontend dependencies already installed (skipping)"
     fi
 
-    # Start Docker services
-    log_step "🐳 Starting Docker services..."
-    docker compose up -d
+    # Build and start Docker services
+    log_step "🐳 Building and starting Docker services..."
+    docker compose up -d --build
 
     # Wait for PostgreSQL
     log_info "Waiting for PostgreSQL to be ready..."
@@ -171,7 +171,7 @@ main() {
 
     # Run database migrations
     log_step "🗄️  Running database migrations..."
-    docker compose exec -T backend bash -c "cd src && uv run alembic upgrade head"
+    docker compose exec -T backend bash -c "cd /app && uv run alembic upgrade head"
     log_success "Migrations complete"
 
     # Seed sample data (optional)

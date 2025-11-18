@@ -7,8 +7,9 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 # Import all models so Alembic can detect them
-from contexts.placeholder.domain.models import Note  # noqa: F401
-from infrastructure import Base, settings
+from src.contexts.core.domain.league import League  # noqa: F401
+from src.contexts.placeholder.domain.models import Note  # noqa: F401
+from src.infrastructure import Base, settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

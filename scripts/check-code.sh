@@ -56,20 +56,26 @@ show_help() {
 
 # Main lint function
 main() {
-    log_step "🔍 Running Linters"
-
     local total_issues=0
     local total_errors=0
     local exit_code=0
+    local started_services=false
 
     # Backend linting
     if [ "$RUN_BACKEND" = true ]; then
-        # Check if backend is running
-        if ! docker compose ps backend | grep -q "Up"; then
-            log_error "Backend container is not running"
-            log_info "Start services with: ./scripts/dev.sh"
-            exit 1
+        # Start backend if not running
+        if ! docker compose ps backend | grep -q "Up" 2>/dev/null; then
+            log_step "🐳 Starting backend container for linting..."
+            docker compose up -d backend
+            started_services=true
+
+            # Wait for backend to be ready
+            log_info "Waiting for backend to be ready..."
+            sleep 5
+            log_success "Backend ready"
         fi
+
+        log_step "🔍 Running Backend Linters"
 
         # Ruff check
         log_step "Backend: ruff check"
@@ -108,7 +114,7 @@ main() {
 
         # MyPy type checking
         log_step "Backend: mypy type checking"
-        if docker compose exec -T backend uv run mypy src/ --ignore-missing-imports; then
+        if docker compose exec -T backend bash -c "cd src && uv run mypy . --ignore-missing-imports"; then
             log_success "Type checking passed"
         else
             log_error "Type errors found"
@@ -156,6 +162,13 @@ main() {
             exit_code=1
         fi
         cd ..
+    fi
+
+    # Cleanup - stop services if we started them
+    if [ "$started_services" = true ]; then
+        log_step "🛑 Stopping services..."
+        docker compose down
+        log_success "Services stopped"
     fi
 
     # Summary

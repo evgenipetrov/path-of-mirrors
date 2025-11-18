@@ -46,22 +46,42 @@ show_help() {
     exit 0
 }
 
-check_backend() {
-    if ! docker compose ps backend | grep -q "Up"; then
-        log_error "Backend container is not running"
-        log_info "Start services with: ./scripts/dev.sh"
-        exit 1
+ensure_backend_running() {
+    local started_services=false
+
+    if ! docker compose ps backend | grep -q "Up" 2>/dev/null; then
+        log_step "🐳 Starting services for migration..."
+        docker compose up -d
+        started_services=true
+
+        # Wait for services to be ready
+        log_info "Waiting for services to be ready..."
+        sleep 5
+
+        # Wait for PostgreSQL
+        local max_attempts=30
+        local attempt=0
+        while [ $attempt -lt $max_attempts ]; do
+            if docker compose exec -T postgres pg_isready -U postgres > /dev/null 2>&1; then
+                break
+            fi
+            attempt=$((attempt + 1))
+            sleep 1
+        done
+        log_success "Services ready"
     fi
+
+    echo "$started_services"
 }
 
 # Command handlers
 cmd_upgrade() {
     log_step "🗄️  Running database migrations..."
-    docker compose exec -T backend bash -c "cd src && uv run alembic upgrade head"
+    docker compose exec -T backend bash -c "cd /app && uv run alembic upgrade head"
     log_success "Migrations complete!"
     echo ""
     log_info "Current revision:"
-    docker compose exec -T backend bash -c "cd src && uv run alembic current"
+    docker compose exec -T backend bash -c "cd /app && uv run alembic current"
 }
 
 cmd_create() {
@@ -73,23 +93,23 @@ cmd_create() {
 
     local message="$1"
     log_step "📝 Creating new migration: $message"
-    docker compose exec -T backend bash -c "cd src && uv run alembic revision --autogenerate -m \"$message\""
+    docker compose exec -T backend bash -c "cd /app && uv run alembic revision --autogenerate -m \"$message\""
     log_success "Migration created!"
     echo ""
     log_info "Next steps:"
-    echo "  1. Review migration file in backend/src/migrations/versions/"
-    echo -e "  2. Run migration: ${BLUE}./scripts/db-migrate.sh${NC}"
+    echo "  1. Review migration file in backend/alembic/versions/"
+    echo -e "  2. Run migration: ${BLUE}./scripts/migrate-db.sh${NC}"
 }
 
 cmd_current() {
     log_step "📍 Current migration version"
-    docker compose exec -T backend bash -c "cd src && uv run alembic current"
+    docker compose exec -T backend bash -c "cd /app && uv run alembic current"
 }
 
 cmd_rollback() {
     log_step "⏪ Rolling back one migration..."
     log_info "Current version:"
-    docker compose exec -T backend bash -c "cd src && uv run alembic current"
+    docker compose exec -T backend bash -c "cd /app && uv run alembic current"
     echo ""
     echo -n "Are you sure you want to rollback? (yes/no): "
     read -r confirmation
@@ -99,22 +119,22 @@ cmd_rollback() {
         exit 0
     fi
 
-    docker compose exec -T backend bash -c "cd src && uv run alembic downgrade -1"
+    docker compose exec -T backend bash -c "cd /app && uv run alembic downgrade -1"
     log_success "Rollback complete!"
     echo ""
     log_info "New version:"
-    docker compose exec -T backend bash -c "cd src && uv run alembic current"
+    docker compose exec -T backend bash -c "cd /app && uv run alembic current"
 }
 
 cmd_history() {
     log_step "📜 Migration history"
-    docker compose exec -T backend bash -c "cd src && uv run alembic history"
+    docker compose exec -T backend bash -c "cd /app && uv run alembic history"
 }
 
 # Main function
 main() {
-    # Check backend is running
-    check_backend
+    # Ensure backend is running
+    local started_services=$(ensure_backend_running)
 
     # Parse command
     local command="${1:-upgrade}"
@@ -144,6 +164,13 @@ main() {
             show_help
             ;;
     esac
+
+    # Cleanup - stop services if we started them
+    if [ "$started_services" = "true" ]; then
+        log_step "🛑 Stopping services..."
+        docker compose down
+        log_success "Services stopped"
+    fi
 }
 
 # Change to project root

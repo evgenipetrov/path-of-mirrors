@@ -2,11 +2,31 @@
 
 # Path of Mirrors - Start Development Environment
 # Starts all services: PostgreSQL, Redis, Backend, and Frontend
+# Usage: ./scripts/start-dev.sh [--build]
+#
+# Options:
+#   --build    Rebuild Docker images before starting
 
 set -e
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
+
+# Parse arguments
+BUILD_FLAG=""
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --build)
+            BUILD_FLAG="--build"
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: ./scripts/start-dev.sh [--build]"
+            exit 1
+            ;;
+    esac
+done
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -42,8 +62,12 @@ cleanup() {
 trap cleanup SIGINT SIGTERM EXIT
 
 # Step 1: Start Docker services
-echo -e "${BLUE}→ Starting Docker services (PostgreSQL, Redis, Backend)...${NC}"
-docker compose up -d
+if [ -n "$BUILD_FLAG" ]; then
+    echo -e "${BLUE}→ Building and starting Docker services (PostgreSQL, Redis, Backend)...${NC}"
+else
+    echo -e "${BLUE}→ Starting Docker services (PostgreSQL, Redis, Backend)...${NC}"
+fi
+docker compose up -d $BUILD_FLAG
 
 # Wait for services to be healthy
 echo -e "${BLUE}→ Waiting for services to be healthy...${NC}"
