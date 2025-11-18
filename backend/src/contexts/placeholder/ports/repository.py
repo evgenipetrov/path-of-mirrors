@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from shared import Game
+from src.shared import Game
 
 from ..domain.models import Note
 

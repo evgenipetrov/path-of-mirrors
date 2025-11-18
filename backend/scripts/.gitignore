@@ -1,0 +1,5 @@
+# Ignore user-specific config
+config.json
+
+# Allow example config
+!config.example.json

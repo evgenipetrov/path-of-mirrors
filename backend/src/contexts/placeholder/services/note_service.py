@@ -2,8 +2,8 @@
 
 from uuid import UUID
 
-from infrastructure import get_logger
-from shared import Game
+from src.infrastructure import get_logger
+from src.shared import Game
 
 from ..domain.models import Note
 from ..domain.schemas import NoteCreate, NoteUpdate

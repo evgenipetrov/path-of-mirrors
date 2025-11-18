@@ -5,8 +5,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from infrastructure import get_db
-from shared import Game
+from src.infrastructure import get_db
+from src.shared import Game
 
 from ..adapters.postgres_repository import PostgresNoteRepository
 from ..domain.schemas import NoteCreate, NoteResponse, NoteUpdate

@@ -8,8 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from contexts.placeholder.api.routes import router as notes_router
-from infrastructure import (
+from src.contexts.placeholder.api.routes import router as notes_router
+from src.infrastructure import (
     RequestLoggingMiddleware,
     check_database_health,
     check_redis_health,

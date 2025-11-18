@@ -3,7 +3,7 @@
 import redis.asyncio as redis
 from redis.asyncio.client import Redis
 
-from .config import settings
+from .settings import settings
 
 # Create Redis client for caching
 redis_client: Redis = redis.from_url(

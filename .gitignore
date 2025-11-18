@@ -71,3 +71,4 @@ redis_data/
 
 # Samples and reference code
 _samples/
+!_samples/data/README.md     # DO commit documentation

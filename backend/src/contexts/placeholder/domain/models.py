@@ -6,8 +6,8 @@ from uuid import UUID, uuid4
 from sqlalchemy import String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from infrastructure import Base
-from shared import Game
+from src.infrastructure import Base
+from src.shared import Game
 
 
 class Note(Base):

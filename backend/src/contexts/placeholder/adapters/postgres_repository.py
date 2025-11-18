@@ -5,7 +5,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared import Game
+from src.shared import Game
 
 from ..domain.models import Note
 from ..ports.repository import NoteRepository

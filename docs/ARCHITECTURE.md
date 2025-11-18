@@ -118,7 +118,27 @@ backend/src/
 ├── contexts/
 │   └── placeholder/     # Dummy CRUD to validate stack
 ├── shared/
-│   └── game_selector.py # Game context enum (PoE1/PoE2)
+│   └── game_context.py  # Game enum (PoE1/PoE2)
+└── infrastructure/
+    ├── database.py
+    ├── logging.py
+    └── health.py
+```
+
+**Phase 1 Epic 1.1 Structure (Current):**
+```
+backend/src/
+├── contexts/
+│   ├── placeholder/         # Dummy CRUD (Phase 0)
+│   └── upstream/            # Data ingestion (Epic 1.1+)
+│       ├── ports/
+│       │   └── provider.py  # BaseProvider Protocol
+│       └── adapters/
+│           ├── provider_factory.py
+│           ├── poe1_provider.py
+│           └── poe2_provider.py
+├── shared/
+│   └── game_context.py      # Game enum
 └── infrastructure/
     ├── database.py
     ├── logging.py
@@ -137,37 +157,101 @@ Path of Mirrors supports both **PoE1 and PoE2** from Phase 1 onward through a pl
 2. **Game-Specific Adapters:** Each game has its own schema parser, API client, and normalization logic
 3. **Context Switching:** User selects game in UI; all features operate on that game's data context
 
-### Structure
+### Structure (Phase 1 Epic 1.1+)
 
 ```
 backend/src/contexts/upstream/
-├── domain/
+├── ports/
+│   └── provider.py          # BaseProvider Protocol (interface)
+├── adapters/
+│   ├── provider_factory.py  # Factory: get_provider(game) -> BaseProvider
+│   ├── poe1_provider.py     # PoE1 implementation
+│   └── poe2_provider.py     # PoE2 implementation
+├── domain/                  # Epic 1.3: Canonical models
 │   ├── item.py              # Canonical item model (game-agnostic)
 │   ├── modifier.py          # Canonical modifier model
 │   └── league.py            # League abstraction
-├── adapters/
-│   ├── poe1/
-│   │   ├── schema.py        # PoE1-specific schema
-│   │   ├── poeninja.py      # PoE1 poe.ninja client
-│   │   └── normalizer.py    # PoE1 → canonical mapping
-│   └── poe2/
-│       ├── schema.py        # PoE2-specific schema
-│       ├── poeninja.py      # PoE2 poe.ninja client
-│       └── normalizer.py    # PoE2 → canonical mapping
-└── ports/
-    ├── league_provider.py   # Interface: get_active_leagues()
-    └── item_provider.py     # Interface: fetch_items(game, league)
+└── services/                # Epic 1.4: Normalization and orchestration
+    └── normalizer.py        # Raw data → canonical models
 ```
 
-### Example: Fetching Market Data
+### Provider Pattern (Epic 1.1)
 
+**Design:** Protocol-based interface with factory pattern for game-specific implementations.
+
+**BaseProvider Protocol:**
+```python
+from typing import Any, Protocol
+from src.shared import Game
+
+class BaseProvider(Protocol):
+    """Minimal interface for fetching game-specific data."""
+
+    @property
+    def game(self) -> Game:
+        """Which game this provider serves."""
+        ...
+
+    async def get_active_leagues(self) -> list[dict[str, Any]]:
+        """Fetch active leagues for this game."""
+        ...
+
+    async def fetch_economy_snapshot(
+        self, league: str, category: str
+    ) -> dict[str, Any]:
+        """Fetch economy data for a league/category."""
+        ...
+
+    async def fetch_build_ladder(self, league: str) -> dict[str, Any]:
+        """Fetch build ladder data for a league."""
+        ...
+```
+
+**Factory Pattern:**
+```python
+from src.shared import Game
+from ..ports import BaseProvider
+from .poe1_provider import PoE1Provider
+from .poe2_provider import PoE2Provider
+
+def get_provider(game: Game) -> BaseProvider:
+    """Return the appropriate provider for the given game."""
+    match game:
+        case Game.POE1:
+            return PoE1Provider()
+        case Game.POE2:
+            return PoE2Provider()
+        case _:
+            raise ValueError(f"Unsupported game: {game}")
+```
+
+**Usage Example:**
 ```python
 # Domain service (game-agnostic)
-async def get_market_snapshot(game: Game, league: str) -> MarketSnapshot:
-    provider = get_provider(game)  # Factory returns PoE1Provider or PoE2Provider
-    raw_data = await provider.fetch_snapshot(league)
-    return provider.normalize(raw_data)  # Returns canonical MarketSnapshot
+from src.contexts.upstream.adapters import get_provider
+from src.shared import Game
+
+async def get_active_leagues_for_game(game: Game):
+    provider = get_provider(game)  # Returns PoE1Provider or PoE2Provider
+    leagues = await provider.get_active_leagues()
+    return leagues
+
+# Example call
+leagues = await get_active_leagues_for_game(Game.POE1)
+# [{"name": "Standard", "active": True}, ...]
 ```
+
+**Design Decisions:**
+- **Protocol vs ABC**: Using `typing.Protocol` for duck typing and flexibility
+- **dict[str, Any] returns**: Deferring structured models to Epic 1.3 (YAGNI principle)
+- **Stateless providers**: Factory returns new instances each call (no caching yet)
+- **Match statement**: Python 3.10+ pattern matching for clarity
+
+**Adding New Games:**
+1. Add new game to `src.shared.Game` enum
+2. Create `{game}_provider.py` implementing `BaseProvider`
+3. Add case to `get_provider()` factory function
+4. Write tests in `tests/contexts/upstream/test_providers.py`
 
 ---
 

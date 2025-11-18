@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from shared import Game
+from src.shared import Game
 
 
 class NoteCreate(BaseModel):
