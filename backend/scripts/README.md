@@ -92,9 +92,64 @@ uv run python scripts/collect_poedb_samples.py
 
 **Status:** ⚠️ Not yet created - Task 1.2.7
 
+### validate_modifier_design.py
+
+**NEW:** Validates the Modifier value object design against all collected samples.
+
+```bash
+# Validate all sources and games
+uv run python backend/scripts/validate_modifier_design.py
+
+# Validate specific game
+uv run python backend/scripts/validate_modifier_design.py --game poe2
+
+# Validate specific source
+uv run python backend/scripts/validate_modifier_design.py --source trade
+
+# Verbose output
+uv run python backend/scripts/validate_modifier_design.py --verbose
+```
+
+**Output:** Validation summary with success/failure rates
+
+**Purpose:**
+- Proves Modifier design works with real data from all sources
+- Demonstrates adapter parsing logic for Epic 1.4+
+- Contains reusable functions for Trade API, poe.ninja, and PoB parsing
+- Exit code 0 = all passed, 1 = failures found
+
+**Note:** Run from project root (not backend/ directory)
+
+### validate_currency_design.py
+
+**NEW:** Validates the Currency domain model design against poe.ninja economy data.
+
+```bash
+# Validate all games
+uv run python backend/scripts/validate_currency_design.py
+
+# Validate specific game
+uv run python backend/scripts/validate_currency_design.py --game poe2
+
+# Verbose output
+uv run python backend/scripts/validate_currency_design.py --verbose
+```
+
+**Output:** Validation summary with success/failure rates, unique currency comparison
+
+**Purpose:**
+- Proves Currency design works with real poe.ninja economy data
+- Demonstrates adapter parsing logic for Epic 1.4+
+- Contains reusable `parse_poeninja_currency()` function
+- Shows PoE1 vs PoE2 currency differences
+- Exit code 0 = all passed, 1 = failures found
+
+**Note:** Run from project root (not backend/ directory)
+
 ## Usage Notes
 
-- All scripts should be run from the `backend/` directory
+- Collection scripts should be run from the `backend/` directory
+- Validation scripts should be run from project root
 - Use `uv run` to execute in the project's virtual environment
 - Check `_samples/data/README.md` for sample documentation
 - Samples are .gitignored by default (except meta.json)

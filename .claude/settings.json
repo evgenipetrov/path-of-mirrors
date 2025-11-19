@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash",
+      "Edit",
+      "Glob",
+      "Grep",
+      "Read",
+      "Task",
+      "TodoWrite",
+      "WebFetch",
+      "Write"
+    ],
+    "deny": [
+      "Bash(sudo:*)",
+      "Bash(rm:*)"
+    ],
+    "ask": []
+  }
+}
