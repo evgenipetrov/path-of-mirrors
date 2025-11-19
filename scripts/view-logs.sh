@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# Script: logs.sh
+# Script: view-logs.sh
 # Description: View Docker service logs
-# Usage: ./scripts/logs.sh [SERVICE] [OPTIONS]
+# Usage: ./scripts/view-logs.sh [SERVICE] [OPTIONS]
 #
 # Services:
 #   (no args)    Show all services
@@ -11,6 +11,8 @@
 #   redis        Redis logs
 #
 # Options:
+#   --dev             Use dev compose files (default)
+#   --prod            Use prod compose files
 #   -f, --follow      Follow log output (tail -f)
 #   -n, --lines NUM   Show last NUM lines (default: all)
 #   --help            Show this help message
@@ -28,6 +30,7 @@ BOLD='\033[1m'
 NC='\033[0m' # No Color
 
 # Configuration
+MODE="dev"
 SERVICE=""
 FOLLOW=false
 LINES=""
@@ -53,15 +56,22 @@ show_help() {
 
 # Main function
 main() {
+    # Set compose files based on mode
+    if [ "$MODE" = "prod" ]; then
+        COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml"
+    else
+        COMPOSE_FILES="-f docker-compose.yml -f docker-compose.dev.yml"
+    fi
+
     # Check if Docker Compose is running
-    if ! docker compose ps | grep -q "Up"; then
+    if ! docker compose $COMPOSE_FILES ps | grep -q "Up"; then
         log_error "No services are running"
-        log_info "Start services with: ./scripts/dev.sh"
+        log_info "Start services with: ./scripts/start.sh"
         exit 1
     fi
 
     # Build docker compose logs command
-    local cmd="docker compose logs"
+    local cmd="docker compose $COMPOSE_FILES logs"
 
     # Add follow flag
     if [ "$FOLLOW" = true ]; then
@@ -111,6 +121,14 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --help)
             show_help
+            ;;
+        --dev)
+            MODE="dev"
+            shift
+            ;;
+        --prod)
+            MODE="prod"
+            shift
             ;;
         -f|--follow)
             FOLLOW=true

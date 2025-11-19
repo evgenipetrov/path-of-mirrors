@@ -12,6 +12,12 @@ set -e
 set -u
 set -o pipefail
 
+# Change to project root
+cd "$(dirname "$0")/.."
+
+# Docker Compose files for development
+COMPOSE_FILES="-f docker-compose.yml -f docker-compose.dev.yml"
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -197,12 +203,12 @@ main() {
     log_success "Your Path of Mirrors development environment is ready!"
     echo ""
     echo "Next steps:"
-    echo -e "  1. Start development: ${BLUE}./scripts/start-dev.sh${NC}"
+    echo -e "  1. Start development: ${BLUE}./scripts/start.sh${NC}"
     echo -e "  2. Run tests:         ${BLUE}./scripts/run-tests.sh${NC}"
-    echo -e "  3. Build production:  ${BLUE}./scripts/build-prod.sh${NC}"
+    echo -e "  3. Build production:  ${BLUE}./scripts/build.sh --prod${NC}"
     echo ""
     log_info "The setup script has stopped all containers."
-    log_info "Use ./scripts/start-dev.sh to start the development environment."
+    log_info "Use ./scripts/start.sh to start the development environment."
     echo ""
 }
 
@@ -224,9 +230,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Change to project root
-cd "$(dirname "$0")/.."
 
 # Docker Compose files for development
-COMPOSE_FILES="-f docker-compose.yml -f docker-compose.dev.yml"
 
 main

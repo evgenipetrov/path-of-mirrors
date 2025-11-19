@@ -7,15 +7,15 @@ Convenient scripts for managing the Path of Mirrors development environment.
 | Script | Purpose | Common Usage |
 |--------|---------|--------------|
 | `setup.sh` | Initial project setup | `./scripts/setup.sh` |
-| `start-dev.sh` | Start dev environment | `./scripts/start-dev.sh` |
-| `stop-dev.sh` | Stop all services | `./scripts/stop-dev.sh` |
-| `restart-dev.sh` | Restart dev environment | `./scripts/restart-dev.sh` |
+| `start.sh` | Start services | `./scripts/start.sh` or `./scripts/start.sh --dev` |
+| `stop.sh` | Stop services | `./scripts/stop.sh` or `./scripts/stop.sh --dev` |
+| `restart.sh` | Restart services | `./scripts/restart.sh` or `./scripts/restart.sh --dev` |
+| `build.sh` | Build Docker images | `./scripts/build.sh --prod` |
 | `run-tests.sh` | Run tests | `./scripts/run-tests.sh` |
 | `check-code.sh` | Run linters | `./scripts/check-code.sh --fix` |
 | `migrate-db.sh` | Database migrations | `./scripts/migrate-db.sh` |
 | `reset-db.sh` | Reset database | `./scripts/reset-db.sh --force` |
 | `view-logs.sh` | View logs | `./scripts/view-logs.sh backend -f` |
-| `build-prod.sh` | Build production artifacts | `./scripts/build-prod.sh` |
 
 ---
 
@@ -47,15 +47,23 @@ Sets up a new development environment from scratch.
 
 ---
 
-### `start-dev.sh` - Start Development Environment
+### `start.sh` - Start Services
 
-Starts the complete development stack with one command.
+Starts services in development or production mode.
 
 ```bash
-./scripts/start-dev.sh
+# Development mode (default) - includes frontend
+./scripts/start.sh
+./scripts/start.sh --dev
+
+# Production mode - backend services only
+./scripts/start.sh --prod
+
+# Rebuild before starting
+./scripts/start.sh --dev --build
 ```
 
-**What it does:**
+**What it does (dev mode):**
 1. Starts Docker services (PostgreSQL, Redis, Backend API)
 2. Waits for health checks to pass (database + cache)
 3. Checks/installs frontend dependencies if needed
@@ -67,44 +75,94 @@ Starts the complete development stack with one command.
 - PostgreSQL 17 (port 5432)
 - Redis 7 (port 6379)
 - FastAPI Backend (port 8000)
-- Vite Frontend (port 5173)
+- Vite Frontend (port 5173) - dev mode only
+
+**Options:**
+- `--dev` - Development mode (default)
+- `--prod` - Production mode
+- `--build` - Rebuild Docker images before starting
 
 **Press Ctrl+C to stop all services cleanly**
 
 ---
 
-### `stop-dev.sh` - Stop All Services
+### `stop.sh` - Stop Services
 
-Stops all running services (Docker + frontend).
+Stops all running services.
 
 ```bash
-./scripts/stop-dev.sh
+# Stop development services (default)
+./scripts/stop.sh
+./scripts/stop.sh --dev
+
+# Stop production services
+./scripts/stop.sh --prod
 ```
 
 **What it does:**
 1. Stops Docker Compose services
-2. Kills any remaining frontend processes
+2. Kills any remaining frontend processes (dev mode)
 3. Cleans up background processes
+
+**Options:**
+- `--dev` - Stop dev services (default)
+- `--prod` - Stop prod services
 
 ---
 
-### `restart-dev.sh` - Restart Development Environment
+### `restart.sh` - Restart Services
 
-Convenience script to stop and restart the entire dev environment.
+Convenience script to stop and restart services.
 
 ```bash
-./scripts/restart-dev.sh
+# Restart development services (default)
+./scripts/restart.sh
+./scripts/restart.sh --dev
+
+# Restart production services
+./scripts/restart.sh --prod
+
+# Restart with rebuild
+./scripts/restart.sh --dev --build
 ```
 
 **What it does:**
-1. Runs `stop-dev.sh` to stop all services
+1. Runs `stop.sh` to stop services
 2. Waits 2 seconds for clean shutdown
-3. Runs `start-dev.sh` to start everything fresh
+3. Runs `start.sh` to start everything fresh
+
+**Options:**
+- `--dev` - Restart dev services (default)
+- `--prod` - Restart prod services
+- `--build` - Rebuild before starting
 
 **Use this when:**
 - Services are stuck or behaving strangely
 - You want a quick "turn it off and on again"
 - Faster than manually stopping and starting
+
+---
+
+### `build.sh` - Build Docker Images
+
+Builds Docker images for development or production.
+
+```bash
+# Build for development (default)
+./scripts/build.sh
+./scripts/build.sh --dev
+
+# Build for production
+./scripts/build.sh --prod
+```
+
+**What it does:**
+1. Builds backend Docker image with appropriate target
+2. Shows build summary
+
+**Options:**
+- `--dev` - Build development image (default)
+- `--prod` - Build production image
 
 ---
 
@@ -238,8 +296,11 @@ Completely resets the database (WARNING: deletes all data).
 View Docker service logs with filtering and follow options.
 
 ```bash
-# View all logs
+# View all logs (dev mode)
 ./scripts/view-logs.sh
+
+# View all logs (prod mode)
+./scripts/view-logs.sh --prod
 
 # View backend logs only
 ./scripts/view-logs.sh backend
@@ -261,44 +322,10 @@ View Docker service logs with filtering and follow options.
 - (no service) - All services
 
 **Options:**
+- `--dev` - Use dev compose files (default)
+- `--prod` - Use prod compose files
 - `-f, --follow` - Follow log output in real-time
 - `-n, --lines NUM` - Show last NUM lines
-
----
-
-### `build-prod.sh` - Build Production Artifacts
-
-Builds production-ready artifacts for deployment.
-
-```bash
-# Full build (with tests and linting)
-./scripts/build-prod.sh
-
-# Build without tests
-./scripts/build-prod.sh --skip-tests
-
-# Build without linting
-./scripts/build-prod.sh --skip-lint
-
-# Fast build (skip both)
-./scripts/build-prod.sh --skip-all
-```
-
-**What it does:**
-1. Runs linters (unless --skip-lint)
-2. Runs tests (unless --skip-tests)
-3. Builds frontend to `frontend/dist/`
-4. Builds backend Docker image with production tag
-5. Shows build summary with artifact sizes
-
-**Options:**
-- `--skip-tests` - Skip running tests
-- `--skip-lint` - Skip running linters
-- `--skip-all` - Skip both tests and linting
-
-**Output:**
-- Frontend: `frontend/dist/` (static files)
-- Backend: `path-of-mirrors-backend:latest` (Docker image)
 
 ---
 
@@ -322,7 +349,7 @@ cd frontend && npm run dev
 
 ```bash
 # Morning: start everything
-./scripts/start-dev.sh
+./scripts/start.sh
 
 # Work on features...
 # Frontend changes auto-reload via HMR
@@ -335,7 +362,7 @@ cd frontend && npm run dev
 ./scripts/check-code.sh --fix
 
 # Evening: stop everything
-# Press Ctrl+C (or run ./scripts/stop-dev.sh)
+# Press Ctrl+C (or run ./scripts/stop.sh)
 ```
 
 ### Database Workflows
@@ -405,35 +432,47 @@ git commit -m "Your message"
 ./scripts/view-logs.sh -n 50
 
 # Restart everything if stuck
-./scripts/restart-dev.sh
+./scripts/restart.sh
 
 # If database is corrupted, reset it
 ./scripts/reset-db.sh --force
 ```
 
-### Production Build
+### Production Build and Deployment
 
 ```bash
-# Build everything (with full checks)
-./scripts/build-prod.sh
+# Build production images
+./scripts/build.sh --prod
 
-# Quick build for testing (skip checks)
-./scripts/build-prod.sh --skip-all
+# Test production backend
+./scripts/start.sh --prod
 
-# Test the frontend build
-cd frontend && npm run preview
+# View production logs
+./scripts/view-logs.sh --prod backend -f
 
-# Test the backend build
-docker run -p 8000:8000 path-of-mirrors-backend:latest
+# Stop production services
+./scripts/stop.sh --prod
 ```
 
 ---
 
 ## Architecture Notes
 
+**Development vs Production Modes:**
+
+All unified scripts (`start.sh`, `stop.sh`, `restart.sh`, `build.sh`, `view-logs.sh`) support `--dev` and `--prod` flags:
+- **`--dev` (default):** Uses `docker-compose.yml` + `docker-compose.dev.yml`
+  - Includes volume mounts for hot-reload
+  - Starts frontend dev server
+  - Development command (uvicorn with --reload)
+- **`--prod`:** Uses `docker-compose.yml` + `docker-compose.prod.yml`
+  - No volume mounts (code baked into image)
+  - Backend only (no frontend)
+  - Production command (gunicorn with workers)
+
 **Why frontend is separate from Docker:**
 
-The frontend runs outside Docker Compose for optimal HMR performance:
+The frontend runs outside Docker Compose in dev mode for optimal HMR performance:
 - ✅ Sub-second hot reload
 - ✅ No Docker volume overhead
 - ✅ Direct file system access
@@ -482,7 +521,7 @@ cd frontend
 rm -rf node_modules package-lock.json
 npm install
 cd ..
-./scripts/start-dev.sh
+./scripts/start.sh
 ```
 
 **Database issues:**
@@ -532,6 +571,7 @@ All scripts follow these conventions:
 3. **Colors:** Green (✅), Red (❌), Yellow (⚠️), Blue (ℹ️)
 4. **Help:** All scripts support `--help`
 5. **Exit codes:** 0 = success, non-zero = failure
+6. **Mode flags:** Unified scripts default to `--dev` if no flag specified
 
 **Adding a new script:**
 
@@ -558,8 +598,8 @@ These scripts are designed to be used in CI/CD pipelines:
 - name: Test
   run: ./scripts/run-tests.sh --coverage
 
-- name: Build
-  run: ./scripts/build-prod.sh --skip-tests
+- name: Build Production
+  run: ./scripts/build.sh --prod
 ```
 
 ---

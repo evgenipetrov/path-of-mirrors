@@ -11,6 +11,9 @@
 #   --frontend    Run frontend linting only
 
 set -e
+
+# Docker Compose files for development
+COMPOSE_FILES="-f docker-compose.yml -f docker-compose.dev.yml"
 set -u
 set -o pipefail
 
