@@ -1,0 +1,156 @@
+/**
+ * Build Display Component
+ *
+ * Shows parsed Path of Building character information and items.
+ */
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import type { PoBParseResponse } from '../types'
+
+interface BuildDisplayProps {
+  build: PoBParseResponse
+}
+
+export function BuildDisplay({ build }: BuildDisplayProps) {
+  const itemCount = build.items ? Object.keys(build.items).length : 0
+
+  return (
+    <div className="space-y-4">
+      {/* Character Info Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {build.name}
+            <Badge variant="outline">{build.game.toUpperCase()}</Badge>
+          </CardTitle>
+          <CardDescription>
+            Level {build.level} {build.ascendancy || build.character_class}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Class</p>
+              <p className="font-medium">{build.character_class}</p>
+            </div>
+            {build.ascendancy && (
+              <div>
+                <p className="text-sm text-muted-foreground">Ascendancy</p>
+                <p className="font-medium">{build.ascendancy}</p>
+              </div>
+            )}
+            {build.league && (
+              <div>
+                <p className="text-sm text-muted-foreground">League</p>
+                <p className="font-medium">{build.league}</p>
+              </div>
+            )}
+            <div>
+              <p className="text-sm text-muted-foreground">Level</p>
+              <p className="font-medium">{build.level}</p>
+            </div>
+          </div>
+
+          {/* Character Stats */}
+          {(build.life || build.energy_shield || build.mana) && (
+            <>
+              <Separator />
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+                {build.life && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Life</p>
+                    <p className="font-medium text-red-500">{build.life.toLocaleString()}</p>
+                  </div>
+                )}
+                {build.energy_shield && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">ES</p>
+                    <p className="font-medium text-blue-500">{build.energy_shield.toLocaleString()}</p>
+                  </div>
+                )}
+                {build.mana && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Mana</p>
+                    <p className="font-medium text-blue-400">{build.mana.toLocaleString()}</p>
+                  </div>
+                )}
+                {build.armour && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Armour</p>
+                    <p className="font-medium">{build.armour.toLocaleString()}</p>
+                  </div>
+                )}
+                {build.evasion && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Evasion</p>
+                    <p className="font-medium">{build.evasion.toLocaleString()}</p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Items Card */}
+      {build.items && itemCount > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Equipped Items</CardTitle>
+            <CardDescription>{itemCount} items equipped</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {Object.entries(build.items).map(([slot, item]) => (
+                <div key={slot} className="rounded-lg border p-3">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-muted-foreground">
+                          {slot}
+                        </span>
+                        <Badge variant={
+                          item.rarity === 'UNIQUE' ? 'default' :
+                          item.rarity === 'RARE' ? 'secondary' :
+                          'outline'
+                        }>
+                          {item.rarity}
+                        </Badge>
+                      </div>
+                      <p className="font-medium">
+                        {item.name || item.base_type}
+                      </p>
+                      {item.name && item.name !== item.base_type && (
+                        <p className="text-sm text-muted-foreground">{item.base_type}</p>
+                      )}
+                      {item.sockets && (
+                        <p className="text-xs text-muted-foreground">Sockets: {item.sockets}</p>
+                      )}
+                    </div>
+                  </div>
+                  {/* Show first 3 mods */}
+                  {item.explicit_mods.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {item.explicit_mods.slice(0, 3).map((mod, idx) => (
+                        <p key={idx} className="text-xs text-muted-foreground">
+                          {mod}
+                        </p>
+                      ))}
+                      {item.explicit_mods.length > 3 && (
+                        <p className="text-xs text-muted-foreground italic">
+                          +{item.explicit_mods.length - 3} more mods
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}

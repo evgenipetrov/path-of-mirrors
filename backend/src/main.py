@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.contexts.placeholder.api.routes import router as notes_router
+from src.contexts.upstream.api.routes import router as pob_router
 from src.infrastructure import (
     RequestLoggingMiddleware,
     check_database_health,
@@ -85,6 +86,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(notes_router)
+app.include_router(pob_router)
 
 
 @app.get("/health", tags=["health"])

@@ -16,6 +16,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedNotesIndexRouteImport } from './routes/_authenticated/notes/index'
+import { Route as AuthenticatedBuildIndexRouteImport } from './routes/_authenticated/build/index'
 import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
 import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
@@ -57,6 +58,11 @@ const AuthenticatedNotesIndexRoute = AuthenticatedNotesIndexRouteImport.update({
   path: '/notes/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBuildIndexRoute = AuthenticatedBuildIndexRouteImport.update({
+  id: '/build/',
+  path: '/build/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSettingsNotificationsRoute =
   AuthenticatedSettingsNotificationsRouteImport.update({
     id: '/notifications',
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/build': typeof AuthenticatedBuildIndexRoute
   '/notes': typeof AuthenticatedNotesIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
 }
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/build': typeof AuthenticatedBuildIndexRoute
   '/notes': typeof AuthenticatedNotesIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
 }
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/_authenticated/build/': typeof AuthenticatedBuildIndexRoute
   '/_authenticated/notes/': typeof AuthenticatedNotesIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
 }
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/display'
     | '/settings/notifications'
+    | '/build'
     | '/notes'
     | '/settings/'
   fileRoutesByTo: FileRoutesByTo
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/display'
     | '/settings/notifications'
+    | '/build'
     | '/notes'
     | '/settings'
   id:
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/display'
     | '/_authenticated/settings/notifications'
+    | '/_authenticated/build/'
     | '/_authenticated/notes/'
     | '/_authenticated/settings/'
   fileRoutesById: FileRoutesById
@@ -215,6 +227,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/build/': {
+      id: '/_authenticated/build/'
+      path: '/build'
+      fullPath: '/build'
+      preLoaderRoute: typeof AuthenticatedBuildIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings/notifications': {
       id: '/_authenticated/settings/notifications'
       path: '/notifications'
@@ -272,12 +291,14 @@ const AuthenticatedSettingsRouteRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedBuildIndexRoute: typeof AuthenticatedBuildIndexRoute
   AuthenticatedNotesIndexRoute: typeof AuthenticatedNotesIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedBuildIndexRoute: AuthenticatedBuildIndexRoute,
   AuthenticatedNotesIndexRoute: AuthenticatedNotesIndexRoute,
 }
 

@@ -74,6 +74,7 @@ class Build(BaseEntity):
         # Metadata
         source: Build source ("pob", "poeninja", "generated")
         pob_code: Raw PoB import code (base64) for stat calculations
+        upstream_data: Raw upstream data (JSONB) for fidelity/re-normalization
         properties: Flexible JSONB for source-specific data
     """
 
@@ -119,6 +120,13 @@ class Build(BaseEntity):
     # This is the long string users paste into Path of Building
     # Enables item swap simulations and upgrade calculations
     pob_code: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
+
+    # Raw upstream data (JSONB) - preserves original data for fidelity
+    # For PoB: stores parsed XML as dict
+    # For poe.ninja: stores complete API response
+    # For generated: stores generation parameters
+    # Enables re-normalization without re-fetching
+    upstream_data: Mapped[dict | None] = mapped_column(JSONB, nullable=True, default=None)
 
     # Additional flexible data (DPS calculations, config options, etc.)
     properties: Mapped[dict | None] = mapped_column(JSONB, nullable=True, default=None)

@@ -255,6 +255,39 @@ class TestBuildMetadata:
         assert build.properties["config"]["enemy_is_boss"] is True
         assert build.properties["cost_estimate"] == 150.5
 
+    @pytest.mark.asyncio
+    async def test_upstream_data_storage(self, db_session: AsyncSession):
+        """Test storing raw upstream data for fidelity."""
+        upstream_pob_data = {
+            "Build": {
+                "className": "Marauder",
+                "ascendClassName": "Juggernaut",
+                "level": "95",
+                "buildName": "RF Jugg",
+            },
+            "Tree": {
+                "activeSpec": "1",
+                "treeVersion": "3_23",
+                "nodes": "12345,23456,34567",
+            },
+        }
+
+        build = Build(
+            game=Game.POE1,
+            name="RF Juggernaut",
+            character_class="Marauder",
+            level=95,
+            source="pob",
+            upstream_data=upstream_pob_data,
+        )
+        db_session.add(build)
+        await db_session.commit()
+        await db_session.refresh(build)
+
+        assert build.upstream_data is not None
+        assert build.upstream_data["Build"]["className"] == "Marauder"
+        assert build.upstream_data["Tree"]["treeVersion"] == "3_23"
+
 
 class TestBuildGameContext:
     """Test game context separation."""
