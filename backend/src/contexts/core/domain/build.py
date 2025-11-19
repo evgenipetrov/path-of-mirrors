@@ -33,17 +33,23 @@ class Build(BaseEntity):
     scraped from poe.ninja, or created by users.
 
     Key Design Decisions:
-        - Items stored as array of item references (UUIDs) or embedded item data
+        - Items stored as JSONB (can be UUIDs or embedded data)
         - Passive tree stored as JSONB (node allocations)
         - Gems stored as JSONB array (skill gems + links)
+        - PoB import code stored for stat delta calculations via PoB binary
         - No direct FK to League (league context via name)
         - Supports both PoE1 and PoE2 with flexible schema
-        - Source tracking (pob, poeninja, user) for provenance
+        - Source tracking (pob, poeninja, generated) for provenance
+
+    Primary Use Case:
+        - Item valuation: Identify which items popular builds need
+        - Upgrade calculations: Use PoB binary to calculate stat deltas
+        - Flip opportunities: Find underpriced items for high-demand builds
+        - Build clustering: Group builds with similar item requirements
 
     Examples:
-        - PoB import: "Level 92 RF Juggernaut"
-        - poe.ninja snapshot: "#1 Necromancer SSF HC"
-        - User build: "Budget SSF Starter"
+        - PoB import: "Level 92 RF Juggernaut" (from pastebin)
+        - poe.ninja snapshot: "#1 Necromancer Affliction HC" (from ladder)
 
     Attributes:
         game: Game context (PoE1 or PoE2)
@@ -66,10 +72,8 @@ class Build(BaseEntity):
         skills: Active skills with gem links
 
         # Metadata
-        source: Build source ("pob", "poeninja", "user")
-        source_url: Original URL if imported
-        author: Build creator (username or account name)
-        notes: User notes or description
+        source: Build source ("pob", "poeninja", "generated")
+        pob_code: Raw PoB import code (base64) for stat calculations
         properties: Flexible JSONB for source-specific data
     """
 
@@ -108,10 +112,13 @@ class Build(BaseEntity):
     skills: Mapped[list[dict] | None] = mapped_column(JSONB, nullable=True, default=None)
 
     # Metadata and provenance
+    # Source: "pob" (imported), "poeninja" (ladder), "generated" (programmatic)
     source: Mapped[str | None] = mapped_column(String(20), nullable=True, default=None)
-    source_url: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
-    author: Mapped[str | None] = mapped_column(String(100), nullable=True, default=None)
-    notes: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
+
+    # PoB import code (base64 string) - critical for stat delta calculations via PoB binary
+    # This is the long string users paste into Path of Building
+    # Enables item swap simulations and upgrade calculations
+    pob_code: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
 
     # Additional flexible data (DPS calculations, config options, etc.)
     properties: Mapped[dict | None] = mapped_column(JSONB, nullable=True, default=None)

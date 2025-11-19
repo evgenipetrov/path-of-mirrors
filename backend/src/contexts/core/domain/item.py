@@ -37,6 +37,7 @@ class Item(BaseEntity):
 
     Key Design Decisions:
         - Modifiers stored as JSONB array (using Modifier.to_dict())
+        - base_type_id links to dat-schema reference data (nullable, enriched later)
         - No FK to Currency - currency context comes from pricing/market data
         - game + name + base_type composite provides natural grouping
         - Flexible enough to handle PoE1 and PoE2 differences
@@ -61,6 +62,11 @@ class Item(BaseEntity):
     rarity: Mapped[str] = mapped_column(String(20))
 
     # Optional fields (with defaults - must come after required fields)
+    # Base type ID from dat-schema/RePoE (e.g., "Metadata/Items/Armours/BodyArmours/BodyStr1")
+    # Nullable because upstream sources don't provide it - enriched from reference data later
+    base_type_id: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, default=None, index=True
+    )
     # "Soul Mantle" or None for non-uniques
     name: Mapped[str | None] = mapped_column(String(200), nullable=True, default=None)
     # ilvl (84, etc.)

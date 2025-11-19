@@ -44,6 +44,25 @@ class TestItemCreation:
         assert item.type_line == "Iron Ring"
         assert item.base_type == "Iron Ring"
         assert item.rarity == ItemRarity.NORMAL
+        assert item.base_type_id is None  # Not enriched yet
+
+    @pytest.mark.asyncio
+    async def test_create_item_with_base_type_id(self, db_session: AsyncSession):
+        """Test creating an item with dat-schema base type ID."""
+        item = Item(
+            game=Game.POE1,
+            name=None,
+            type_line="Vaal Regalia",
+            base_type="Vaal Regalia",
+            base_type_id="Metadata/Items/Armours/BodyArmours/BodyInt3",
+            rarity=ItemRarity.RARE,
+        )
+        db_session.add(item)
+        await db_session.commit()
+        await db_session.refresh(item)
+
+        assert item.base_type_id == "Metadata/Items/Armours/BodyArmours/BodyInt3"
+        assert item.base_type == "Vaal Regalia"
 
     @pytest.mark.asyncio
     async def test_create_unique_item(self, db_session: AsyncSession):
@@ -465,6 +484,45 @@ class TestItemQueries:
         result = await db_session.execute(select(Item).where(Item.name == "Headhunter"))
         headhunters = result.scalars().all()
         assert len(headhunters) == 2
+
+    @pytest.mark.asyncio
+    async def test_query_by_base_type_id(self, db_session: AsyncSession):
+        """Test querying items by base_type_id (uses ix_items_base_type_id)."""
+        base_id = "Metadata/Items/Armours/BodyArmours/BodyInt3"
+        items = [
+            Item(
+                game=Game.POE1,
+                name=None,
+                type_line="Vaal Regalia",
+                base_type="Vaal Regalia",
+                base_type_id=base_id,
+                rarity=ItemRarity.RARE,
+            ),
+            Item(
+                game=Game.POE1,
+                name="Shavronne's Wrappings",
+                type_line="Occultist's Vestment",
+                base_type="Occultist's Vestment",
+                base_type_id="Metadata/Items/Armours/BodyArmours/BodyInt2",
+                rarity=ItemRarity.UNIQUE,
+            ),
+            Item(
+                game=Game.POE1,
+                name=None,
+                type_line="Vaal Regalia",
+                base_type="Vaal Regalia",
+                base_type_id=base_id,
+                rarity=ItemRarity.RARE,
+            ),
+        ]
+        db_session.add_all(items)
+        await db_session.commit()
+
+        result = await db_session.execute(
+            select(Item).where(Item.base_type_id == base_id)
+        )
+        vaal_regalias = result.scalars().all()
+        assert len(vaal_regalias) == 2
 
 
 class TestItemRealExamples:
