@@ -145,7 +145,10 @@ exclude_lines = [
 
 [dependency-groups]
 dev = [
+    "faker>=37.3.0",
     "pre-commit>=4.3.0",
+    "pytest>=8.4.0",
+    "pytest-asyncio>=1.0.0",
 ]
 
 [tool.mypy]
