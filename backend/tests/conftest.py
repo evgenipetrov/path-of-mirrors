@@ -1,16 +1,18 @@
-from collections.abc import Callable, Generator
+from collections.abc import AsyncGenerator, Callable, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+import pytest_asyncio
 from faker import Faker
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 
 from src.infrastructure import settings
+from src.infrastructure.database import Base
 
 # Import the new app (for Notes API and new architecture tests)
 # Old app tests should use src.app.main directly in their own test files
@@ -19,10 +21,10 @@ from src.main import app
 DATABASE_URI = settings.POSTGRES_URI
 # Construct sync prefix from async prefix (replace asyncpg with psycopg2)
 DATABASE_PREFIX = "postgresql+psycopg2://"
+ASYNC_DATABASE_PREFIX = "postgresql+asyncpg://"
 
 sync_engine = create_engine(DATABASE_PREFIX + DATABASE_URI)
 local_session = sessionmaker(autocommit=False, autoflush=False, bind=sync_engine)
-
 
 fake = Faker()
 
@@ -40,6 +42,33 @@ def db() -> Generator[Session, Any, None]:
     session = local_session()
     yield session
     session.close()
+
+
+@pytest_asyncio.fixture
+async def db_session() -> AsyncGenerator[AsyncSession, None]:
+    """Async database session fixture for new architecture tests.
+
+    Creates a fresh engine and session for each test to avoid connection conflicts.
+    Each test gets completely isolated tables (create/drop per test).
+    """
+    # Create fresh engine for this test
+    engine = create_async_engine(ASYNC_DATABASE_PREFIX + DATABASE_URI, echo=False)
+
+    # Create tables
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    # Create session
+    async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+    async with async_session() as session:
+        yield session
+
+    # Cleanup - drop all tables after test
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
+    await engine.dispose()
 
 
 def override_dependency(dependency: Callable[..., Any], mocked_response: Any) -> None:
