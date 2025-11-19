@@ -86,7 +86,7 @@ main() {
     local prereqs_ok=true
 
     check_command "docker" "docker --version" "Docker" || prereqs_ok=false
-    check_command "docker" "docker compose version" "Docker Compose" || prereqs_ok=false
+    check_command "docker" "docker compose $COMPOSE_FILES version" "Docker Compose" || prereqs_ok=false
     check_command "node" "node --version" "Node.js" || prereqs_ok=false
     check_command "npm" "npm --version" "npm" || prereqs_ok=false
 
@@ -112,7 +112,7 @@ main() {
 
     # Build and start Docker services
     log_step "🐳 Building and starting Docker services..."
-    docker compose up -d --build
+    docker compose $COMPOSE_FILES up -d --build
 
     # Wait for PostgreSQL
     log_info "Waiting for PostgreSQL to be ready..."
@@ -121,7 +121,7 @@ main() {
     local attempt=0
 
     while [ $attempt -lt $max_attempts ]; do
-        if docker compose exec -T postgres pg_isready -U postgres > /dev/null 2>&1; then
+        if docker compose $COMPOSE_FILES exec -T postgres pg_isready -U postgres > /dev/null 2>&1; then
             pg_ready=true
             break
         fi
@@ -133,7 +133,7 @@ main() {
         log_success "PostgreSQL ready (port 5432)"
     else
         log_error "PostgreSQL failed to start after ${max_attempts} seconds"
-        log_info "Check logs with: docker compose logs postgres"
+        log_info "Check logs with: docker compose $COMPOSE_FILES logs postgres"
         exit 1
     fi
 
@@ -143,7 +143,7 @@ main() {
     attempt=0
 
     while [ $attempt -lt $max_attempts ]; do
-        if docker compose exec -T redis redis-cli ping > /dev/null 2>&1; then
+        if docker compose $COMPOSE_FILES exec -T redis redis-cli ping > /dev/null 2>&1; then
             redis_ready=true
             break
         fi
@@ -155,7 +155,7 @@ main() {
         log_success "Redis ready (port 6379)"
     else
         log_error "Redis failed to start after ${max_attempts} seconds"
-        log_info "Check logs with: docker compose logs redis"
+        log_info "Check logs with: docker compose $COMPOSE_FILES logs redis"
         exit 1
     fi
 
@@ -165,21 +165,21 @@ main() {
         log_success "Backend API ready (port 8000)"
     else
         log_error "Backend API failed to start"
-        log_info "Check logs with: docker compose logs backend"
+        log_info "Check logs with: docker compose $COMPOSE_FILES logs backend"
         exit 1
     fi
 
     # Run database migrations
     log_step "🗄️  Running database migrations..."
-    docker compose exec -T backend bash -c "cd /app && uv run alembic upgrade head"
+    docker compose $COMPOSE_FILES exec -T backend bash -c "cd /app && uv run alembic upgrade head"
     log_success "Migrations complete"
 
     # Seed sample data (optional)
     if [ "$SKIP_SEED" = false ]; then
         log_info "Checking for seed script..."
-        if docker compose exec -T backend test -f scripts/seed.py; then
+        if docker compose $COMPOSE_FILES exec -T backend test -f scripts/seed.py; then
             log_info "Seeding sample data..."
-            docker compose exec -T backend uv run python scripts/seed.py
+            docker compose $COMPOSE_FILES exec -T backend uv run python scripts/seed.py
             log_success "Sample data seeded"
         else
             log_info "No seed script found (skipping)"
@@ -188,7 +188,7 @@ main() {
 
     # Stop Docker services
     log_step "🛑 Stopping Docker services..."
-    docker compose down
+    docker compose $COMPOSE_FILES down
     log_success "Services stopped"
 
     # Success message
@@ -225,5 +225,8 @@ done
 
 # Change to project root
 cd "$(dirname "$0")/.."
+
+# Docker Compose files for development
+COMPOSE_FILES="-f docker-compose.yml -f docker-compose.dev.yml"
 
 main

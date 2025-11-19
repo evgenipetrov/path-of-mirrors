@@ -64,9 +64,9 @@ main() {
     # Backend linting
     if [ "$RUN_BACKEND" = true ]; then
         # Start backend if not running
-        if ! docker compose ps backend | grep -q "Up" 2>/dev/null; then
+        if ! docker compose $COMPOSE_FILES ps backend | grep -q "Up" 2>/dev/null; then
             log_step "🐳 Starting backend container for linting..."
-            docker compose up -d backend
+            docker compose $COMPOSE_FILES up -d backend
             started_services=true
 
             # Wait for backend to be ready
@@ -80,14 +80,14 @@ main() {
         # Ruff check
         log_step "Backend: ruff check"
         if [ "$AUTO_FIX" = true ]; then
-            if docker compose exec -T backend uv run ruff check --fix src/; then
+            if docker compose $COMPOSE_FILES exec -T backend uv run ruff check --fix src/; then
                 log_success "No issues found (auto-fixed where possible)"
             else
                 log_warning "Some issues could not be auto-fixed"
                 total_issues=$((total_issues + 1))
             fi
         else
-            if docker compose exec -T backend uv run ruff check src/; then
+            if docker compose $COMPOSE_FILES exec -T backend uv run ruff check src/; then
                 log_success "No issues found"
             else
                 log_error "Linting issues found"
@@ -99,10 +99,10 @@ main() {
         # Ruff format
         log_step "Backend: ruff format"
         if [ "$AUTO_FIX" = true ]; then
-            docker compose exec -T backend uv run ruff format src/
+            docker compose $COMPOSE_FILES exec -T backend uv run ruff format src/
             log_success "Code formatted"
         else
-            if docker compose exec -T backend uv run ruff format --check src/; then
+            if docker compose $COMPOSE_FILES exec -T backend uv run ruff format --check src/; then
                 log_success "Code is properly formatted"
             else
                 log_error "Code formatting issues found"
@@ -114,7 +114,7 @@ main() {
 
         # MyPy type checking
         log_step "Backend: mypy type checking"
-        if docker compose exec -T backend bash -c "cd src && uv run mypy . --ignore-missing-imports"; then
+        if docker compose $COMPOSE_FILES exec -T backend bash -c "cd src && uv run mypy . --ignore-missing-imports"; then
             log_success "Type checking passed"
         else
             log_error "Type errors found"
@@ -167,7 +167,7 @@ main() {
     # Cleanup - stop services if we started them
     if [ "$started_services" = true ]; then
         log_step "🛑 Stopping services..."
-        docker compose down
+        docker compose $COMPOSE_FILES down
         log_success "Services stopped"
     fi
 

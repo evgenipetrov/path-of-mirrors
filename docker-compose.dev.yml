@@ -1,0 +1,19 @@
+# Development overrides for docker-compose.yml
+#
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# This file adds development-friendly volume mounts so that changes to dependencies,
+# migrations, and tests sync automatically between host and container.
+
+services:
+  backend:
+    volumes:
+      # Override: mount additional development files
+      - ./backend/src:/app/src
+      - ./backend/pyproject.toml:/app/pyproject.toml
+      - ./backend/uv.lock:/app/uv.lock
+      - ./backend/alembic:/app/alembic
+      - ./backend/alembic.ini:/app/alembic.ini
+      - ./backend/tests:/app/tests
+    # Development command with hot reload
+    command: ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/src"]

@@ -74,7 +74,7 @@ main() {
 
     # Stop services
     log_step "🛑 Stopping services..."
-    docker compose down
+    docker compose $COMPOSE_FILES down
     log_success "Services stopped"
 
     # Remove database volume
@@ -84,7 +84,7 @@ main() {
 
     # Start services with fresh build
     log_step "🚀 Building and starting services..."
-    docker compose up -d --build
+    docker compose $COMPOSE_FILES up -d --build
 
     # Wait for PostgreSQL
     log_info "Waiting for PostgreSQL to be ready..."
@@ -93,7 +93,7 @@ main() {
     local attempt=0
 
     while [ $attempt -lt $max_attempts ]; do
-        if docker compose exec -T postgres pg_isready -U postgres > /dev/null 2>&1; then
+        if docker compose $COMPOSE_FILES exec -T postgres pg_isready -U postgres > /dev/null 2>&1; then
             pg_ready=true
             break
         fi
@@ -105,7 +105,7 @@ main() {
         log_success "PostgreSQL ready"
     else
         log_error "PostgreSQL failed to start after ${max_attempts} seconds"
-        log_info "Check logs with: docker compose logs postgres"
+        log_info "Check logs with: docker compose $COMPOSE_FILES logs postgres"
         exit 1
     fi
 
@@ -129,20 +129,20 @@ main() {
         log_success "Old migrations removed"
 
         log_step "📝 Generating fresh migration..."
-        docker compose exec -T backend bash -c "cd /app && uv run alembic revision --autogenerate -m 'initial schema'"
+        docker compose $COMPOSE_FILES exec -T backend bash -c "cd /app && uv run alembic revision --autogenerate -m 'initial schema'"
         log_success "Fresh migration generated"
     fi
 
     # Run migrations
     log_step "🗄️  Running database migrations..."
-    docker compose exec -T backend bash -c "cd /app && uv run alembic upgrade head"
+    docker compose $COMPOSE_FILES exec -T backend bash -c "cd /app && uv run alembic upgrade head"
     log_success "Migrations complete"
 
     # Seed data if requested
     if [ "$SEED" = true ]; then
         log_step "🌱 Seeding sample data..."
-        if docker compose exec -T backend test -f scripts/seed.py; then
-            docker compose exec -T backend uv run python scripts/seed.py
+        if docker compose $COMPOSE_FILES exec -T backend test -f scripts/seed.py; then
+            docker compose $COMPOSE_FILES exec -T backend uv run python scripts/seed.py
             log_success "Sample data seeded"
         else
             log_warning "No seed script found at scripts/seed.py (skipping)"

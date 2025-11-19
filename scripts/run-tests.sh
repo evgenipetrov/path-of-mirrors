@@ -66,9 +66,9 @@ main() {
     # Run backend tests
     if [ "$RUN_BACKEND" = true ]; then
         # Start backend if not running
-        if ! docker compose ps backend | grep -q "Up" 2>/dev/null; then
+        if ! docker compose $COMPOSE_FILES ps backend | grep -q "Up" 2>/dev/null; then
             log_step "🐳 Starting services for testing..."
-            docker compose up -d
+            docker compose $COMPOSE_FILES up -d
             started_services=true
 
             # Wait for services to be ready
@@ -79,7 +79,7 @@ main() {
             local max_attempts=30
             local attempt=0
             while [ $attempt -lt $max_attempts ]; do
-                if docker compose exec -T postgres pg_isready -U postgres > /dev/null 2>&1; then
+                if docker compose $COMPOSE_FILES exec -T postgres pg_isready -U postgres > /dev/null 2>&1; then
                     break
                 fi
                 attempt=$((attempt + 1))
@@ -92,7 +92,7 @@ main() {
 
         if [ "$WITH_COVERAGE" = true ]; then
             log_info "Running with coverage report..."
-            if docker compose exec -T backend uv run --extra dev pytest --cov=src --cov-report=term-missing tests/; then
+            if docker compose $COMPOSE_FILES exec -T backend uv run --extra dev pytest --cov=src --cov-report=term-missing tests/; then
                 backend_result=$?
                 log_success "Backend tests passed with coverage"
             else
@@ -100,10 +100,10 @@ main() {
                 log_error "Backend tests failed"
             fi
         else
-            if docker compose exec -T backend uv run --extra dev pytest tests/ -v; then
+            if docker compose $COMPOSE_FILES exec -T backend uv run --extra dev pytest tests/ -v; then
                 backend_result=$?
                 # Extract test count from pytest output
-                backend_passed=$(docker compose exec -T backend uv run --extra dev pytest tests/ --co -q 2>/dev/null | wc -l || echo "0")
+                backend_passed=$(docker compose $COMPOSE_FILES exec -T backend uv run --extra dev pytest tests/ --co -q 2>/dev/null | wc -l || echo "0")
                 log_success "Backend tests passed"
             else
                 backend_result=$?
@@ -164,7 +164,7 @@ main() {
     # Cleanup - stop services if we started them
     if [ "$started_services" = true ]; then
         log_step "🛑 Stopping services..."
-        docker compose down
+        docker compose $COMPOSE_FILES down
         log_success "Services stopped"
     fi
 
