@@ -45,8 +45,8 @@ export const sidebarData: SidebarData = {
       title: 'Explore',
       items: [
         {
-          title: 'Builds',
-          url: '/builds',
+          title: 'Meta',
+          url: '/meta',
           icon: Compass,
         },
         {

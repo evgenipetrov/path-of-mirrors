@@ -10,9 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as MetaRouteImport } from './routes/meta'
 import { Route as EconomyRouteImport } from './routes/economy'
 import { Route as CatalogRouteImport } from './routes/catalog'
-import { Route as BuildsRouteImport } from './routes/builds'
 import { Route as AnalysisRouteImport } from './routes/analysis'
 import { Route as R500RouteImport } from './routes/500'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -31,6 +31,11 @@ const SignInRoute = SignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MetaRoute = MetaRouteImport.update({
+  id: '/meta',
+  path: '/meta',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EconomyRoute = EconomyRouteImport.update({
   id: '/economy',
   path: '/economy',
@@ -39,11 +44,6 @@ const EconomyRoute = EconomyRouteImport.update({
 const CatalogRoute = CatalogRouteImport.update({
   id: '/catalog',
   path: '/catalog',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BuildsRoute = BuildsRouteImport.update({
-  id: '/builds',
-  path: '/builds',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnalysisRoute = AnalysisRouteImport.update({
@@ -115,9 +115,9 @@ const AuthenticatedSettingsAccountRoute =
 export interface FileRoutesByFullPath {
   '/500': typeof R500Route
   '/analysis': typeof AnalysisRoute
-  '/builds': typeof BuildsRoute
   '/catalog': typeof CatalogRoute
   '/economy': typeof EconomyRoute
+  '/meta': typeof MetaRoute
   '/sign-in': typeof SignInRoute
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/': typeof AuthenticatedIndexRoute
@@ -132,9 +132,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/500': typeof R500Route
   '/analysis': typeof AnalysisRoute
-  '/builds': typeof BuildsRoute
   '/catalog': typeof CatalogRoute
   '/economy': typeof EconomyRoute
+  '/meta': typeof MetaRoute
   '/sign-in': typeof SignInRoute
   '/': typeof AuthenticatedIndexRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -150,9 +150,9 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/500': typeof R500Route
   '/analysis': typeof AnalysisRoute
-  '/builds': typeof BuildsRoute
   '/catalog': typeof CatalogRoute
   '/economy': typeof EconomyRoute
+  '/meta': typeof MetaRoute
   '/sign-in': typeof SignInRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -169,9 +169,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/500'
     | '/analysis'
-    | '/builds'
     | '/catalog'
     | '/economy'
+    | '/meta'
     | '/sign-in'
     | '/settings'
     | '/'
@@ -186,9 +186,9 @@ export interface FileRouteTypes {
   to:
     | '/500'
     | '/analysis'
-    | '/builds'
     | '/catalog'
     | '/economy'
+    | '/meta'
     | '/sign-in'
     | '/'
     | '/settings/account'
@@ -203,9 +203,9 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/500'
     | '/analysis'
-    | '/builds'
     | '/catalog'
     | '/economy'
+    | '/meta'
     | '/sign-in'
     | '/_authenticated/settings'
     | '/_authenticated/'
@@ -222,9 +222,9 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   R500Route: typeof R500Route
   AnalysisRoute: typeof AnalysisRoute
-  BuildsRoute: typeof BuildsRoute
   CatalogRoute: typeof CatalogRoute
   EconomyRoute: typeof EconomyRoute
+  MetaRoute: typeof MetaRoute
   SignInRoute: typeof SignInRoute
 }
 
@@ -235,6 +235,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meta': {
+      id: '/meta'
+      path: '/meta'
+      fullPath: '/meta'
+      preLoaderRoute: typeof MetaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/economy': {
@@ -249,13 +256,6 @@ declare module '@tanstack/react-router' {
       path: '/catalog'
       fullPath: '/catalog'
       preLoaderRoute: typeof CatalogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/builds': {
-      id: '/builds'
-      path: '/builds'
-      fullPath: '/builds'
-      preLoaderRoute: typeof BuildsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/analysis': {
@@ -389,9 +389,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   R500Route: R500Route,
   AnalysisRoute: AnalysisRoute,
-  BuildsRoute: BuildsRoute,
   CatalogRoute: CatalogRoute,
   EconomyRoute: EconomyRoute,
+  MetaRoute: MetaRoute,
   SignInRoute: SignInRoute,
 }
 export const routeTree = rootRouteImport
