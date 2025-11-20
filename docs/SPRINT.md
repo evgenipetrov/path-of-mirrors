@@ -92,6 +92,14 @@ Planned route wiring is not yet created under `frontend/src/routes`; hook up a r
 
 ## Sprint Backlog
 
+### New Workstream: PoB headless integration (PoE1 + PoE2)
+- Build PoB headless runner using the Lua bridge (see `_samples/code/path-of-mirrors_v0.4`) to retrieve derived stats (EHP, resists, ES, main-skill DPS, block, etc.).
+- Package LuaJIT + PoB binaries into `/bin/` (or configure via `POB_CLI_POE1` / `POB_CLI_POE2` env vars); document install/build steps.
+- Extend `/api/v1/builds/parse` to call the runner and return `derived_stats` + `main_skill`; cache in Redis session.
+- Update `/api/v1/builds/analyze` to use derived stats for default weights when none are provided.
+- Add integration tests with PoE1/PoE2 sample PoB files (store fixtures under `_samples/data/...`) and skip gracefully when binaries are absent.
+- Frontend: after parse, surface derived stats and pre-fill upgrade/analysis filters with generated weights.
+
 ### Phase 1: Backend Core (Days 1-3)
 
 #### Task 1.1: PoB Parser Service ⚙️
