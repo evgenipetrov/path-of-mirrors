@@ -124,6 +124,10 @@ class PoBParseResponse(BaseModel):
 
     # Metadata
     source: str = "pob"
+    derived_stats: dict | None = Field(
+        default=None,
+        description="Optional stats derived from headless PoB (EHP, resists, DPS, etc.)",
+    )
 
     model_config = ConfigDict(
         json_schema_extra={

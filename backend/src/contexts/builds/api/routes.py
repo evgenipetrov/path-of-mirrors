@@ -22,6 +22,7 @@ from src.contexts.builds.domain.schemas import (
     PoBParseResponse,
 )
 from src.contexts.builds.services.pob import parse_pob_code, parse_pob_xml
+from src.contexts.upstream.services.pob_runner import run_pob
 from src.infrastructure import create_session, get_session
 
 logger = structlog.get_logger(__name__)
@@ -72,6 +73,9 @@ async def parse_build(request: PoBParseRequest) -> PoBParseResponse:
         else:
             build = parse_pob_xml(request.pob_xml, request.game)  # type: ignore
 
+        # Optionally derive stats via headless PoB CLI (graceful fallback)
+        derived_stats = run_pob(request.pob_xml or "", request.game) if (request.pob_xml or request.pob_code) else {}
+
         # Store build in Redis session
         session_data = {
             "build": {
@@ -92,6 +96,7 @@ async def parse_build(request: PoBParseRequest) -> PoBParseResponse:
                 "source": build.source or "pob",
             },
             "pob_code": request.pob_code,  # Store for future re-parsing if needed
+            "derived_stats": derived_stats or None,
         }
 
         session_id = await create_session(session_data)
@@ -114,6 +119,7 @@ async def parse_build(request: PoBParseRequest) -> PoBParseResponse:
             passive_tree=build.passive_tree,
             skills=build.skills,
             source=build.source or "pob",
+            derived_stats=derived_stats or None,
         )
 
         logger.info(
