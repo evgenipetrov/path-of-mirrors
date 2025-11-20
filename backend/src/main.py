@@ -8,8 +8,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.contexts.analysis.api.routes import router as analysis_router
+from src.contexts.builds.api.routes import router as builds_router
+from src.contexts.catalog.api.routes import router as catalog_router
+from src.contexts.economy.api.routes import router as economy_router
 from src.contexts.placeholder.api.routes import router as notes_router
-from src.contexts.upstream.api.routes import router as pob_router
+from src.contexts.upstream.api.routes import router as upstream_router
 from src.infrastructure import (
     RequestLoggingMiddleware,
     check_database_health,
@@ -86,7 +90,11 @@ app.add_middleware(
 
 # Include routers
 app.include_router(notes_router)
-app.include_router(pob_router)
+app.include_router(upstream_router)
+app.include_router(catalog_router)
+app.include_router(economy_router)
+app.include_router(builds_router)
+app.include_router(analysis_router)
 
 
 @app.get("/health", tags=["health"])

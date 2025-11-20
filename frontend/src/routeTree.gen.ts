@@ -10,6 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as EconomyRouteImport } from './routes/economy'
+import { Route as CatalogRouteImport } from './routes/catalog'
+import { Route as BuildsRouteImport } from './routes/builds'
+import { Route as AnalysisRouteImport } from './routes/analysis'
 import { Route as R500RouteImport } from './routes/500'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
@@ -25,6 +29,26 @@ import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_auth
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EconomyRoute = EconomyRouteImport.update({
+  id: '/economy',
+  path: '/economy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CatalogRoute = CatalogRouteImport.update({
+  id: '/catalog',
+  path: '/catalog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BuildsRoute = BuildsRouteImport.update({
+  id: '/builds',
+  path: '/builds',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalysisRoute = AnalysisRouteImport.update({
+  id: '/analysis',
+  path: '/analysis',
   getParentRoute: () => rootRouteImport,
 } as any)
 const R500Route = R500RouteImport.update({
@@ -90,6 +114,10 @@ const AuthenticatedSettingsAccountRoute =
 
 export interface FileRoutesByFullPath {
   '/500': typeof R500Route
+  '/analysis': typeof AnalysisRoute
+  '/builds': typeof BuildsRoute
+  '/catalog': typeof CatalogRoute
+  '/economy': typeof EconomyRoute
   '/sign-in': typeof SignInRoute
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/': typeof AuthenticatedIndexRoute
@@ -103,6 +131,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/500': typeof R500Route
+  '/analysis': typeof AnalysisRoute
+  '/builds': typeof BuildsRoute
+  '/catalog': typeof CatalogRoute
+  '/economy': typeof EconomyRoute
   '/sign-in': typeof SignInRoute
   '/': typeof AuthenticatedIndexRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -117,6 +149,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/500': typeof R500Route
+  '/analysis': typeof AnalysisRoute
+  '/builds': typeof BuildsRoute
+  '/catalog': typeof CatalogRoute
+  '/economy': typeof EconomyRoute
   '/sign-in': typeof SignInRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -132,6 +168,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/500'
+    | '/analysis'
+    | '/builds'
+    | '/catalog'
+    | '/economy'
     | '/sign-in'
     | '/settings'
     | '/'
@@ -145,6 +185,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/500'
+    | '/analysis'
+    | '/builds'
+    | '/catalog'
+    | '/economy'
     | '/sign-in'
     | '/'
     | '/settings/account'
@@ -158,6 +202,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/500'
+    | '/analysis'
+    | '/builds'
+    | '/catalog'
+    | '/economy'
     | '/sign-in'
     | '/_authenticated/settings'
     | '/_authenticated/'
@@ -173,6 +221,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   R500Route: typeof R500Route
+  AnalysisRoute: typeof AnalysisRoute
+  BuildsRoute: typeof BuildsRoute
+  CatalogRoute: typeof CatalogRoute
+  EconomyRoute: typeof EconomyRoute
   SignInRoute: typeof SignInRoute
 }
 
@@ -183,6 +235,34 @@ declare module '@tanstack/react-router' {
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/economy': {
+      id: '/economy'
+      path: '/economy'
+      fullPath: '/economy'
+      preLoaderRoute: typeof EconomyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/catalog': {
+      id: '/catalog'
+      path: '/catalog'
+      fullPath: '/catalog'
+      preLoaderRoute: typeof CatalogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/builds': {
+      id: '/builds'
+      path: '/builds'
+      fullPath: '/builds'
+      preLoaderRoute: typeof BuildsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analysis': {
+      id: '/analysis'
+      path: '/analysis'
+      fullPath: '/analysis'
+      preLoaderRoute: typeof AnalysisRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/500': {
@@ -308,6 +388,10 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   R500Route: R500Route,
+  AnalysisRoute: AnalysisRoute,
+  BuildsRoute: BuildsRoute,
+  CatalogRoute: CatalogRoute,
+  EconomyRoute: EconomyRoute,
   SignInRoute: SignInRoute,
 }
 export const routeTree = rootRouteImport

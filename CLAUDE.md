@@ -2,284 +2,379 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Context
+## Overview
 
-Path of Mirrors is a full-stack economic intelligence platform for Path of Exile 1 and Path of Exile 2, built as a modular monolith with hexagonal architecture.
+Path of Mirrors is a full-stack economic intelligence platform for Path of Exile 1 and PoE 2, built with FastAPI (backend) and React (frontend) using a **hexagonal architecture** pattern. The project is organized around **bounded contexts** (feature modules) with clean separation between domain logic and infrastructure.
 
-**Stack:**
-- Backend: FastAPI + SQLAlchemy 2.0 (async) + PostgreSQL 17 + Redis
-- Frontend: React 19 + TypeScript + Vite + TanStack Router/Query/Table + shadcn/ui + Tailwind CSS
-- Package Management: `uv` (Python), `npm` (Node)
-- Infrastructure: Docker Compose
+## Tech Stack
+
+**Backend:**
+- FastAPI + SQLAlchemy 2.0 (async) + PostgreSQL 17 + Redis
+- Python 3.12+, package manager: `uv`
+- Alembic for migrations
+- structlog for JSON logging
+
+**Frontend:**
+- React 19 + Vite + TypeScript
+- TanStack Router (file-based routing)
+- TanStack Query (server state) + TanStack Table (dense data grids)
+- shadcn/ui + Tailwind CSS
+- orval (auto-generates TypeScript API client from OpenAPI)
+
+**Infrastructure:**
+- Docker Compose for local development
+- Development: Backend in Docker, frontend runs native (optimal HMR)
 
 ## Essential Commands
 
-### Development Environment
 ```bash
-# Start backend services (Postgres + Redis + FastAPI in Docker)
-docker compose up -d
+# First-time setup (installs deps, starts Docker services, runs migrations)
+./scripts/setup-project.sh
 
-# Start frontend dev server (run in frontend/)
-cd frontend && npm run dev
+# Daily development (starts PostgreSQL, Redis, Backend, and Frontend with HMR)
+./scripts/start-services.sh --dev
 
-# Access:
-# - Frontend: http://localhost:5173
-# - Backend API: http://localhost:8000
-# - API Docs: http://localhost:8000/docs
-```
+# Stop all services
+./scripts/stop-services.sh --dev  # or just Ctrl+C
 
-### Backend Development
-```bash
-# CRITICAL: Always use 'uv run' for Python commands
-uv run pytest                           # Run all tests
-uv run pytest tests/path/to/test.py     # Run specific test
-uv run pytest -k "test_pattern"         # Run tests matching pattern
-uv run pytest --cov=src                 # Run with coverage
+# Run tests
+./scripts/run-tests.sh              # All tests
+./scripts/run-tests.sh --backend    # Backend only (pytest)
+./scripts/run-tests.sh --frontend   # Frontend only (vitest)
+
+# Code quality
+./scripts/check-code.sh --fix       # Auto-fix linting/formatting (ruff + mypy + eslint)
 
 # Database migrations
-uv run alembic revision --autogenerate -m "description"  # Create migration
-uv run alembic upgrade head             # Apply migrations
-uv run alembic downgrade -1             # Rollback one migration
+./scripts/migrate-db.sh create "description"  # Create migration
+./scripts/migrate-db.sh                       # Apply migrations
+./scripts/migrate-db.sh rollback              # Rollback one migration
+./scripts/reset-db.sh --force                 # Nuclear option (deletes all data)
 
-# Linting and formatting
-uv run ruff check src tests             # Check code
-uv run ruff check --fix src tests       # Auto-fix issues
-uv run mypy src                         # Type checking
+# API client regeneration (after backend schema changes)
+./scripts/generate-api.sh
 
-# Running scripts (e.g., data collection)
-uv run python scripts/collect_poeninja_samples.py --game poe1
+# View logs
+./scripts/view-logs.sh backend -f   # Follow backend logs
+./scripts/view-logs.sh backend -n 100  # Last 100 lines
+
+# Production build
+./scripts/build-images.sh --prod
 ```
 
-### Frontend Development
-```bash
-cd frontend
+## Project Structure
 
-npm run dev                # Dev server with HMR
-npm run build              # Production build
-npm run preview            # Preview production build
-npm run lint               # ESLint check
-npm run format             # Prettier format
-npm run test               # Run Vitest unit tests
-npm run test:watch         # Vitest watch mode
-npm run test:e2e           # Playwright E2E tests
+**Backend bounded contexts (hexagonal architecture):**
+```
+backend/src/
+├── contexts/              # Bounded contexts (feature modules)
+│   ├── catalog/          # Static game data (items, modifiers, recipes)
+│   ├── economy/          # Market data (prices, trends, currencies)
+│   ├── builds/           # User build data (PoB imports, item sets)
+│   ├── analysis/         # Computed/ephemeral (valuations, deal finder, craft sims)
+│   ├── upstream/         # Legacy data ingestion (migrating to economy)
+│   └── placeholder/      # Phase 0 demo (notes CRUD, will be removed)
+├── infrastructure/       # Cross-cutting concerns
+│   ├── database.py       # SQLAlchemy async session management
+│   ├── cache.py          # Redis client
+│   ├── logging.py        # structlog setup
+│   ├── health.py         # Health check endpoints
+│   └── middleware.py     # Request logging middleware
+├── shared/               # Shared domain (Game enum, etc.)
+└── main.py              # FastAPI app entrypoint
 ```
 
-### Docker Operations
-```bash
-docker compose logs -f backend          # Follow backend logs
-docker compose exec backend bash        # Shell into backend container
-docker compose down                     # Stop services
-docker compose down -v                  # Stop and remove volumes (fresh DB)
+**Each context follows hexagonal pattern:**
+```
+contexts/{context_name}/
+├── domain/              # Business entities (SQLAlchemy models, Pydantic schemas)
+├── ports/               # Repository protocols (interfaces)
+├── adapters/            # Concrete implementations (Postgres repos, external API clients)
+├── services/            # Application services (orchestration)
+└── api/                 # FastAPI routes
 ```
 
-## Architecture Overview
+**Frontend structure:**
+```
+frontend/src/
+├── routes/              # File-based routes (TanStack Router)
+├── features/            # Feature modules (catalog, economy, builds, analysis)
+├── components/
+│   ├── ui/             # shadcn/ui components (copied, customizable)
+│   └── tables/         # TanStack Table wrappers
+├── hooks/
+│   ├── api/            # Auto-generated TanStack Query hooks (from orval)
+│   └── useGameContext.tsx
+└── lib/
+    ├── api-client.ts   # Axios instance
+    └── utils.ts
+```
+
+## Architectural Principles
 
 ### Hexagonal Architecture (Ports & Adapters)
 
-Every bounded context follows this structure:
+**Dependency direction:** Outer layers depend on inner layers, never reverse.
+
 ```
-contexts/{context_name}/
-├── domain/             # Business logic (models, enums, value objects)
-│   ├── models.py       # SQLAlchemy models (MappedAsDataclass)
-│   └── schemas.py      # Pydantic schemas for API
-├── ports/              # Interfaces (repository protocols)
-│   └── repository.py   # Abstract repository interface
-├── adapters/           # Infrastructure implementations
-│   └── postgres_repository.py  # Concrete SQLAlchemy repository
-├── services/           # Application/domain services (orchestration)
-│   └── {name}_service.py
-└── api/                # FastAPI routes
-    └── routes.py       # HTTP layer
+API Layer (FastAPI routes)
+    ↓ depends on
+Service Layer (business logic orchestration)
+    ↓ depends on
+Ports (repository protocols, provider interfaces)
+    ↑ implemented by
+Adapters (PostgreSQL repos, PoE1/PoE2 providers, external APIs)
+    ↓ uses
+Domain Models (entities, shared concepts)
 ```
 
-**Key principles:**
-- Domain models are SQLAlchemy 2.0 `MappedAsDataclass` (no `__init__`, use class attributes)
-- Repositories use Protocol-based interfaces (duck typing)
-- Services orchestrate domain logic, never called from routes directly
-- API routes only handle HTTP concerns (request/response), delegate to services
-- Dependencies flow: API → Services → Repositories → Domain
+**Key patterns:**
+- **Protocols over inheritance:** Use `typing.Protocol` for repository interfaces
+- **Factory pattern:** `get_provider(game: Game) -> BaseProvider` for game-specific logic
+- **No cross-context imports:** Contexts reference each other by natural keys/slugs, not database FKs
+- **Pragmatic compromise:** SQLAlchemy models ARE the domain models (not pure DDD)
 
 ### Game Abstraction Layer
 
-The provider pattern enables PoE1/PoE2 dual support:
-```
-contexts/upstream/
-├── ports/
-│   └── provider.py              # BaseProvider Protocol
-└── adapters/
-    ├── provider_factory.py      # get_provider(game) -> BaseProvider
-    ├── poe1_provider.py         # PoE1 implementation
-    └── poe2_provider.py         # PoE2 implementation
-```
+Both PoE1 and PoE2 are supported via **provider pattern**:
 
-**Usage:**
 ```python
 from src.contexts.upstream.adapters import get_provider
 from src.shared import Game
 
-provider = get_provider(Game.POE1)  # Returns PoE1Provider
+# Get game-specific implementation
+provider = get_provider(Game.POE1)  # Returns PoE1Provider or PoE2Provider
 leagues = await provider.get_active_leagues()
+data = await provider.fetch_economy_snapshot("Settlers", "Currency")
 ```
 
-### Database Patterns
+Frontend uses `useGameContext()` hook for global game state.
 
-**SQLAlchemy 2.0 async models (MappedAsDataclass):**
-```python
-from sqlalchemy.orm import Mapped, mapped_column, MappedAsDataclass
-from src.infrastructure.database import Base
+### Bounded Context Rules
 
-class Note(Base, MappedAsDataclass):
-    __tablename__ = "notes"
+1. **Resource-oriented design:** Contexts expose stable resources (`/items`, `/prices`, `/builds`), not user journeys
+2. **Contexts don't import each other** (except via `shared/`)
+3. **Cross-context linking:** Use natural keys (slugs) or stable UUIDs, never database FKs
+4. **Contexts own their data:** Economy owns prices, Catalog owns items, Builds owns user data
+5. **Analysis context is stateless:** Computes on-demand, caches in Redis
 
-    id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid7)
-    title: Mapped[str]
-    content: Mapped[str | None] = mapped_column(default=None)
-    game_context: Mapped[str] = mapped_column(index=True)
+## Development Workflow
+
+### Adding a New Feature (Backend)
+
+1. Identify the appropriate bounded context (or create new one)
+2. Define domain models in `domain/models.py` (SQLAlchemy + Pydantic schemas)
+3. Create repository protocol in `ports/repository.py`
+4. Implement adapter in `adapters/postgres_repository.py`
+5. Add service layer in `services/` for business logic
+6. Create API routes in `api/routes.py`
+7. Generate migration: `./scripts/migrate-db.sh create "add feature"`
+8. Apply migration: `./scripts/migrate-db.sh`
+9. Run tests: `./scripts/run-tests.sh --backend`
+
+### Adding a New Feature (Frontend)
+
+1. Create or update route in `src/routes/` (TanStack Router file-based)
+2. Add feature components in `src/features/{context}/`
+3. Use auto-generated API hooks from `src/hooks/api/`
+4. If backend schema changed: `./scripts/generate-api.sh` to regenerate hooks
+5. Leverage `useGameContext()` for game-specific filtering
+6. Run tests: `./scripts/run-tests.sh --frontend`
+
+### Database Migrations
+
+**Creating migrations:**
+```bash
+# 1. Edit models in backend/src/contexts/{context}/domain/models.py
+# 2. Generate migration
+./scripts/migrate-db.sh create "add user preferences table"
+# 3. Review migration in backend/alembic/versions/
+# 4. Apply migration
+./scripts/migrate-db.sh
 ```
 
-**Repository pattern:**
+**Troubleshooting:**
+- Rollback: `./scripts/migrate-db.sh rollback`
+- Check status: `./scripts/migrate-db.sh current`
+- Nuclear reset: `./scripts/reset-db.sh --force`
+
+### Testing
+
+**Backend (pytest):**
+- Tests mirror `src/` structure in `tests/`
+- Use fixtures for database session, mock repositories
+- Mock external APIs (poe.ninja, trade API)
+- Run in Docker: `./scripts/run-tests.sh --backend`
+
+**Frontend (vitest + Playwright):**
+- Unit tests: `*.test.ts[x]` files, run with `./scripts/run-tests.sh --frontend`
+- E2E tests: Playwright in `frontend/e2e/`
+- Component tests use React Testing Library
+
+**Coverage target:** ≥70% for domain/service layers
+
+## Code Style
+
+**Python:**
+- Line length: 100 characters
+- Formatter: ruff format
+- Linter: ruff check + mypy type checking
+- Type hints required for all function signatures
+- Async functions for all I/O operations
+- Auto-fix: `./scripts/check-code.sh --fix`
+
+**TypeScript/React:**
+- Functional components with hooks (no class components)
+- Props defined with `type`, not `interface`
+- Filename conventions: `ComponentName.tsx`, `useSomething.ts`
+- Use auto-generated API hooks from `orval`
+- ESLint + Prettier enforced
+
+## API Design
+
+**Conventions:**
+- Version prefix: `/api/v1/{context}/...`
+- Pagination: `?limit=50&offset=0`
+- Filtering: `?game=poe1&league=settlers`
+- Sorting: `?sort=-price` (descending)
+- Errors follow RFC 7807 (problem details)
+
+**Health checks:**
+- `GET /health` - Liveness probe
+- `GET /ready` - Readiness probe (checks DB + Redis)
+
+**Auto-generated OpenAPI:**
+- Spec available at: `http://localhost:8000/openapi.json`
+- Interactive docs: `http://localhost:8000/docs`
+
+## Common Patterns
+
+### Structured Logging
+
 ```python
-# Port (protocol)
-class NoteRepository(Protocol):
-    async def create(self, note: Note) -> Note: ...
-    async def get_by_id(self, note_id: UUID) -> Note | None: ...
+from src.infrastructure import get_logger
+
+logger = get_logger(__name__)
+
+logger.info(
+    "market_snapshot_fetched",
+    game="poe1",
+    league="Settlers",
+    item_count=1234,
+    duration_ms=456
+)
+```
+
+### Game Context (Frontend)
+
+```typescript
+import { useGameContext } from '@/hooks/useGameContext';
+
+function MyComponent() {
+  const { game, setGame } = useGameContext();  // 'poe1' | 'poe2'
+
+  // API hooks automatically filter by game
+  const { data: items } = useGetItemsApiV1CatalogItemsGet({ game });
+
+  return <GameSelector value={game} onChange={setGame} />;
+}
+```
+
+### Repository Pattern (Backend)
+
+```python
+# Port (interface)
+class ItemRepository(Protocol):
+    async def get_by_slug(self, slug: str) -> Item | None: ...
+    async def list(self, filters: ItemFilters) -> list[Item]: ...
 
 # Adapter (implementation)
-class PostgresNoteRepository:
+class PostgresItemRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
+
+    async def get_by_slug(self, slug: str) -> Item | None:
+        result = await self.session.execute(
+            select(Item).where(Item.slug == slug)
+        )
+        return result.scalar_one_or_none()
 ```
 
-### Frontend Architecture
+## Troubleshooting
 
-**TanStack Router for file-based routing:**
-- Routes defined in `frontend/src/routes/` with `.tsx` files
-- Uses `@tanstack/react-router` with type-safe navigation
-- Game context managed via React Context (`useGameContext()`)
-
-**State management:**
-- Server state: TanStack Query (auto-generated hooks from OpenAPI via orval)
-- Client state: Zustand or React Context
-- URL state: TanStack Router search params
-
-**API client generation:**
-Frontend types and hooks are auto-generated from backend OpenAPI spec. When backend API changes:
+**Services won't start:**
 ```bash
-cd frontend
-npm run generate:api  # Not implemented yet - manual for now
+./scripts/restart-services.sh --dev            # Restart everything
+./scripts/view-logs.sh backend -f     # Check backend logs
+docker compose ps                     # Check service status
 ```
 
-## Development Guidelines
-
-### Working with Contexts
-
-**Creating a new bounded context:**
-1. Create directory structure: `backend/src/contexts/{name}/{domain,ports,adapters,services,api}`
-2. Define domain models in `domain/models.py` (SQLAlchemy MappedAsDataclass)
-3. Define Pydantic schemas in `domain/schemas.py` for API validation
-4. Create repository protocol in `ports/repository.py`
-5. Implement repository in `adapters/{db}_repository.py`
-6. Create service layer in `services/{name}_service.py`
-7. Add API routes in `api/routes.py`
-8. Register routes in `backend/src/main.py`
-9. Create Alembic migration: `uv run alembic revision --autogenerate -m "add {name} context"`
-10. Write tests in `backend/tests/contexts/{name}/`
-
-### Code Style Conventions
-
-**Backend:**
-- Python 3.12+ with type hints (enforced by mypy)
-- Line length: 100 characters (ruff)
-- Async/await for all I/O operations
-- Use `structlog` for logging with structured context
-- Pydantic schemas for validation (v2 syntax)
-- Repository methods return domain objects, not dicts
-
-**Frontend:**
-- Functional components with hooks only
-- Use `type` for props and interfaces
-- Explicit return types for custom hooks
-- Filename convention: `ComponentName.tsx`, `useSomething.ts`
-- Tailwind CSS for styling (no CSS modules)
-- shadcn/ui components copied to `src/components/ui/` (fully customizable)
-
-### Testing Patterns
-
-**Backend tests:**
+**Database issues:**
 ```bash
-# Test structure mirrors src/ structure
-tests/
-├── contexts/
-│   └── placeholder/
-│       ├── test_models.py
-│       ├── test_repository.py
-│       ├── test_service.py
-│       └── test_routes.py
-└── conftest.py  # Shared fixtures
-
-# Run tests with uv run
-uv run pytest                           # All tests
-uv run pytest tests/contexts/upstream/  # Specific module
-uv run pytest -k "test_provider"        # Pattern match
+./scripts/migrate-db.sh current       # Check migration status
+./scripts/reset-db.sh --force         # Nuclear option (deletes all data)
 ```
 
-**Frontend tests:**
-- Unit tests: Vitest + React Testing Library
-- E2E tests: Playwright (in `frontend/e2e/`)
-
-### Common Pitfalls
-
-1. **NEVER call `python` directly** - always use `uv run python`
-2. **NEVER call `pytest` directly** - always use `uv run pytest`
-3. **Don't mix domain and infrastructure** - keep domain/ pure Python
-4. **Don't forget migrations** - any model change needs `alembic revision --autogenerate`
-5. **Don't use old SQLAlchemy patterns** - models are MappedAsDataclass (no `__init__`)
-6. **Game context is mandatory** - all game-specific data must be filtered by `game_context`
-
-## Agent Coordination
-
-- **Claude (this agent):** Primary implementation - writes backend/frontend code
-- **Gemini agent:** Design and gap analysis (consult `AGENTS.md`)
-- **Codex agent:** Test generation (consult `AGENTS.md`)
-
-**Workflow:** Always check if code changes require doc updates. Treat tasks incomplete until `docs/` is updated or a docs-TODO is created.
-
-## Key Documentation
-
-Read these for comprehensive understanding (in order of importance):
-1. `docs/ARCHITECTURE.md` - Detailed architecture patterns and decisions
-2. `docs/QUICKSTART.md` - Essential commands and workflows
-3. `docs/CONTRIBUTING.md` - Full development setup and conventions
-4. `docs/PRODUCT.md` - Product vision and feature roadmap
-5. `docs/SPRINT.md` - Current sprint priorities
-6. `backend/scripts/README.md` - Data collection scripts usage
-
-## Project Structure Summary
-
+**Frontend API calls fail:**
+```bash
+curl http://localhost:8000/health     # Verify backend is running
+./scripts/generate-api.sh             # Regenerate API client if schema changed
 ```
-path-of-mirrors/
-├── backend/
-│   ├── src/
-│   │   ├── contexts/           # Bounded contexts (features)
-│   │   │   ├── placeholder/    # Notes CRUD (Phase 0 demo)
-│   │   │   └── upstream/       # Data ingestion (Phase 1+)
-│   │   ├── infrastructure/     # DB, Redis, logging, health
-│   │   ├── shared/             # Game enum, shared utilities
-│   │   └── main.py             # FastAPI app entrypoint
-│   ├── alembic/                # Database migrations
-│   ├── scripts/                # Data collection utilities
-│   ├── tests/                  # Mirror of src/ structure
-│   └── pyproject.toml          # uv dependencies
-├── frontend/
-│   ├── src/
-│   │   ├── components/ui/      # shadcn/ui components
-│   │   ├── routes/             # TanStack Router file-based routes
-│   │   ├── hooks/              # React hooks (API, context)
-│   │   └── lib/                # Utilities, API client
-│   └── package.json
-├── docs/                       # Documentation (single source of truth)
-└── docker-compose.yml          # Local development services
-```
-- Always use uv to execute python commands.
-- _samples folder in repo root is just that - samples. it is gitignored, so never use it to implement tests or imports.
-- use different files for different models/classes, so they can be easily found
+
+**Port conflicts:**
+- Frontend: 5173 (Vite)
+- Backend: 8000 (FastAPI)
+- PostgreSQL: 5432
+- Redis: 6379
+
+Use `lsof -i :PORT` to find conflicting processes.
+
+## Important Files
+
+**Configuration:**
+- `backend/src/.env` - Backend environment variables (copy from `.env.example`)
+- `frontend/.env` - Frontend environment variables
+- `docker-compose.yml` + `docker-compose.dev.yml` - Docker orchestration
+- `backend/pyproject.toml` - Python dependencies (managed by `uv`)
+- `frontend/package.json` - Node dependencies (use `npm`, not `pnpm`)
+
+**Entry points:**
+- `backend/src/main.py` - FastAPI application
+- `frontend/src/main.tsx` - React application
+- `backend/alembic/` - Database migrations
+
+**Documentation:**
+- `docs/ARCHITECTURE.md` - Detailed architecture decisions
+- `docs/DESIGN.md` - Future resource-oriented design
+- `docs/CONTRIBUTING.md` - Contributor guide
+- `scripts/README.md` - All development scripts explained
+
+## Project Phases
+
+**Current state:** Transitioning from Phase 0 to Phase 1
+
+- **Phase 0 (complete):** Stack validation with placeholder CRUD
+- **Phase 1 (in progress):** Data ingestion, PoB parsing, dual-game support
+- **Phase 2 (planned):** Market intelligence dashboard
+- **Phase 3+:** Crafting assistant, deal finder, price checker
+
+**Migration in progress:**
+- Old `contexts/core` → splitting into `catalog` + `builds`
+- Old `contexts/upstream` → moving ingestion to `economy`
+- Old `contexts/upgrades` → refactoring to `analysis/deals`
+
+When working in these areas, consult `docs/DESIGN.md` for the target structure.
+
+## Known Issues & Conventions
+
+1. **Frontend uses npm, not pnpm:** Despite `pnpm-lock.yaml` existing, `npm` is the supported tool
+2. **Backend excludes `src/app/**`:** Legacy FastCRUD template pending cleanup (see `pyproject.toml`)
+3. **Frontend auto-generated code:** Never edit files in `frontend/src/hooks/api/generated/` directly
+4. **Docker watch mode:** Backend auto-reloads on code changes via Docker Compose watch
+
+## When to Read Documentation
+
+- **New bounded context?** Read `docs/ARCHITECTURE.md` sections on hexagonal architecture and bounded contexts
+- **Database changes?** See migration examples in `scripts/README.md`
+- **Confused about structure?** Check `docs/DESIGN.md` for resource-oriented design principles
+- **Need examples?** See git history for recent feature additions (commit messages follow Conventional Commits)

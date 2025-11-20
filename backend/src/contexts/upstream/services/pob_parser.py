@@ -20,7 +20,7 @@ Example PoB Import Code:
 import base64
 import xml.etree.ElementTree as ET
 import zlib
-from typing import Any
+from typing import Any, cast
 
 from src.contexts.core.domain import Build
 from src.shared import Game
@@ -122,17 +122,17 @@ def parse_pob_code(import_code: str, game: Game) -> Build:
     """
     # Clean the import code - remove all whitespace (spaces, tabs, newlines)
     # PoB codes should be continuous base64 strings
-    cleaned_code = ''.join(import_code.split())
+    cleaned_code = "".join(import_code.split())
 
     if not cleaned_code:
         raise ValueError("PoB import code is empty after removing whitespace")
 
     # Validate it looks like base64 (basic check)
     # Support both standard base64 (+/) and URL-safe base64 (-_)
-    valid_chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=-_'
+    valid_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=-_"
     if not all(c in valid_chars for c in cleaned_code):
         # Find the first invalid character to help with debugging
-        invalid_chars = set(c for c in cleaned_code if c not in valid_chars)
+        invalid_chars = {c for c in cleaned_code if c not in valid_chars}
         raise ValueError(
             f"PoB import code contains invalid characters for base64 encoding: {invalid_chars}"
         )
@@ -141,7 +141,7 @@ def parse_pob_code(import_code: str, game: Game) -> Build:
         # Step 1: Base64 decode
         # PoB uses URL-safe base64 (- and _ instead of + and /)
         # Detect which encoding based on characters present
-        if '-' in cleaned_code or '_' in cleaned_code:
+        if "-" in cleaned_code or "_" in cleaned_code:
             # URL-safe base64
             compressed = base64.urlsafe_b64decode(cleaned_code)
         else:
@@ -152,6 +152,7 @@ def parse_pob_code(import_code: str, game: Game) -> Build:
 
     # Log compression info for debugging
     import structlog
+
     logger = structlog.get_logger(__name__)
     logger.debug(
         "Decoded base64",
@@ -163,21 +164,30 @@ def parse_pob_code(import_code: str, game: Game) -> Build:
     try:
         # Step 2: zlib decompress
         xml_bytes = zlib.decompress(compressed)
-        xml_content = xml_bytes.decode('utf-8')
+        xml_content = xml_bytes.decode("utf-8")
     except zlib.error as e:
         # Check if this might be an incomplete code
         # Typical PoB codes are 10,000-20,000 characters long
         error_msg = f"Failed to decompress PoB code: {e}"
 
         if len(cleaned_code) < 1000:
-            error_msg = f"PoB import code is too short ({len(cleaned_code)} characters). " \
-                       "Typical codes are 10,000+ characters. Please make sure you copied the entire code from Path of Building."
+            error_msg = (
+                "PoB import code is too short "
+                f"({len(cleaned_code)} characters). Typical codes are 10,000+ characters. "
+                "Please make sure you copied the entire code from Path of Building."
+            )
         elif len(cleaned_code) < 5000:
-            error_msg = f"PoB import code may be incomplete ({len(cleaned_code)} characters). " \
-                       "Typical codes are 10,000+ characters. Please verify you copied the entire code."
+            error_msg = (
+                "PoB import code may be incomplete "
+                f"({len(cleaned_code)} characters). Typical codes are 10,000+ characters. "
+                "Please verify you copied the entire code."
+            )
         elif "invalid" in str(e).lower() or "incorrect" in str(e).lower():
-            error_msg = f"PoB import code appears to be corrupted or incomplete ({len(cleaned_code)} characters). " \
-                       "Try copying the code again from Path of Building."
+            error_msg = (
+                "PoB import code appears to be corrupted or incomplete "
+                f"({len(cleaned_code)} characters). Try copying the code again "
+                "from Path of Building."
+            )
 
         raise ValueError(error_msg)
     except UnicodeDecodeError as e:
@@ -207,7 +217,7 @@ def extract_item_from_slot(build: Build, slot: str) -> dict | None:
     if build.items is None:
         return None
 
-    return build.items.get(slot)
+    return cast(dict[str, Any] | None, build.items.get(slot))
 
 
 def parse_item_text(item_text: str) -> dict[str, Any]:
@@ -234,7 +244,7 @@ def parse_item_text(item_text: str) -> dict[str, Any]:
         >>> item = parse_item_text(text)
         >>> print(item["name"], item["base_type"], item["rarity"])
     """
-    lines = [line.strip() for line in item_text.strip().split('\n') if line.strip()]
+    lines = [line.strip() for line in item_text.strip().split("\n") if line.strip()]
 
     if not lines:
         return {}

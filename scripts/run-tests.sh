@@ -10,47 +10,22 @@
 #   --backend     Run backend tests only
 #   --frontend    Run frontend tests only
 
-set -e
+set -euo pipefail
 
-# Docker Compose files for development
-COMPOSE_FILES="-f docker-compose.yml -f docker-compose.dev.yml"
-set -u
-set -o pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/log.sh"
+source "$SCRIPT_DIR/lib/compose.sh"
+source "$SCRIPT_DIR/lib/wait.sh"
+source "$SCRIPT_DIR/lib/backend.sh"
+source "$SCRIPT_DIR/lib/frontend.sh"
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-BOLD='\033[1m'
-NC='\033[0m' # No Color
+MODE="${MODE:-dev}"
+COMPOSE_FILES="$(select_compose_files "$MODE")"
 
 # Configuration
 RUN_BACKEND=true
 RUN_FRONTEND=true
 WITH_COVERAGE=false
-
-# Helper functions
-log_info() {
-    echo -e "${BLUE}ℹ️  $1${NC}"
-}
-
-log_success() {
-    echo -e "${GREEN}✅ $1${NC}"
-}
-
-log_error() {
-    echo -e "${RED}❌ $1${NC}"
-}
-
-log_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
-}
-
-log_step() {
-    echo -e "\n${BOLD}$1${NC}"
-    echo "====================================="
-}
 
 show_help() {
     head -n 11 "$0" | tail -n 9 | sed 's/^# //'
@@ -73,23 +48,18 @@ main() {
             log_step "🐳 Starting services for testing..."
             docker compose $COMPOSE_FILES up -d
             started_services=true
-
-            # Wait for services to be ready
-            log_info "Waiting for services to be ready..."
-            sleep 5
-
-            # Wait for PostgreSQL
-            local max_attempts=30
-            local attempt=0
-            while [ $attempt -lt $max_attempts ]; do
-                if docker compose $COMPOSE_FILES exec -T postgres pg_isready -U postgres > /dev/null 2>&1; then
-                    break
-                fi
-                attempt=$((attempt + 1))
-                sleep 1
-            done
-            log_success "Services ready"
         fi
+
+        log_info "Waiting for PostgreSQL..."
+        if wait_for_pg "$COMPOSE_FILES" 30; then
+            log_success "PostgreSQL ready"
+        else
+            log_error "PostgreSQL failed to start"
+            exit 1
+        fi
+
+        log_info "Running database migrations..."
+        docker compose $COMPOSE_FILES exec -T backend uv run alembic upgrade head >/dev/null
 
         log_step "🧪 Running Backend Tests (pytest)"
 
@@ -124,10 +94,10 @@ main() {
     if [ "$RUN_FRONTEND" = true ]; then
         log_step "Frontend Tests (vitest)"
 
-        if [ ! -d "frontend/node_modules" ]; then
-            log_error "Frontend dependencies not installed"
-            log_info "Run: cd frontend && npm install"
-            exit 1
+        if ensure_frontend_deps; then
+            log_success "Frontend dependencies installed"
+        else
+            log_info "Frontend dependencies already installed"
         fi
 
         # Check if frontend tests exist
@@ -182,6 +152,11 @@ main() {
         echo ""
         echo -e "  ${GREEN}Total tests:${NC} $total_passed passed"
         echo -e "  ${GREEN}Duration:${NC}    ${duration}s"
+        echo ""
+        log_info "Next steps:"
+        echo "  - Lint & types: ./scripts/check-code.sh"
+        echo "  - Run backend only: ./scripts/run-tests.sh --backend"
+        echo "  - Run frontend only: ./scripts/run-tests.sh --frontend"
         exit 0
     else
         log_error "Some tests failed!"
@@ -189,6 +164,10 @@ main() {
         echo -e "  ${RED}Failed suites:${NC} $total_failed"
         echo -e "  ${GREEN}Passed tests:${NC}  $total_passed"
         echo -e "  ${BLUE}Duration:${NC}      ${duration}s"
+        echo ""
+        log_info "Next steps:"
+        echo "  - Inspect logs: ./scripts/view-logs.sh backend -n 100"
+        echo "  - Rerun with coverage: ./scripts/run-tests.sh --coverage"
         exit 1
     fi
 }

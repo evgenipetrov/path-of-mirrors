@@ -17,37 +17,17 @@
 #   -n, --lines NUM   Show last NUM lines (default: all)
 #   --help            Show this help message
 
-set -e
-set -u
-set -o pipefail
+set -euo pipefail
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-BOLD='\033[1m'
-NC='\033[0m' # No Color
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/log.sh"
+source "$SCRIPT_DIR/lib/compose.sh"
 
 # Configuration
 MODE="dev"
 SERVICE=""
 FOLLOW=false
 LINES=""
-
-# Helper functions
-log_info() {
-    echo -e "${BLUE}ℹ️  $1${NC}"
-}
-
-log_error() {
-    echo -e "${RED}❌ $1${NC}"
-}
-
-log_step() {
-    echo -e "\n${BOLD}$1${NC}"
-    echo "====================================="
-}
 
 show_help() {
     head -n 16 "$0" | tail -n 14 | sed 's/^# //'
@@ -57,16 +37,12 @@ show_help() {
 # Main function
 main() {
     # Set compose files based on mode
-    if [ "$MODE" = "prod" ]; then
-        COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml"
-    else
-        COMPOSE_FILES="-f docker-compose.yml -f docker-compose.dev.yml"
-    fi
+    COMPOSE_FILES="$(select_compose_files "$MODE")"
 
     # Check if Docker Compose is running
     if ! docker compose $COMPOSE_FILES ps | grep -q "Up"; then
         log_error "No services are running"
-        log_info "Start services with: ./scripts/start.sh"
+        log_info "Start services with: ./scripts/start-services.sh"
         exit 1
     fi
 
@@ -114,6 +90,13 @@ main() {
 
     # Execute command
     eval "$cmd"
+
+    if [ "$FOLLOW" = false ]; then
+        echo ""
+        log_info "Next steps:"
+        echo "  - Follow logs: ${YELLOW}$cmd -f${NC}"
+        echo "  - Restart:     ./scripts/restart-services.sh --${MODE}"
+    fi
 }
 
 # Parse arguments

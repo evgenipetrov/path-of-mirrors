@@ -23,7 +23,7 @@ For detailed technical architecture and design decisions, see [ARCHITECTURE.md](
 
 - **Backend:** FastAPI + SQLAlchemy 2.0 + PostgreSQL 17 + Redis
 - **Frontend:** React 18 + shadcn/ui + Tailwind CSS + TanStack Query
-- **Package Management:** `uv` (Python), `npm` (Node)
+- **Package Management:** `uv` (Python), `npm` (Node). Note: `pnpm-lock.yaml` exists; npm is the supported tool to avoid dual-lock drift.
 - **Infrastructure:** Docker Compose + Traefik
 - **Testing:** pytest (backend), Vitest + React Testing Library (frontend)
 
@@ -107,22 +107,19 @@ cp .env.example .env
 
 ### 4. Start Development Environment
 
-**Option A: Docker Compose (Recommended)**
+**Option A: Scripted (Recommended)**
 ```bash
 # From project root
-docker compose up --watch
+./scripts/start-services.sh --dev
 ```
 
 This starts:
 - Backend (FastAPI) on `http://localhost:8000`
-- Frontend (React/Vite) on `http://localhost:3000`
+- Frontend (Vite) on `http://localhost:5173`
 - PostgreSQL on `localhost:5432`
 - Redis on `localhost:6379`
-- Traefik reverse proxy on `http://localhost`
 
-The `--watch` flag enables hot-reload for both backend and frontend.
-
-**Option B: Local Development (without Docker)**
+**Option B: Manual**
 
 Terminal 1 (Backend):
 ```bash
@@ -133,7 +130,7 @@ uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 Terminal 2 (Frontend):
 ```bash
 cd frontend
-npm run dev
+npm run dev -- --host --port 5173
 ```
 
 Terminal 3 (PostgreSQL + Redis):
@@ -145,9 +142,14 @@ docker compose up postgres redis
 
 Visit the following URLs to confirm everything is running:
 
-- **Frontend:** http://localhost:3000
+- **Frontend:** http://localhost:5173
 - **Backend API Docs:** http://localhost:8000/docs
 - **Health Check:** http://localhost:8000/health
+- **Context health stubs:**
+  - http://localhost:8000/api/v1/catalog/health
+  - http://localhost:8000/api/v1/economy/health
+  - http://localhost:8000/api/v1/builds/health
+  - http://localhost:8000/api/v1/analysis/health
 
 ---
 

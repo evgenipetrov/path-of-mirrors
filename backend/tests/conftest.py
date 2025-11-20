@@ -13,6 +13,7 @@ from sqlalchemy.orm.session import Session
 
 from src.infrastructure import settings
 from src.infrastructure.database import Base
+from src.contexts.placeholder.domain import models as _placeholder_models  # ensures tables registered
 
 # Import the new app (for Notes API and new architecture tests)
 # Old app tests should use src.app.main directly in their own test files
@@ -25,6 +26,8 @@ ASYNC_DATABASE_PREFIX = "postgresql+asyncpg://"
 
 sync_engine = create_engine(DATABASE_PREFIX + DATABASE_URI)
 local_session = sessionmaker(autocommit=False, autoflush=False, bind=sync_engine)
+# Create tables once for sync tests (Placeholder/legacy APIs)
+Base.metadata.create_all(bind=sync_engine)
 
 fake = Faker()
 

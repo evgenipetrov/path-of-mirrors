@@ -33,7 +33,7 @@ This is the **MVP feature** that validates the entire product concept:
 - Infrastructure: Docker, FastAPI, PostgreSQL, Redis
 - Placeholder CRUD context (notes demo)
 - Frontend: React 19, TanStack Router/Query, shadcn/ui
-- 100% test coverage for placeholder
+- High test coverage on placeholder context (not currently enforced at 100%)
 
 ✅ **Epic 1.3 COMPLETE (Domain Models):**
 - **4 core domain models implemented:**
@@ -41,7 +41,7 @@ This is the **MVP feature** that validates the entire product concept:
   - `Modifier` (8 fields, 36 tests) ✅
   - `Item` (14 fields incl. base_type_id, 25 tests) ✅
   - `Build` (14 fields incl. pob_code, 22 tests) ✅
-- **100 passing tests** across all models
+- Dozens of passing tests across models (coverage enforced via `uv run pytest` locally; CI still pending)
 - **5 user journey documents** created:
   - Journey 1: Single Item Upgrade (MVP) - THIS SPRINT
   - Journey 2: All Slot Upgrades
@@ -65,34 +65,28 @@ Implement User Journey 1 end-to-end - from PoB import to ranked upgrade results
 
 ### Key Components (from Journey 1 Design Doc)
 
-**Backend Services:**
+**Backend Services (current code paths):**
 ```
-backend/src/contexts/upgrades/
-├── api/
-│   └── routes.py                # POST /api/upgrades/find
-├── services/
-│   ├── pob_parser.py            # Parse PoB XML/code → Build
-│   ├── trade_api_client.py      # Query pathofexile.com/trade
-│   ├── stat_extractor.py        # Extract item stats for comparison
-│   └── upgrade_ranker.py        # Rank items by improvement
-├── domain/
-│   └── schemas.py               # Pydantic request/response models
+backend/src/contexts/upstream/
+├── api/builds_routes.py         # POST /api/v1/builds/parse, /analyze
+├── services/pob_parser.py       # Parse PoB XML/code → Build
+├── services/trade_api_client.py # Query pathofexile.com/trade
+├── services/stat_extractor.py   # Extract item stats for comparison
+├── services/upgrade_ranker.py   # Rank items by improvement
+└── domain/schemas.py            # Pydantic request/response models
 ```
 
-**Frontend Components:**
+**Frontend Components (current layout):**
 ```
-frontend/src/routes/upgrades/
-├── index.tsx                    # Main page route
+frontend/src/features/upgrades/
+├── UpgradeFinder.tsx            # Main feature shell
 ├── components/
 │   ├── PoBInput.tsx             # File upload + paste code (tabs)
-│   ├── CurrentBuild.tsx         # Display parsed build summary
-│   ├── ItemSlotSelector.tsx     # Dropdown for equipment slots
-│   ├── UpgradeFilters.tsx       # Price, stat filters
-│   ├── UpgradeResults.tsx       # Results table with TanStack Table
-│   └── TradeWhisper.tsx         # Copy whisper command button
+│   ├── BuildDisplay.tsx         # Display parsed build summary
 ```
+Planned route wiring is not yet created under `frontend/src/routes`; hook up a route before user-facing delivery.
 
-**Critical Insight:** NO database required initially - all stateless processing!
+**Critical Insight:** NO database required initially - all stateless processing.
 
 ---
 

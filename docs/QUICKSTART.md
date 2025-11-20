@@ -6,7 +6,7 @@ Get Path of Mirrors running in under 5 minutes.
 
 - Docker & Docker Compose
 - Node.js 18+
-- npm
+- npm (project uses npm as the supported package manager)
 
 ## First Time Setup
 
@@ -16,7 +16,7 @@ git clone <repository-url>
 cd path-of-mirrors
 
 # 2. Run setup script (installs dependencies, starts services, runs migrations)
-./scripts/setup.sh
+./scripts/setup-project.sh
 
 # 3. Start frontend (in a new terminal)
 cd frontend
@@ -33,11 +33,11 @@ npm run dev
 ## Daily Development
 
 ```bash
-# Start all backend services (PostgreSQL, Redis, Backend API)
-./scripts/start-dev.sh
+# Start all backend services (PostgreSQL, Redis, Backend API) and launch frontend
+./scripts/start-services.sh --dev
 
-# In another terminal: start frontend
-cd frontend && npm run dev
+# Frontend is started by the script (Vite on 5173). If you prefer manual control:
+# cd frontend && npm run dev
 ```
 
 **Stop everything:** Press `Ctrl+C` in both terminals
@@ -50,6 +50,11 @@ cd frontend && npm run dev
 ```bash
 ./scripts/run-tests.sh                 # Run all tests
 ./scripts/run-tests.sh --backend       # Backend only
+```
+
+### Regenerate API Client
+```bash
+./scripts/generate-api.sh              # From OpenAPI at http://localhost:8000/openapi.json
 ```
 
 ### Code Quality
@@ -72,7 +77,7 @@ cd frontend && npm run dev
 
 ### Production Build
 ```bash
-./scripts/build-prod.sh                # Build frontend + backend Docker image
+./scripts/build-images.sh --prod              # Build frontend + backend Docker image
 ```
 
 ---
@@ -81,7 +86,7 @@ cd frontend && npm run dev
 
 **Services won't start?**
 ```bash
-./scripts/restart-dev.sh              # Restart everything
+./scripts/restart-services.sh --dev            # Restart everything
 ```
 
 **Database corrupted?**
@@ -91,7 +96,7 @@ cd frontend && npm run dev
 
 **Need help?**
 ```bash
-./scripts/setup.sh --help         # Any script supports --help
+./scripts/setup-project.sh --help         # Any script supports --help
 ```
 
 ---
@@ -105,9 +110,9 @@ path-of-mirrors/
 │   │   └── placeholder/   # Notes CRUD (Phase 0 demo)
 │   └── infrastructure/    # Database, logging, health checks
 ├── frontend/src/
-│   ├── pages/            # Route components (e.g., Notes page)
-│   ├── components/ui/    # Reusable UI components (shadcn/ui)
-│   └── hooks/api/        # Auto-generated API hooks (TanStack Query)
+│   ├── routes/           # File-based routes (TanStack Router)
+│   ├── components/       # UI and layout components
+│   └── features/         # Feature modules (notes, upgrades, etc.)
 ├── scripts/              # Development scripts (setup, test, lint, etc.)
 └── docs/                 # Documentation (SPRINT.md, ARCHITECTURE.md)
 ```
@@ -127,9 +132,8 @@ path-of-mirrors/
 ### Making a Frontend Change
 ```bash
 # 1. Edit code in frontend/src/
-# 2. Frontend auto-reloads (HMR)
-# 3. Changes appear instantly in browser
-# 4. Check console for errors
+# 2. Frontend auto-reloads (HMR) on http://localhost:5173
+# 3. Check console and terminal for errors
 ```
 
 ### Adding a Database Migration

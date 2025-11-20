@@ -23,6 +23,7 @@ class ItemRarity(str):
 
     Note: Not using Enum to allow flexibility for future rarity types.
     """
+
     NORMAL = "Normal"
     MAGIC = "Magic"
     RARE = "Rare"

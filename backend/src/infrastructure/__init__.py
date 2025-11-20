@@ -17,6 +17,13 @@ from .database import Base, async_engine, get_db, local_session
 from .health import check_database_health, check_redis_health
 from .logging import get_logger, setup_logging
 from .middleware import RequestLoggingMiddleware
+from .session_storage import (
+    create_session,
+    delete_session,
+    extend_session,
+    get_session,
+    update_session,
+)
 from .settings import settings
 
 __all__ = [
@@ -46,6 +53,12 @@ __all__ = [
     "redis_client",
     "get_cache",
     "close_cache",
+    # Session Storage
+    "create_session",
+    "get_session",
+    "update_session",
+    "delete_session",
+    "extend_session",
     # Health
     "check_database_health",
     "check_redis_health",

@@ -12,6 +12,7 @@ export interface PoBParseRequest {
 }
 
 export interface PoBParseResponse {
+  session_id: string
   game: Game
   name: string
   character_class: string
@@ -39,4 +40,42 @@ export interface ItemData {
   sockets?: string
   corrupted?: boolean
   unique_id?: string
+}
+
+export interface UpgradeSearchRequest {
+  session_id: string
+  item_slot: string
+  max_price_chaos?: number | null
+  min_life?: number | null
+  min_resistance?: number | null
+  stat_weights?: Record<string, number> | null
+  limit?: number
+}
+
+export interface UpgradeResult {
+  trade_id: string
+  name: string
+  base_type: string
+  rarity: string
+  price_chaos: number
+  stats: Record<string, number>
+  improvements: Record<string, number>
+  upgrade_score: number
+  value_score: number | null
+  trade_url: string
+  whisper: string
+}
+
+export interface UpgradeSearchResponse {
+  session_id: string
+  game: Game
+  item_slot: string
+  current_item: {
+    name?: string
+    base_type: string
+    stats: Record<string, number>
+  }
+  upgrades: UpgradeResult[]
+  total_results: number
+  query_time_ms: number
 }

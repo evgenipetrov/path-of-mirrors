@@ -1,20 +1,27 @@
 """Test parsing real PoB import code from file."""
-import os
+
+from pathlib import Path
+
 import pytest
+
 from src.contexts.upstream.services.pob_parser import parse_pob_code
 from src.shared import Game
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+IMPORT_CODE_PATH = REPO_ROOT / "_samples/data/poe1/pob/import_string.txt"
+
+if not IMPORT_CODE_PATH.exists():
+    pytest.skip("Sample import_string.txt missing in test environment", allow_module_level=True)
 
 
 def test_parse_real_import_code_from_sample_file():
     """Test parsing a real PoB import code (URL-safe base64) exported from PoB."""
     # Get path to import string file - this is the REAL code from PoB
     # (uses URL-safe base64 encoding with - and _ characters)
-    backend_dir = os.path.dirname(os.path.dirname(__file__))
-    repo_root = os.path.dirname(backend_dir)
-    import_code_path = os.path.join(repo_root, "_samples/data/poe1/pob/import_string.txt")
+    import_code_path = REPO_ROOT / "_samples/data/poe1/pob/import_string.txt"
 
     # Read the import code
-    with open(import_code_path, 'r') as f:
+    with import_code_path.open('r') as f:
         import_code = f.read().strip()
 
     print(f"\nImport code length: {len(import_code)} characters")

@@ -9,6 +9,7 @@ This directory contains all project documentation organized by purpose.
 ### Getting Started
 - **[QUICKSTART.md](QUICKSTART.md)** - Essential commands and workflows for development
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Full development setup and conventions
+- **[scripts/README.md](../scripts/README.md)** - One-liners (start, test, generate API client)
 
 ### Architecture
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - Detailed architecture patterns and decisions
@@ -62,17 +63,17 @@ This directory contains all project documentation organized by purpose.
 
 | Document | Status | Last Updated |
 |----------|--------|--------------|
-| QUICKSTART.md | ✅ Current | 2025-11-18 |
-| ARCHITECTURE.md | ✅ Current | 2025-11-18 |
-| ARCHITECTURE_DIAGRAM.md | ✅ Current | 2025-11-18 |
-| CONTRIBUTING.md | ✅ Current | 2025-11-18 |
-| PRODUCT.md | ✅ Current | 2025-11-18 |
-| SPRINT.md | ✅ Current | 2025-11-18 |
-| BACKLOG.md | ✅ Current | 2025-11-18 |
-| EPIC_SEQUENCE.md | ✅ Current | 2025-11-18 |
-| INFRASTRUCTURE_SETUP.md | ✅ Current | 2025-11-18 |
-| MIGRATION_TEST_PLAN.md | ✅ Current | 2025-11-18 |
-| adr/001-domain-infrastructure-coupling.md | ✅ Current | 2025-11-18 |
+| QUICKSTART.md | ✅ Current | 2025-11-20 |
+| ARCHITECTURE.md | ✅ Current | 2025-11-20 |
+| ARCHITECTURE_DIAGRAM.md | ✅ Current | 2025-11-20 |
+| CONTRIBUTING.md | ✅ Current | 2025-11-20 |
+| PRODUCT.md | ✅ Current | 2025-11-20 |
+| SPRINT.md | ✅ Current | 2025-11-20 |
+| BACKLOG.md | ✅ Current | 2025-11-20 |
+| EPIC_SEQUENCE.md | ✅ Current | 2025-11-20 |
+| INFRASTRUCTURE_SETUP.md | ✅ Current | 2025-11-20 |
+| MIGRATION_TEST_PLAN.md | ✅ Current | 2025-11-20 |
+| adr/001-domain-infrastructure-coupling.md | ✅ Current | 2025-11-20 |
 
 ---
 

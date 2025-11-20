@@ -76,3 +76,5 @@ _samples/
 # Database migrations (greenfield - resetting often)
 backend/alembic/versions/
 !backend/alembic/versions/.gitkeep
+# Coverage artifacts
+htmlcov/

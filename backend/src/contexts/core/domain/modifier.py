@@ -195,6 +195,8 @@ class Modifier:
         pattern = r"[+-]?\d+\.?\d*"
         matches = re.findall(pattern, text)
 
+        values: tuple[Decimal, ...]
+
         if not matches:
             # No numeric values found - use 1 as default (for boolean-like mods)
             values = (Decimal("1"),)

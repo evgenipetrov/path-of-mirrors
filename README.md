@@ -56,14 +56,14 @@ git clone <repository-url>
 cd path-of-mirrors
 
 # Start everything (backend + frontend)
-./scripts/start-dev.sh
+./scripts/start-services.sh --dev
 ```
 
 This will:
 - Start PostgreSQL, Redis, and Backend in Docker
 - Wait for services to be healthy
 - Install frontend dependencies (if needed)
-- Start frontend dev server with HMR
+- Start the frontend Vite dev server (port 5173)
 - Show unified logs and status
 
 **Press Ctrl+C to stop all services**
@@ -128,21 +128,24 @@ The `scripts/` directory contains convenient startup scripts:
 
 ```bash
 # Start all services (backend + frontend)
-./scripts/start-dev.sh
+./scripts/start-services.sh --dev
 
 # Stop all services
-./scripts/stop-dev.sh
+./scripts/stop-services.sh --dev
 
 # Restart all services
-./scripts/restart-dev.sh
+./scripts/restart-services.sh --dev
+
+# Regenerate frontend API client
+./scripts/generate-api.sh
 ```
 
-**What `start-dev.sh` does:**
+**What `start-services.sh --dev` does:**
 1. Starts Docker services (PostgreSQL, Redis, Backend)
 2. Waits for health checks to pass
 3. Installs frontend dependencies (if needed)
-4. Starts frontend dev server with HMR
-5. Shows unified logs from all services
+4. Starts Vite dev server at http://localhost:5173
+5. Shows unified logs from Docker services
 6. Gracefully shuts down everything on Ctrl+C
 
 ### Backend Development
@@ -181,9 +184,6 @@ npm run build
 # Preview production build
 npm run preview
 
-# Regenerate API client from backend OpenAPI spec
-npm run generate:api
-
 # Lint code
 npm run lint
 ```
@@ -200,12 +200,10 @@ npm run lint
 
 ### Adding New Frontend Features
 
-1. Generate API client: `npm run generate:api`
-2. Create page component in `src/pages/`
-3. Add route to `App.tsx`
-4. Use TanStack Query hooks from `@/hooks/api`
-5. Use shadcn/ui components from `@/components/ui`
-6. Test with HMR
+1. Create or update a route under `src/routes/` (TanStack Router)
+2. Use feature components from `src/features/` and shared UI from `src/components`
+3. Keep API calls using the existing generated hooks under `src/hooks/api/generated/`
+4. Run `npm run dev` for HMR while developing
 
 ## Project Structure
 
@@ -213,7 +211,12 @@ npm run lint
 path-of-mirrors/
 ├── backend/
 │   ├── src/
-│   │   ├── contexts/           # Bounded contexts (features)
+│   │   ├── contexts/           # Bounded contexts (resource-first)
+│   │   │   ├── catalog/        # Static game data (stubbed)
+│   │   │   ├── economy/        # Market data ingestion (stubbed)
+│   │   │   ├── builds/         # User build data (stubbed)
+│   │   │   ├── analysis/       # Computations (stubbed)
+│   │   │   ├── upstream/       # Existing PoB/build routes (to migrate)
 │   │   │   ├── placeholder/    # Notes CRUD (Phase 0 demo)
 │   │   │   └── shared/         # Shared domain logic
 │   │   ├── infrastructure/     # Cross-cutting concerns
@@ -230,21 +233,22 @@ path-of-mirrors/
 │   │   │   ├── ui/             # shadcn/ui components
 │   │   │   └── tables/         # TanStack Table wrappers
 │   │   ├── hooks/
-│   │   │   ├── api/            # Auto-generated API hooks
+│   │   │   ├── api/            # Auto-generated API hooks (checked in)
 │   │   │   └── useGameContext.tsx
 │   │   ├── lib/
 │   │   │   ├── api-client.ts   # Axios client
 │   │   │   └── utils.ts        # Helper functions
-│   │   ├── pages/              # Route components
+│   │   ├── features/           # Feature modules (catalog/economy/builds/analysis stubs)
+│   │   ├── routes/             # File-based routes (TanStack Router)
 │   │   ├── App.tsx
 │   │   └── main.tsx
-│   ├── orval.config.ts         # API client generator config
+│   ├── orval.config.ts         # OpenAPI → React Query hooks config
 │   └── package.json
 ├── scripts/
-│   ├── start-dev.sh                  # Start all services
-│   ├── stop-dev.sh                 # Stop all services
-│   ├── restart-dev.sh              # Restart all services
-│   └── README.md               # Scripts documentation
+│   ├── start-services.sh                    # Start services (use --dev or --prod)
+│   ├── stop-services.sh                     # Stop services
+│   ├── restart-services.sh                  # Restart services
+│   └── README.md                   # Scripts documentation
 ├── docs/
 │   ├── PRODUCT.md              # Product vision
 │   ├── ARCHITECTURE.md         # Architecture decisions
@@ -295,11 +299,7 @@ const { data: notes } = useListNotesApiNotesGet({ game });
 
 ### Auto-Generated API Client
 
-Changes to backend automatically flow to frontend:
-
-1. Update backend endpoint
-2. Run `npm run generate:api` in frontend
-3. Get type-safe hooks with IntelliSense
+The repo includes generated hooks under `frontend/src/hooks/api/generated/`. Regenerating them requires reintroducing an `orval.config.ts` and a corresponding npm script (not currently present).
 
 Example:
 
@@ -366,7 +366,7 @@ LOG_LEVEL=INFO          # DEBUG | INFO | WARNING | ERROR
 
 ```bash
 # API URL
-VITE_API_URL=http://localhost:8000
+VITE_API_BASE_URL=http://localhost:8000
 ```
 
 ## Troubleshooting
@@ -395,8 +395,7 @@ curl http://localhost:8000/health
 
 # 2. Verify CORS is configured (already set in backend)
 
-# 3. Regenerate API client
-npm run generate:api
+# 3. If hooks look stale, reinstall deps or regenerate manually once `orval.config.ts` is restored
 ```
 
 ### Database migrations fail

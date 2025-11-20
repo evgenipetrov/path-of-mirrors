@@ -3,7 +3,7 @@
  */
 
 import { AXIOS_INSTANCE } from '@/lib/api-client'
-import type { PoBParseRequest, PoBParseResponse } from './types'
+import type { PoBParseRequest, PoBParseResponse, UpgradeSearchRequest, UpgradeSearchResponse } from './types'
 
 /**
  * Parse Path of Building file or import code.
@@ -14,18 +14,27 @@ import type { PoBParseRequest, PoBParseResponse } from './types'
 export async function parsePob(
   request: PoBParseRequest
 ): Promise<PoBParseResponse> {
-  console.log('Parsing PoB with request:', {
-    hasXml: !!request.pob_xml,
-    hasCode: !!request.pob_code,
-    game: request.game,
-    codeLength: request.pob_code?.length || 0,
-  })
-
   const { data } = await AXIOS_INSTANCE.post<PoBParseResponse>(
-    '/api/v1/pob/parse',
+    '/api/v1/builds/parse',
     request
   )
 
-  console.log('Parse successful, got build:', data.name)
+  return data
+}
+
+/**
+ * Search for item upgrades.
+ *
+ * @param request - Upgrade search request with filters
+ * @returns Ranked list of upgrade results
+ */
+export async function searchUpgrades(
+  request: UpgradeSearchRequest
+): Promise<UpgradeSearchResponse> {
+  const { data } = await AXIOS_INSTANCE.post<UpgradeSearchResponse>(
+    '/api/v1/upgrades/search',
+    request
+  )
+
   return data
 }

@@ -6,12 +6,13 @@ Convenient scripts for managing the Path of Mirrors development environment.
 
 | Script | Purpose | Common Usage |
 |--------|---------|--------------|
-| `setup.sh` | Initial project setup | `./scripts/setup.sh` |
-| `start.sh` | Start services | `./scripts/start.sh` or `./scripts/start.sh --dev` |
-| `stop.sh` | Stop services | `./scripts/stop.sh` or `./scripts/stop.sh --dev` |
-| `restart.sh` | Restart services | `./scripts/restart.sh` or `./scripts/restart.sh --dev` |
-| `build.sh` | Build Docker images | `./scripts/build.sh --prod` |
+| `setup-project.sh` | Initial project setup | `./scripts/setup-project.sh` |
+| `start-services.sh` | Start services | `./scripts/start-services.sh` or `./scripts/start-services.sh --dev` |
+| `stop-services.sh` | Stop services | `./scripts/stop-services.sh` or `./scripts/stop-services.sh --dev` |
+| `restart-services.sh` | Restart services | `./scripts/restart-services.sh` or `./scripts/restart-services.sh --dev` |
+| `build-images.sh` | Build Docker images | `./scripts/build-images.sh --prod` |
 | `run-tests.sh` | Run tests | `./scripts/run-tests.sh` |
+| `generate-api.sh` | Regenerate frontend API client | `./scripts/generate-api.sh` |
 | `check-code.sh` | Run linters | `./scripts/check-code.sh --fix` |
 | `migrate-db.sh` | Database migrations | `./scripts/migrate-db.sh` |
 | `reset-db.sh` | Reset database | `./scripts/reset-db.sh --force` |
@@ -21,12 +22,12 @@ Convenient scripts for managing the Path of Mirrors development environment.
 
 ## Available Scripts
 
-### `setup.sh` - Initial Project Setup
+### `setup-project.sh` - Initial Project Setup
 
 Sets up a new development environment from scratch.
 
 ```bash
-./scripts/setup.sh
+./scripts/setup-project.sh
 ```
 
 **What it does:**
@@ -47,20 +48,20 @@ Sets up a new development environment from scratch.
 
 ---
 
-### `start.sh` - Start Services
+### `start-services.sh` - Start Services
 
 Starts services in development or production mode.
 
 ```bash
 # Development mode (default) - includes frontend
-./scripts/start.sh
-./scripts/start.sh --dev
+./scripts/start-services.sh
+./scripts/start-services.sh --dev
 
 # Production mode - backend services only
-./scripts/start.sh --prod
+./scripts/start-services.sh --prod
 
 # Rebuild before starting
-./scripts/start.sh --dev --build
+./scripts/start-services.sh --dev --build
 ```
 
 **What it does (dev mode):**
@@ -86,17 +87,17 @@ Starts services in development or production mode.
 
 ---
 
-### `stop.sh` - Stop Services
+### `stop-services.sh` - Stop Services
 
 Stops all running services.
 
 ```bash
 # Stop development services (default)
-./scripts/stop.sh
-./scripts/stop.sh --dev
+./scripts/stop-services.sh
+./scripts/stop-services.sh --dev
 
 # Stop production services
-./scripts/stop.sh --prod
+./scripts/stop-services.sh --prod
 ```
 
 **What it does:**
@@ -110,26 +111,26 @@ Stops all running services.
 
 ---
 
-### `restart.sh` - Restart Services
+### `restart-services.sh` - Restart Services
 
 Convenience script to stop and restart services.
 
 ```bash
 # Restart development services (default)
-./scripts/restart.sh
-./scripts/restart.sh --dev
+./scripts/restart-services.sh
+./scripts/restart-services.sh --dev
 
 # Restart production services
-./scripts/restart.sh --prod
+./scripts/restart-services.sh --prod
 
 # Restart with rebuild
-./scripts/restart.sh --dev --build
+./scripts/restart-services.sh --dev --build
 ```
 
 **What it does:**
-1. Runs `stop.sh` to stop services
+1. Runs `stop-services.sh` to stop services
 2. Waits 2 seconds for clean shutdown
-3. Runs `start.sh` to start everything fresh
+3. Runs `start-services.sh` to start everything fresh
 
 **Options:**
 - `--dev` - Restart dev services (default)
@@ -143,17 +144,17 @@ Convenience script to stop and restart services.
 
 ---
 
-### `build.sh` - Build Docker Images
+### `build-images.sh` - Build Docker Images
 
 Builds Docker images for development or production.
 
 ```bash
 # Build for development (default)
-./scripts/build.sh
-./scripts/build.sh --dev
+./scripts/build-images.sh
+./scripts/build-images.sh --dev
 
 # Build for production
-./scripts/build.sh --prod
+./scripts/build-images.sh --prod
 ```
 
 **What it does:**
@@ -337,7 +338,7 @@ View Docker service logs with filtering and follow options.
 # Clone repository and set up everything
 git clone <repository-url>
 cd path-of-mirrors
-./scripts/setup.sh
+./scripts/setup-project.sh
 
 # Start frontend in a separate terminal
 cd frontend && npm run dev
@@ -349,7 +350,7 @@ cd frontend && npm run dev
 
 ```bash
 # Morning: start everything
-./scripts/start.sh
+./scripts/start-services.sh
 
 # Work on features...
 # Frontend changes auto-reload via HMR
@@ -362,7 +363,7 @@ cd frontend && npm run dev
 ./scripts/check-code.sh --fix
 
 # Evening: stop everything
-# Press Ctrl+C (or run ./scripts/stop.sh)
+# Press Ctrl+C (or run ./scripts/stop-services.sh)
 ```
 
 ### Database Workflows
@@ -432,7 +433,7 @@ git commit -m "Your message"
 ./scripts/view-logs.sh -n 50
 
 # Restart everything if stuck
-./scripts/restart.sh
+./scripts/restart-services.sh
 
 # If database is corrupted, reset it
 ./scripts/reset-db.sh --force
@@ -442,16 +443,16 @@ git commit -m "Your message"
 
 ```bash
 # Build production images
-./scripts/build.sh --prod
+./scripts/build-images.sh --prod
 
 # Test production backend
-./scripts/start.sh --prod
+./scripts/start-services.sh --prod
 
 # View production logs
 ./scripts/view-logs.sh --prod backend -f
 
 # Stop production services
-./scripts/stop.sh --prod
+./scripts/stop-services.sh --prod
 ```
 
 ---
@@ -460,7 +461,7 @@ git commit -m "Your message"
 
 **Development vs Production Modes:**
 
-All unified scripts (`start.sh`, `stop.sh`, `restart.sh`, `build.sh`, `view-logs.sh`) support `--dev` and `--prod` flags:
+All unified scripts (`start-services.sh`, `stop-services.sh`, `restart-services.sh`, `build-images.sh`, `view-logs.sh`) support `--dev` and `--prod` flags:
 - **`--dev` (default):** Uses `docker-compose.yml` + `docker-compose.dev.yml`
   - Includes volume mounts for hot-reload
   - Starts frontend dev server
@@ -521,7 +522,7 @@ cd frontend
 rm -rf node_modules package-lock.json
 npm install
 cd ..
-./scripts/start.sh
+./scripts/start-services.sh
 ```
 
 **Database issues:**
@@ -590,7 +591,7 @@ These scripts are designed to be used in CI/CD pipelines:
 ```yaml
 # Example GitHub Actions usage
 - name: Setup
-  run: ./scripts/setup.sh
+  run: ./scripts/setup-project.sh
 
 - name: Lint
   run: ./scripts/check-code.sh
@@ -599,7 +600,7 @@ These scripts are designed to be used in CI/CD pipelines:
   run: ./scripts/run-tests.sh --coverage
 
 - name: Build Production
-  run: ./scripts/build.sh --prod
+  run: ./scripts/build-images.sh --prod
 ```
 
 ---

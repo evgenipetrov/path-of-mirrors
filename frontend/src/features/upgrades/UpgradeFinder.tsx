@@ -2,22 +2,34 @@
  * Upgrade Finder Feature Component
  *
  * Main page for finding item upgrades using Path of Building imports.
+ * Complete end-to-end flow: Parse → Select Slot → Filter → Search → Display Results
  */
 
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { AlertCircle, CheckCircle2, ChevronUp } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ChevronUp, Search } from 'lucide-react'
 import { PoBInput } from './components/PoBInput'
 import { BuildDisplay } from './components/BuildDisplay'
-import { parsePob } from './api'
-import type { Game, PoBParseResponse } from './types'
+import { ItemSlotSelector } from './components/ItemSlotSelector'
+import { UpgradeFilters } from './components/UpgradeFilters'
+import { UpgradeResults } from './components/UpgradeResults'
+import { parsePob, searchUpgrades } from './api'
+import type { Game, PoBParseResponse, UpgradeFiltersState, UpgradeSearchResponse } from './types'
 
 export function UpgradeFinder() {
   const [game] = useState<Game>('poe1') // TODO: Add game selector
   const [parsedBuild, setParsedBuild] = useState<PoBParseResponse | null>(null)
   const [isImportOpen, setIsImportOpen] = useState(true)
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
+  const [upgradeResults, setUpgradeResults] = useState<UpgradeSearchResponse | null>(null)
+  const [filters, setFilters] = useState<UpgradeFiltersState>({
+    maxPriceChaos: null,
+    minLife: null,
+    minResistance: null,
+    limit: 10,
+  })
 
   const parseMutation = useMutation({
     mutationFn: async (input: { pobXml?: string; pobCode?: string }) => {
@@ -29,20 +41,45 @@ export function UpgradeFinder() {
     },
     onSuccess: (data) => {
       setParsedBuild(data)
-      setIsImportOpen(false) // Collapse after successful import
+      setIsImportOpen(false)
+      setSelectedSlot(null) // Reset slot selection
+      setUpgradeResults(null) // Clear previous results
     },
   })
+
+  const searchMutation = useMutation({
+    mutationFn: async () => {
+      if (!parsedBuild || !selectedSlot) {
+        throw new Error('No build or slot selected')
+      }
+
+      return searchUpgrades({
+        session_id: parsedBuild.session_id,
+        item_slot: selectedSlot,
+        max_price_chaos: filters.maxPriceChaos,
+        min_life: filters.minLife,
+        min_resistance: filters.minResistance,
+        limit: filters.limit,
+      })
+    },
+    onSuccess: (data) => {
+      setUpgradeResults(data)
+    },
+  })
+
+  const availableSlots = parsedBuild?.items ? Object.keys(parsedBuild.items) : []
+  const canSearch = parsedBuild && selectedSlot
 
   return (
     <div className="container mx-auto py-8 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Build Analyzer</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Upgrade Finder</h1>
         <p className="text-muted-foreground mt-2">
-          Import your Path of Building to analyze your build and find upgrades
+          Import your Path of Building to find better items on the trade site
         </p>
       </div>
 
-      {/* Error Alert */}
+      {/* Parse Error Alert */}
       {parseMutation.isError && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -51,24 +88,43 @@ export function UpgradeFinder() {
             {parseMutation.error instanceof Error
               ? parseMutation.error.message
               : 'Failed to parse Path of Building data. Please check your input and try again.'}
-            {/* Show backend error detail if available */}
-            {(parseMutation.error as any)?.response?.data?.detail && (
+            {(
+              (parseMutation.error as { response?: { data?: { detail?: string } } } | undefined)?.response?.data
+                ?.detail
+            ) && (
               <div className="mt-2 text-sm">
-                <strong>Details:</strong> {(parseMutation.error as any).response.data.detail}
+                <strong>Details:</strong>{' '}
+                {
+                  (parseMutation.error as { response?: { data?: { detail?: string } } } | undefined)?.response?.data
+                    ?.detail
+                }
               </div>
             )}
           </AlertDescription>
         </Alert>
       )}
 
-      {/* Success Alert with Import Another Build button */}
+      {/* Search Error Alert */}
+      {searchMutation.isError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error searching for upgrades</AlertTitle>
+          <AlertDescription>
+            {searchMutation.error instanceof Error
+              ? searchMutation.error.message
+              : 'Failed to search for upgrades. Please try again.'}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Success Alert */}
       {parseMutation.isSuccess && parsedBuild && !isImportOpen && (
         <Alert>
           <CheckCircle2 className="h-4 w-4" />
           <AlertTitle>Build parsed successfully</AlertTitle>
           <AlertDescription className="flex items-center justify-between">
             <span>
-              Loaded {parsedBuild.name} - {parsedBuild.items ? Object.keys(parsedBuild.items).length : 0} items found
+              Loaded {parsedBuild.name} - {Object.keys(parsedBuild.items || {}).length} items found
             </span>
             <Button
               variant="outline"
@@ -107,6 +163,49 @@ export function UpgradeFinder() {
 
       {/* Build Display */}
       {parsedBuild && <BuildDisplay build={parsedBuild} />}
+
+      {/* Upgrade Search Section - Only show if build is parsed */}
+      {parsedBuild && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {/* Item Slot Selector */}
+            <ItemSlotSelector
+              availableSlots={availableSlots}
+              selectedSlot={selectedSlot}
+              onSlotChange={setSelectedSlot}
+              disabled={parseMutation.isPending || searchMutation.isPending}
+            />
+
+            {/* Upgrade Filters */}
+            <UpgradeFilters
+              filters={filters}
+              onFiltersChange={setFilters}
+              disabled={!canSearch || searchMutation.isPending}
+            />
+          </div>
+
+          {/* Search Button */}
+          <div className="flex justify-center">
+            <Button
+              onClick={() => searchMutation.mutate()}
+              disabled={!canSearch || searchMutation.isPending}
+              size="lg"
+              className="w-full md:w-auto"
+            >
+              <Search className="mr-2 h-5 w-5" />
+              {searchMutation.isPending ? 'Searching...' : 'Search for Upgrades'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Upgrade Results */}
+      {upgradeResults && (
+        <UpgradeResults
+          results={upgradeResults.upgrades}
+          currentItem={upgradeResults.current_item}
+        />
+      )}
     </div>
   )
 }

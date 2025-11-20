@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# Script: db-reset.sh
+# Script: reset-db.sh
 # Description: Reset the database (WARNING: deletes all data)
-# Usage: ./scripts/db-reset.sh [OPTIONS]
+# Usage: ./scripts/reset-db.sh [OPTIONS]
 #
 # Options:
 #   --help        Show this help message
@@ -10,47 +10,24 @@
 #   --seed        Seed sample data after reset
 #   --greenfield  Clean and regenerate migrations (for development)
 
-set -e
+set -euo pipefail
 
-# Docker Compose files for development
-COMPOSE_FILES="-f docker-compose.yml -f docker-compose.dev.yml"
-set -u
-set -o pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-BOLD='\033[1m'
-NC='\033[0m' # No Color
+source "$SCRIPT_DIR/lib/log.sh"
+source "$SCRIPT_DIR/lib/compose.sh"
+source "$SCRIPT_DIR/lib/wait.sh"
+source "$SCRIPT_DIR/lib/backend.sh"
+
+MODE="${MODE:-dev}"
+COMPOSE_FILES="$(select_compose_files "$MODE")"
 
 # Configuration
 FORCE=false
 SEED=false
 GREENFIELD=false
-
-# Helper functions
-log_info() {
-    echo -e "${BLUE}ℹ️  $1${NC}"
-}
-
-log_success() {
-    echo -e "${GREEN}✅ $1${NC}"
-}
-
-log_error() {
-    echo -e "${RED}❌ $1${NC}"
-}
-
-log_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
-}
-
-log_step() {
-    echo -e "\n${BOLD}$1${NC}"
-    echo "====================================="
-}
 
 show_help() {
     head -n 12 "$0" | tail -n 10 | sed 's/^# //'
@@ -91,39 +68,22 @@ main() {
 
     # Wait for PostgreSQL
     log_info "Waiting for PostgreSQL to be ready..."
-    local pg_ready=false
-    local max_attempts=30
-    local attempt=0
-
-    while [ $attempt -lt $max_attempts ]; do
-        if docker compose $COMPOSE_FILES exec -T postgres pg_isready -U postgres > /dev/null 2>&1; then
-            pg_ready=true
-            break
-        fi
-        attempt=$((attempt + 1))
-        sleep 1
-    done
-
-    if [ "$pg_ready" = true ]; then
+    if wait_for_pg "$COMPOSE_FILES" 30; then
         log_success "PostgreSQL ready"
     else
-        log_error "PostgreSQL failed to start after ${max_attempts} seconds"
+        log_error "PostgreSQL failed to start after 30 seconds"
         log_info "Check logs with: docker compose $COMPOSE_FILES logs postgres"
         exit 1
     fi
 
     # Wait for backend
     log_info "Waiting for backend to be ready..."
-    sleep 2
-    attempt=0
-    while [ $attempt -lt $max_attempts ]; do
-        if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
-            log_success "Backend ready"
-            break
-        fi
-        attempt=$((attempt + 1))
-        sleep 1
-    done
+    if wait_for_url "http://localhost:8000/health" 30; then
+        log_success "Backend ready"
+    else
+        log_error "Backend failed to start"
+        exit 1
+    fi
 
     # Clean old migrations if greenfield mode
     if [ "$GREENFIELD" = true ]; then
@@ -132,20 +92,20 @@ main() {
         log_success "Old migrations removed"
 
         log_step "📝 Generating fresh migration..."
-        docker compose $COMPOSE_FILES exec -T backend bash -c "cd /app && uv run alembic revision --autogenerate -m 'initial schema'"
+        backend_exec "$COMPOSE_FILES" "uv run alembic revision --autogenerate -m 'initial schema'"
         log_success "Fresh migration generated"
     fi
 
     # Run migrations
     log_step "🗄️  Running database migrations..."
-    docker compose $COMPOSE_FILES exec -T backend bash -c "cd /app && uv run alembic upgrade head"
+    backend_exec "$COMPOSE_FILES" "uv run alembic upgrade head"
     log_success "Migrations complete"
 
     # Seed data if requested
     if [ "$SEED" = true ]; then
         log_step "🌱 Seeding sample data..."
         if docker compose $COMPOSE_FILES exec -T backend test -f scripts/seed.py; then
-            docker compose $COMPOSE_FILES exec -T backend uv run python scripts/seed.py
+            backend_exec "$COMPOSE_FILES" "uv run python scripts/seed.py"
             log_success "Sample data seeded"
         else
             log_warning "No seed script found at scripts/seed.py (skipping)"
@@ -194,8 +154,5 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
-
-# Change to project root
-cd "$(dirname "$0")/.."
 
 main
