@@ -7,6 +7,10 @@ import {
   UserCog,
   StickyNote,
   Sparkles,
+  Coins,
+  BookOpen,
+  BarChart3,
+  Compass,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -34,6 +38,31 @@ export const sidebarData: SidebarData = {
           title: 'Notes',
           url: '/notes',
           icon: StickyNote,
+        },
+      ],
+    },
+    {
+      title: 'Explore',
+      items: [
+        {
+          title: 'Builds',
+          url: '/builds',
+          icon: Compass,
+        },
+        {
+          title: 'Economy',
+          url: '/economy',
+          icon: Coins,
+        },
+        {
+          title: 'Catalog',
+          url: '/catalog',
+          icon: BookOpen,
+        },
+        {
+          title: 'Analysis',
+          url: '/analysis',
+          icon: BarChart3,
         },
       ],
     },
