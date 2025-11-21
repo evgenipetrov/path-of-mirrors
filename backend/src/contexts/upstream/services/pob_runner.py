@@ -1,20 +1,27 @@
-"""Headless Path of Building runner (stub with graceful fallback).
+"""Headless Path of Building runner with Lua bridge.
 
-This module is the integration point for invoking the Path of Building
-Community Fork binaries (PoE1) and the PoE2 fork via a Lua bridge. For now it
-is a thin shim that:
-  - Reads configured binary paths from env (POB_CLI_POE1 / POB_CLI_POE2)
-  - If binaries are absent, returns {} so callers can fall back to lightweight
-    parsing.
-  - Is structured so we can later swap in the real Lua bridge logic from
-    `_samples/code/path-of-mirrors_v0.4`.
+This integrates the Path of Building Community binaries (PoE1 + PoE2) via a
+Lua bridge script executed under LuaJIT. It streams PoB build XML on stdin and
+expects JSON on stdout.
+
+Environment (defaults can be set in Docker image):
+  POB_CLI_POE1: path to "Path of Building.exe" for PoE1
+  POB_CLI_POE2: path to "Path of Building-PoE2.exe" for PoE2
+  POB_LUAJIT:   path to luajit binary
+  POB_BRIDGE:   path to pob_bridge.lua
+
+Behavior:
+  - If any prerequisite is missing, returns an empty dict (callers fall back to
+    lightweight parsing rather than failing the request).
+  - On success, returns parsed JSON emitted by the Lua bridge.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
-from typing import Any
+from typing import Any, Iterable
 
 from src.shared import Game
 import structlog
@@ -30,20 +37,53 @@ def _binary_for_game(game: Game) -> str | None:
     return None
 
 
-def run_pob(xml_content: str, game: Game, timeout: int = 10) -> dict[str, Any]:
-    """Invoke PoB headless CLI (if configured) to derive stats.
+def _is_executable(path: str | None) -> bool:
+    return bool(path) and os.path.isfile(path) and os.access(path, os.X_OK)
 
-    Currently returns {} when the binary is not configured or invocation fails.
-    This keeps upstream flows non-blocking while we wire in the real bridge.
+
+def _missing_fields(items: Iterable[tuple[str, str | None]]) -> list[str]:
+    return [name for name, value in items if not value]
+
+
+def run_pob(xml_content: str, game: Game, timeout: int = 15) -> dict[str, Any]:
+    """Invoke PoB via Lua bridge and parse JSON output.
+
+    Returns {} if tooling is missing or invocation fails; callers should treat
+    this as a graceful no-op and continue with fallback parsing.
     """
-    binary = _binary_for_game(game)
-    if not binary:
-        logger.warn("pob_cli_not_configured", game=game.value)
+
+    pob_binary = _binary_for_game(game)
+    luajit = os.getenv("POB_LUAJIT")
+    bridge = os.getenv("POB_BRIDGE")
+
+    missing = _missing_fields(
+        [
+            ("pob_binary", pob_binary),
+            ("luajit", luajit),
+            ("bridge", bridge),
+        ]
+    )
+    if missing:
+        logger.warn("pob_cli_missing_config", game=game.value, missing=missing)
         return {}
 
+    if not _is_executable(luajit):
+        logger.warn("luajit_not_executable", path=luajit)
+        return {}
+
+    # PoB binaries are Windows executables; call path is validated but we don't enforce executability.
+    if not os.path.isfile(pob_binary):
+        logger.warn("pob_binary_missing", game=game.value, path=pob_binary)
+        return {}
+
+    if not os.path.isfile(bridge):
+        logger.warn("pob_bridge_missing", path=bridge)
+        return {}
+
+    cmd = [luajit, bridge, pob_binary]
     try:
         result = subprocess.run(
-            [binary, "--stdin"],  # placeholder interface
+            cmd,
             input=xml_content.encode("utf-8"),
             capture_output=True,
             timeout=timeout,
@@ -62,7 +102,12 @@ def run_pob(xml_content: str, game: Game, timeout: int = 10) -> dict[str, Any]:
         )
         return {}
 
-    # Future: parse structured JSON from stdout; for now, return empty to avoid
-    # blocking callers. Keep placeholder for quick swap-in.
-    logger.info("pob_cli_called", game=game.value)
-    return {}
+    stdout = result.stdout.decode("utf-8", errors="ignore")
+    try:
+        payload = json.loads(stdout)
+    except json.JSONDecodeError:
+        logger.warn("pob_cli_bad_json", sample=stdout[:200])
+        return {}
+
+    logger.info("pob_cli_ok", game=game.value)
+    return payload if isinstance(payload, dict) else {}

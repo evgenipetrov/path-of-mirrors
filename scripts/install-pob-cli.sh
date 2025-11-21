@@ -154,12 +154,8 @@ fetch_and_unpack "$POB_POE2_URL" "$BIN_DIR/pob-poe2" "PoB PoE2 (portable)"
 # Build LuaJIT
 build_luajit
 
-# Drop a minimal bridge stub (replace later with full bridge logic)
-cat > "$BIN_DIR/pob_bridge.lua" <<'EOF'
--- Minimal PoB bridge stub: echoes fixed JSON.
-local json = '{ "ok": true, "message": "stub bridge", "stats": {} }'
-io.write(json)
-EOF
+# Copy the bridge script from the repo into bin for runtime use
+cp "$ROOT/backend/resources/pob_bridge.lua" "$BIN_DIR/pob_bridge.lua"
 chmod +x "$BIN_DIR/pob_bridge.lua"
 
 echo ""
@@ -170,7 +166,7 @@ echo "  export POB_CLI_POE2=\"$BIN_DIR/pob-poe2/Path of Building-PoE2.exe\""
 echo "  export POB_LUAJIT=\"$BIN_DIR/luajit/bin/luajit\""
 echo "  export POB_BRIDGE=\"$BIN_DIR/pob_bridge.lua\""
 echo ""
-echo "Smoke test (bridge stub):"
+echo "Smoke test (bridge):"
 echo "  POB_LUAJIT=\"$BIN_DIR/luajit/bin/luajit\" POB_BRIDGE=\"$BIN_DIR/pob_bridge.lua\" \\"
 echo "    LUA_PATH=\"$BIN_DIR/?.lua;;\" \\"
 echo "    $BIN_DIR/luajit/bin/luajit $BIN_DIR/pob_bridge.lua <<< '<PathOfBuilding></PathOfBuilding>'"
