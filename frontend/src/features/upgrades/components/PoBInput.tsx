@@ -78,7 +78,7 @@ export function PoBInput({ onParse, isLoading = false }: PoBInputProps) {
                   placeholder="Paste your PoB import code"
                   value={pobCode}
                   onChange={(e) => setPobCode(e.target.value)}
-                  className="font-mono text-xs"
+                  className="font-mono text-xs sm:flex-1"
                 />
                 <Button
                   onClick={handleCodeParse}
@@ -88,21 +88,16 @@ export function PoBInput({ onParse, isLoading = false }: PoBInputProps) {
                   {isLoading ? 'Parsing...' : 'Parse Build'}
                 </Button>
               </div>
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <p className="truncate pr-3">
-                  In Path of Building: Import/Export → Generate → Copy, then paste here.
-                </p>
-                {pobCode && (
-                  <p className="font-mono">
-                    {pobCode.length.toLocaleString()} chars
-                    {pobCode.length < 5000 && (
-                      <span className="text-amber-500 ml-2">
-                        (typical codes are 10,000+ chars)
-                      </span>
-                    )}
-                  </p>
-                )}
-              </div>
+              {pobCode && (
+                <div className="text-sm text-muted-foreground font-mono">
+                  {pobCode.length.toLocaleString()} chars
+                  {pobCode.length < 5000 && (
+                    <span className="text-amber-500 ml-2">
+                      (typical codes are 10,000+ chars)
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </TabsContent>
 
@@ -115,7 +110,7 @@ export function PoBInput({ onParse, isLoading = false }: PoBInputProps) {
                   type="file"
                   accept=".xml"
                   onChange={handleFileChange}
-                  className="sm:max-w-xs"
+                  className="sm:flex-1"
                 />
                 <Button
                   onClick={handleFileUpload}
