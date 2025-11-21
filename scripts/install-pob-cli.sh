@@ -155,7 +155,7 @@ fetch_and_unpack "$POB_POE2_URL" "$BIN_DIR/pob-poe2" "PoB PoE2 (portable)"
 build_luajit
 
 # Copy the bridge script from the repo into bin for runtime use
-cp "$ROOT/backend/resources/pob_bridge.lua" "$BIN_DIR/pob_bridge.lua"
+cp "$ROOT/backend/src/contexts/upstream/services/pob_bridge.lua" "$BIN_DIR/pob_bridge.lua"
 chmod +x "$BIN_DIR/pob_bridge.lua"
 
 echo ""
