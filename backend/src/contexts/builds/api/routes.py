@@ -74,7 +74,8 @@ async def parse_build(request: PoBParseRequest) -> PoBParseResponse:
             build = parse_pob_xml(request.pob_xml, request.game)  # type: ignore
 
         # Optionally derive stats via headless PoB CLI (graceful fallback)
-        derived_stats = run_pob(request.pob_xml or "", request.game) if (request.pob_xml or request.pob_code) else {}
+        should_run_pob = request.pob_xml or request.pob_code
+        derived_stats = run_pob(request.pob_xml or "", request.game) if should_run_pob else {}
 
         # Store build in Redis session
         session_data = {

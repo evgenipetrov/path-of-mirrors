@@ -21,10 +21,12 @@ from __future__ import annotations
 import json
 import os
 import subprocess
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
+
+import structlog
 
 from src.shared import Game
-import structlog
 
 logger = structlog.get_logger(__name__)
 
@@ -38,7 +40,9 @@ def _binary_for_game(game: Game) -> str | None:
 
 
 def _is_executable(path: str | None) -> bool:
-    return bool(path) and os.path.isfile(path) and os.access(path, os.X_OK)
+    if not path:
+        return False
+    return os.path.isfile(path) and os.access(path, os.X_OK)
 
 
 def _missing_fields(items: Iterable[tuple[str, str | None]]) -> list[str]:
@@ -71,16 +75,21 @@ def run_pob(xml_content: str, game: Game, timeout: int = 15) -> dict[str, Any]:
         logger.warn("luajit_not_executable", path=luajit)
         return {}
 
-    # PoB binaries are Windows executables; call path is validated but we don't enforce executability.
-    if not os.path.isfile(pob_binary):
+    # PoB binaries are Windows executables; we only validate that the path exists.
+    if not pob_binary or not os.path.isfile(pob_binary):
         logger.warn("pob_binary_missing", game=game.value, path=pob_binary)
         return {}
 
-    if not os.path.isfile(bridge):
+    if not bridge or not os.path.isfile(bridge):
         logger.warn("pob_bridge_missing", path=bridge)
         return {}
 
-    cmd = [luajit, bridge, pob_binary]
+    # At this point, values are non-None strings
+    assert luajit is not None
+    assert bridge is not None
+    assert pob_binary is not None
+
+    cmd: list[str] = [luajit, bridge, pob_binary]
     try:
         result = subprocess.run(
             cmd,

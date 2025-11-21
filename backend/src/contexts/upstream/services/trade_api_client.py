@@ -19,8 +19,8 @@ from typing import Any
 
 import structlog
 
-from src.infrastructure.http_client import get_http_client
 from src.shared import Game
+from src.shared.http import create_poe_http_client
 
 logger = structlog.get_logger(__name__)
 
@@ -68,8 +68,6 @@ async def search_items(
     base_url = TRADE_API_URLS[game]
     search_url = f"{base_url}/search/{league}"
 
-    client = get_http_client()
-
     logger.info(
         "Searching Trade API",
         game=game.value,
@@ -79,7 +77,9 @@ async def search_items(
     )
 
     try:
+        client = get_http_client()
         response = await client.post(search_url, json=query)
+        response.raise_for_status()
         data: dict[str, Any] = response.json()
 
         # Extract result IDs (limit to requested amount)
@@ -139,8 +139,6 @@ async def fetch_items(
     # Add query_id as query param if provided (helps with rate limiting)
     params = {"query": query_id} if query_id else None
 
-    client = get_http_client()
-
     logger.info(
         "Fetching items from Trade API",
         game=game.value,
@@ -149,7 +147,9 @@ async def fetch_items(
     )
 
     try:
+        client = get_http_client()
         response = await client.get(fetch_url, params=params)
+        response.raise_for_status()
         data: dict[str, Any] = response.json()
 
         # Extract results
@@ -284,3 +284,12 @@ def build_simple_query(
         }
 
     return query
+
+
+# Adapter retained for testability/backwards compatibility
+def get_http_client():
+    """Return a PoE-configured HTTP client.
+
+    Kept as a separate function so test suites can monkeypatch/magicmock easily.
+    """
+    return create_poe_http_client()
