@@ -8,6 +8,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button'
+import { X } from 'lucide-react'
 import type { PoBParseResponse, ItemData } from '../types'
 
 interface BuildDisplayProps {
@@ -374,14 +376,16 @@ type StatTileProps = {
 function StatTile({ label, value, detail, accent, weightKey, getWeight, onWeightChange, onRemove }: StatTileProps) {
   return (
     <div className="relative rounded-lg border p-3">
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         aria-label={`Hide ${label}`}
         onClick={onRemove}
-        className="absolute right-2 top-2 rounded-full p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+        className="absolute right-1 top-1 size-6"
       >
-        ×
-      </button>
+        <X className="size-4" />
+      </Button>
       <div className="flex items-start justify-between gap-2">
         <div className="pt-1">
           <p className="text-sm text-muted-foreground">{label}</p>
