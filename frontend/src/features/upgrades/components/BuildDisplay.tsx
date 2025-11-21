@@ -67,26 +67,33 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid gap-4 lg:grid-cols-4">
-            <StatColumn
-              title="Character"
-              stats={[
-                { label: 'Class', value: build.character_class },
-                build.ascendancy ? { label: 'Ascendancy', value: build.ascendancy } : undefined,
-                { label: 'Level', value: build.level },
-                build.league ? { label: 'League', value: build.league } : undefined,
-                derived?.attributes ? { label: 'Attributes', value: formatAttributes(derived.attributes) } : undefined,
-                derived?.charges
-                  ? {
-                      label: 'Charges',
-                      value: `${derived.charges.endurance ?? 0} / ${derived.charges.frenzy ?? 0} / ${derived.charges.power ?? 0}`,
-                      detail: 'Endurance / Frenzy / Power',
-                    }
-                  : undefined,
-              ].filter(Boolean) as StatTileProps[]}
-              getWeight={getWeight}
-              onWeightChange={onWeightChange}
-            />
+          {/* Character quick info inline */}
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <InfoBlock label="Class" lines={[build.character_class]} />
+            {build.ascendancy && <InfoBlock label="Ascendancy" lines={[build.ascendancy]} />}
+            <InfoBlock label="Level" lines={[build.level.toString()]} />
+            {build.league && <InfoBlock label="League" lines={[build.league]} />}
+            {derived?.attributes && (
+              <InfoBlock
+                label="Attributes"
+                lines={[
+                  formatAttributes(derived.attributes) ?? '—',
+                  'Str / Dex / Int',
+                ]}
+              />
+            )}
+            {derived?.charges && (
+              <InfoBlock
+                label="Charges"
+                lines={[
+                  `${derived.charges.endurance ?? 0} / ${derived.charges.frenzy ?? 0} / ${derived.charges.power ?? 0}`,
+                  'Endurance / Frenzy / Power',
+                ]}
+              />
+            )}
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-3">
 
             <StatColumn
               title="Defensive"
@@ -353,6 +360,35 @@ function StatColumn({ title, stats, getWeight, onWeightChange }: StatColumnProps
           />
         ))}
       </div>
+    </div>
+  )
+}
+
+type InfoLineProps = {
+  label: string
+  value: string
+  detail?: string
+}
+
+function InfoLine({ label, value, detail }: InfoLineProps) {
+  return (
+    <div className="flex flex-col">
+      <span className="text-xs uppercase text-muted-foreground font-semibold">{label}</span>
+      <span className="text-sm font-medium">{value}</span>
+      {detail && <span className="text-xs text-muted-foreground">{detail}</span>}
+    </div>
+  )
+}
+
+function InfoBlock({ label, lines }: { label: string; lines: string[] }) {
+  return (
+    <div className="rounded-lg border px-3 py-2 flex flex-col gap-1">
+      <span className="text-xs uppercase text-muted-foreground font-semibold">{label}</span>
+      {lines.map((line, idx) => (
+        <span key={`${label}-${idx}`} className={idx === 0 ? 'text-sm font-medium' : 'text-xs text-muted-foreground'}>
+          {line}
+        </span>
+      ))}
     </div>
   )
 }
