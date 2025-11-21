@@ -4,6 +4,7 @@
  * Shows parsed Path of Building character information and items.
  */
 
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -13,11 +14,30 @@ interface BuildDisplayProps {
   build: PoBParseResponse
 }
 
+const DEFAULT_WEIGHTS: Record<string, number> = {
+  life: 2,
+  es: 1,
+  mana: 1,
+  armour: 0.5,
+  evasion: 0.5,
+  block: 0.5,
+  spell_block: 0.5,
+  spell_suppression: 0.5,
+  res_fire: 1,
+  res_cold: 1,
+  res_lightning: 1,
+  res_chaos: 1,
+  dps: 3,
+  ehp: 2,
+  max_hit: 1,
+}
+
 export function BuildDisplay({ build }: BuildDisplayProps) {
   const itemCount = build.items ? Object.keys(build.items).length : 0
 
   const groupedItems = groupItemsByCategory(build.items ?? {})
   const derived = build.derived_stats
+  const [weights, setWeights] = useState<Record<string, number>>(DEFAULT_WEIGHTS)
 
   const formatAttributes = (attrs?: { str?: number; dex?: number; int?: number }) => {
     if (!attrs) return undefined
@@ -28,6 +48,10 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
 
   const toPercent = (value?: number) =>
     value === undefined ? undefined : `${Math.round(value >= 10 ? value : value * 100)}%`
+
+  const getWeight = (key: string, fallback = 1) => weights[key] ?? DEFAULT_WEIGHTS[key] ?? fallback
+  const onWeightChange = (key: string, value: number) =>
+    setWeights((prev) => ({ ...prev, [key]: value }))
 
   return (
     <div className="space-y-4">
@@ -52,9 +76,6 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
                 { label: 'Level', value: build.level },
                 build.league ? { label: 'League', value: build.league } : undefined,
                 derived?.attributes ? { label: 'Attributes', value: formatAttributes(derived.attributes) } : undefined,
-                derived?.movement_speed !== undefined
-                  ? { label: 'Movement Speed', value: toPercent(derived.movement_speed) }
-                  : undefined,
                 derived?.charges
                   ? {
                       label: 'Charges',
@@ -63,22 +84,26 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
                     }
                   : undefined,
               ].filter(Boolean) as StatTileProps[]}
+              getWeight={getWeight}
+              onWeightChange={onWeightChange}
             />
 
             <StatColumn
               title="Defensive"
               stats={[
-                { label: 'Life', value: derived?.life ?? build.life, accent: 'text-red-500' },
-                { label: 'Energy Shield', value: derived?.es ?? build.energy_shield },
-                { label: 'Mana', value: derived?.mana ?? build.mana },
-                { label: 'Armour', value: derived?.armour ?? build.armour },
-                { label: 'Evasion', value: derived?.eva ?? build.evasion },
-                derived?.block?.attack !== undefined ? { label: 'Block', value: toPercent(derived.block.attack) } : undefined,
-                derived?.block?.spell !== undefined ? { label: 'Spell Block', value: toPercent(derived.block.spell) } : undefined,
+                { label: 'Life', value: derived?.life ?? build.life, accent: 'text-red-500', weightKey: 'life' },
+                { label: 'Energy Shield', value: derived?.es ?? build.energy_shield, weightKey: 'es' },
+                { label: 'Mana', value: derived?.mana ?? build.mana, weightKey: 'mana' },
+                { label: 'Armour', value: derived?.armour ?? build.armour, weightKey: 'armour' },
+                { label: 'Evasion', value: derived?.eva ?? build.evasion, weightKey: 'evasion' },
+                derived?.block?.attack !== undefined ? { label: 'Block', value: toPercent(derived.block.attack), weightKey: 'block' } : undefined,
+                derived?.block?.spell !== undefined ? { label: 'Spell Block', value: toPercent(derived.block.spell), weightKey: 'spell_block' } : undefined,
                 derived?.block?.suppression !== undefined
-                  ? { label: 'Spell Suppression', value: toPercent(derived.block.suppression) }
+                  ? { label: 'Spell Suppression', value: toPercent(derived.block.suppression), weightKey: 'spell_suppression' }
                   : undefined,
               ].filter((stat) => stat && stat.value !== undefined)}
+              getWeight={getWeight}
+              onWeightChange={onWeightChange}
             />
 
             <StatColumn
@@ -87,27 +112,32 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
                 derived?.res
                   ? [
                       derived.res.fire !== undefined
-                        ? { label: 'Fire', value: `${derived.res.fire}%` }
+                        ? { label: 'Fire', value: `${derived.res.fire}%`, weightKey: 'res_fire' }
                         : undefined,
                       derived.res.cold !== undefined
-                        ? { label: 'Cold', value: `${derived.res.cold}%` }
+                        ? { label: 'Cold', value: `${derived.res.cold}%`, weightKey: 'res_cold' }
                         : undefined,
                       derived.res.lightning !== undefined
-                        ? { label: 'Lightning', value: `${derived.res.lightning}%` }
+                        ? { label: 'Lightning', value: `${derived.res.lightning}%`, weightKey: 'res_lightning' }
                         : undefined,
                       derived.res.chaos !== undefined
-                        ? { label: 'Chaos', value: `${derived.res.chaos}%` }
+                        ? { label: 'Chaos', value: `${derived.res.chaos}%`, weightKey: 'res_chaos' }
                         : undefined,
                     ].filter(Boolean) as StatTileProps[]
                   : []
               }
+              getWeight={getWeight}
+              onWeightChange={onWeightChange}
             />
 
             <StatColumn
               title="Offensive / Simulated"
               stats={[
-                { label: 'Total DPS', value: derived?.dps },
-                { label: 'Effective HP', value: derived?.ehp },
+                { label: 'Total DPS', value: derived?.dps, weightKey: 'dps' },
+                { label: 'Effective HP', value: derived?.ehp, weightKey: 'ehp' },
+                derived?.movement_speed !== undefined
+                  ? { label: 'Movement Speed', value: toPercent(derived.movement_speed), weightKey: 'ms' }
+                  : undefined,
                 derived?.max_hit &&
                 [
                   derived.max_hit.physical,
@@ -128,9 +158,12 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
                       ]
                         .filter(Boolean)
                         .join(' · '),
+                      weightKey: 'max_hit',
                     }
                   : undefined,
               ].filter((stat) => stat && (stat.value !== undefined || stat.detail))}
+              getWeight={getWeight}
+              onWeightChange={onWeightChange}
             />
           </div>
         </CardContent>
@@ -260,9 +293,12 @@ type StatTileProps = {
   value?: number | string
   detail?: string
   accent?: string
+  weightKey?: string
+  getWeight: (key: string, fallback?: number) => number
+  onWeightChange: (key: string, value: number) => void
 }
 
-function StatTile({ label, value, detail, accent }: StatTileProps) {
+function StatTile({ label, value, detail, accent, weightKey, getWeight, onWeightChange }: StatTileProps) {
   return (
     <div className="rounded-lg border p-3">
       <p className="text-sm text-muted-foreground">{label}</p>
@@ -273,6 +309,21 @@ function StatTile({ label, value, detail, accent }: StatTileProps) {
       ) : (
         <p className="text-sm text-muted-foreground">{detail || '—'}</p>
       )}
+      {weightKey && (
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <label className="text-xs text-muted-foreground" htmlFor={`weight-${weightKey}`}>
+            Priority
+          </label>
+          <input
+            id={`weight-${weightKey}`}
+            type="number"
+            step="0.1"
+            className="w-16 rounded border px-2 py-1 text-right text-xs"
+            value={getWeight(weightKey)}
+            onChange={(e) => onWeightChange(weightKey, parseFloat(e.target.value) || 0)}
+          />
+        </div>
+      )}
       {detail && value !== undefined && (
         <p className="text-xs text-muted-foreground mt-1">{detail}</p>
       )}
@@ -282,17 +333,24 @@ function StatTile({ label, value, detail, accent }: StatTileProps) {
 
 type StatColumnProps = {
   title: string
-  stats: Array<{ label: string; value?: number; detail?: string; accent?: string }>
+  stats: Array<{ label: string; value?: number | string; detail?: string; accent?: string; weightKey?: string }>
+  getWeight: (key: string, fallback?: number) => number
+  onWeightChange: (key: string, value: number) => void
 }
 
-function StatColumn({ title, stats }: StatColumnProps) {
+function StatColumn({ title, stats, getWeight, onWeightChange }: StatColumnProps) {
   if (!stats || stats.length === 0) return null
   return (
     <div className="space-y-2">
       <p className="text-xs font-semibold uppercase text-muted-foreground">{title}</p>
       <div className="grid gap-2">
         {stats.map((stat, idx) => (
-          <StatTile key={`${title}-${idx}-${stat.label}`} {...stat} />
+          <StatTile
+            key={`${title}-${idx}-${stat.label}`}
+            {...stat}
+            getWeight={getWeight}
+            onWeightChange={onWeightChange}
+          />
         ))}
       </div>
     </div>
