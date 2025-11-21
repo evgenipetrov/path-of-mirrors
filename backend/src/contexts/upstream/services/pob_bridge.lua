@@ -157,6 +157,7 @@ local function main()
 
   local stats = {
     life = out.Life or 0,
+    mana = out.Mana or out.UnreservedMana or out.ManaUnreserved or 0,
     es = out.EnergyShield or 0,
     eva = out.Evasion or 0,
     armour = out.Armour or 0,
@@ -167,6 +168,30 @@ local function main()
       cold = out.ColdResist or 0,
       lightning = out.LightningResist or 0,
       chaos = out.ChaosResist or 0,
+    },
+    attributes = {
+      str = out.Str or out.Strength or 0,
+      dex = out.Dex or out.Dexterity or 0,
+      int = out.Int or out.Intelligence or 0,
+    },
+    movement_speed = out.EffectiveMovementSpeedMod or out.MovementSpeedMod or out.Speed or 0,
+    charges = {
+      endurance = out.EnduranceCharges or 0,
+      frenzy = out.FrenzyCharges or 0,
+      power = out.PowerCharges or 0,
+    },
+    block = {
+      attack = out.BlockChance or 0,
+      spell = out.SpellBlockChance or 0,
+      suppression = out.SpellSuppressionChance or 0,
+    },
+    max_hit = {
+      total = out.MaximumHitTaken or 0,
+      physical = out.MaximumPhysicalHitTaken or 0,
+      fire = out.MaximumFireHitTaken or 0,
+      cold = out.MaximumColdHitTaken or 0,
+      lightning = out.MaximumLightningHitTaken or 0,
+      chaos = out.MaximumChaosHitTaken or 0,
     },
   }
 

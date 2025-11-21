@@ -19,6 +19,16 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
   const groupedItems = groupItemsByCategory(build.items ?? {})
   const derived = build.derived_stats
 
+  const formatAttributes = (attrs?: { str?: number; dex?: number; int?: number }) => {
+    if (!attrs) return undefined
+    const { str, dex, int } = attrs
+    if ([str, dex, int].every((v) => v === undefined)) return undefined
+    return `${str ?? '–'} / ${dex ?? '–'} / ${int ?? '–'}`
+  }
+
+  const toPercent = (value?: number) =>
+    value === undefined ? undefined : `${Math.round(value >= 10 ? value : value * 100)}%`
+
   return (
     <div className="space-y-4">
       {/* Character Info Card */}
@@ -33,47 +43,42 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Class</p>
-              <p className="font-medium">{build.character_class}</p>
-            </div>
-            {build.ascendancy && (
-              <div>
-                <p className="text-sm text-muted-foreground">Ascendancy</p>
-                <p className="font-medium">{build.ascendancy}</p>
-              </div>
-            )}
-            {build.league && (
-              <div>
-                <p className="text-sm text-muted-foreground">League</p>
-                <p className="font-medium">{build.league}</p>
-              </div>
-            )}
-            <div>
-              <p className="text-sm text-muted-foreground">Level</p>
-              <p className="font-medium">{build.level}</p>
-            </div>
-          </div>
-          <Separator />
-
           <div className="grid gap-4 lg:grid-cols-4">
             <StatColumn
-              title="Life / EHP"
+              title="Character"
               stats={[
-                { label: 'Life', value: derived?.life ?? build.life ?? undefined, accent: 'text-red-500' },
-                { label: 'Mana', value: build.mana ?? undefined },
-                { label: 'EHP', value: derived?.ehp },
-              ].filter((stat) => stat.value !== undefined)}
+                { label: 'Class', value: build.character_class },
+                build.ascendancy ? { label: 'Ascendancy', value: build.ascendancy } : undefined,
+                { label: 'Level', value: build.level },
+                build.league ? { label: 'League', value: build.league } : undefined,
+                derived?.attributes ? { label: 'Attributes', value: formatAttributes(derived.attributes) } : undefined,
+                derived?.movement_speed !== undefined
+                  ? { label: 'Movement Speed', value: toPercent(derived.movement_speed) }
+                  : undefined,
+                derived?.charges
+                  ? {
+                      label: 'Charges',
+                      value: `${derived.charges.endurance ?? 0} / ${derived.charges.frenzy ?? 0} / ${derived.charges.power ?? 0}`,
+                      detail: 'Endurance / Frenzy / Power',
+                    }
+                  : undefined,
+              ].filter(Boolean) as StatTileProps[]}
             />
 
             <StatColumn
-              title="Defences"
+              title="Defensive"
               stats={[
-                { label: 'Energy Shield', value: derived?.es ?? build.energy_shield ?? undefined },
-                { label: 'Armour', value: derived?.armour ?? build.armour ?? undefined },
-                { label: 'Evasion', value: derived?.eva ?? build.evasion ?? undefined },
-              ].filter((stat) => stat.value !== undefined)}
+                { label: 'Life', value: derived?.life ?? build.life, accent: 'text-red-500' },
+                { label: 'Energy Shield', value: derived?.es ?? build.energy_shield },
+                { label: 'Mana', value: derived?.mana ?? build.mana },
+                { label: 'Armour', value: derived?.armour ?? build.armour },
+                { label: 'Evasion', value: derived?.eva ?? build.evasion },
+                derived?.block?.attack !== undefined ? { label: 'Block', value: toPercent(derived.block.attack) } : undefined,
+                derived?.block?.spell !== undefined ? { label: 'Spell Block', value: toPercent(derived.block.spell) } : undefined,
+                derived?.block?.suppression !== undefined
+                  ? { label: 'Spell Suppression', value: toPercent(derived.block.suppression) }
+                  : undefined,
+              ].filter((stat) => stat && stat.value !== undefined)}
             />
 
             <StatColumn
@@ -81,27 +86,51 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
               stats={
                 derived?.res
                   ? [
-                      {
-                        label: 'Resists',
-                        detail: [
-                          derived.res.fire !== undefined && `Fire ${derived.res.fire}%`,
-                          derived.res.cold !== undefined && `Cold ${derived.res.cold}%`,
-                          derived.res.lightning !== undefined && `Lightning ${derived.res.lightning}%`,
-                          derived.res.chaos !== undefined && `Chaos ${derived.res.chaos}%`,
-                        ]
-                          .filter(Boolean)
-                          .join(' · '),
-                      },
-                    ].filter((stat) => stat.detail)
+                      derived.res.fire !== undefined
+                        ? { label: 'Fire', value: `${derived.res.fire}%` }
+                        : undefined,
+                      derived.res.cold !== undefined
+                        ? { label: 'Cold', value: `${derived.res.cold}%` }
+                        : undefined,
+                      derived.res.lightning !== undefined
+                        ? { label: 'Lightning', value: `${derived.res.lightning}%` }
+                        : undefined,
+                      derived.res.chaos !== undefined
+                        ? { label: 'Chaos', value: `${derived.res.chaos}%` }
+                        : undefined,
+                    ].filter(Boolean) as StatTileProps[]
                   : []
               }
             />
 
             <StatColumn
-              title="Offence"
+              title="Offensive / Simulated"
               stats={[
                 { label: 'Total DPS', value: derived?.dps },
-              ].filter((stat) => stat.value !== undefined)}
+                { label: 'Effective HP', value: derived?.ehp },
+                derived?.max_hit &&
+                [
+                  derived.max_hit.physical,
+                  derived.max_hit.fire,
+                  derived.max_hit.cold,
+                  derived.max_hit.lightning,
+                  derived.max_hit.chaos,
+                ].some((v) => v && v !== 0)
+                  ? {
+                      label: 'Max Hit',
+                      detail: [
+                        derived.max_hit.physical !== undefined && `Phys ${Math.round(derived.max_hit.physical).toLocaleString()}`,
+                        derived.max_hit.fire !== undefined && `Fire ${Math.round(derived.max_hit.fire).toLocaleString()}`,
+                        derived.max_hit.cold !== undefined && `Cold ${Math.round(derived.max_hit.cold).toLocaleString()}`,
+                        derived.max_hit.lightning !== undefined &&
+                          `Lightning ${Math.round(derived.max_hit.lightning).toLocaleString()}`,
+                        derived.max_hit.chaos !== undefined && `Chaos ${Math.round(derived.max_hit.chaos).toLocaleString()}`,
+                      ]
+                        .filter(Boolean)
+                        .join(' · '),
+                    }
+                  : undefined,
+              ].filter((stat) => stat && (stat.value !== undefined || stat.detail))}
             />
           </div>
         </CardContent>
@@ -228,7 +257,7 @@ function groupItemsByCategory(items: Record<string, ItemData>) {
 
 type StatTileProps = {
   label: string
-  value?: number
+  value?: number | string
   detail?: string
   accent?: string
 }
@@ -238,7 +267,9 @@ function StatTile({ label, value, detail, accent }: StatTileProps) {
     <div className="rounded-lg border p-3">
       <p className="text-sm text-muted-foreground">{label}</p>
       {value !== undefined ? (
-        <p className={`text-xl font-semibold ${accent ?? ''}`}>{Math.round(value).toLocaleString()}</p>
+        <p className={`text-xl font-semibold ${accent ?? ''}`}>
+          {typeof value === 'number' ? Math.round(value).toLocaleString() : value}
+        </p>
       ) : (
         <p className="text-sm text-muted-foreground">{detail || '—'}</p>
       )}
