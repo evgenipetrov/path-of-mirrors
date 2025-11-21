@@ -9,7 +9,7 @@ import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { AlertCircle, CheckCircle2, Search } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -25,11 +25,8 @@ import { ConfigDrawer } from '@/components/config-drawer'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { PoBInput } from './components/PoBInput'
 import { BuildDisplay } from './components/BuildDisplay'
-import { ItemSlotSelector } from './components/ItemSlotSelector'
-import { UpgradeFilters } from './components/UpgradeFilters'
-import { UpgradeResults } from './components/UpgradeResults'
-import { parsePob, searchUpgrades } from './api'
-import type { Game, PoBParseResponse, UpgradeFiltersState, UpgradeSearchResponse } from './types'
+import { parsePob } from './api'
+import type { Game, PoBParseResponse } from './types'
 
 const SESSION_KEY = 'pob_build_session'
 
@@ -44,14 +41,6 @@ export function UpgradeFinder() {
     }
   })
   const [isImportOpen, setIsImportOpen] = useState(() => !sessionStorage.getItem(SESSION_KEY))
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
-  const [upgradeResults, setUpgradeResults] = useState<UpgradeSearchResponse | null>(null)
-  const [filters, setFilters] = useState<UpgradeFiltersState>({
-    maxPriceChaos: null,
-    minLife: null,
-    minResistance: null,
-    limit: 10,
-  })
 
   const parseMutation = useMutation({
     mutationFn: async (input: { pobXml?: string; pobCode?: string }) => {
@@ -65,33 +54,8 @@ export function UpgradeFinder() {
       setParsedBuild(data)
       setIsImportOpen(false)
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(data))
-      setSelectedSlot(null) // Reset slot selection
-      setUpgradeResults(null) // Clear previous results
     },
   })
-
-  const searchMutation = useMutation({
-    mutationFn: async () => {
-      if (!parsedBuild || !selectedSlot) {
-        throw new Error('No build or slot selected')
-      }
-
-      return searchUpgrades({
-        session_id: parsedBuild.session_id,
-        item_slot: selectedSlot,
-        max_price_chaos: filters.maxPriceChaos,
-        min_life: filters.minLife,
-        min_resistance: filters.minResistance,
-        limit: filters.limit,
-      })
-    },
-    onSuccess: (data) => {
-      setUpgradeResults(data)
-    },
-  })
-
-  const availableSlots = parsedBuild?.items ? Object.keys(parsedBuild.items) : []
-  const canSearch = parsedBuild && selectedSlot
 
   return (
     <>
@@ -142,64 +106,8 @@ export function UpgradeFinder() {
           </Alert>
         )}
 
-        {/* Search Error Alert */}
-        {searchMutation.isError && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error searching for upgrades</AlertTitle>
-            <AlertDescription>
-              {searchMutation.error instanceof Error
-                ? searchMutation.error.message
-                : 'Failed to search for upgrades. Please try again.'}
-            </AlertDescription>
-          </Alert>
-        )}
-
         {/* Build Display */}
         {parsedBuild && <BuildDisplay build={parsedBuild} />}
-
-        {/* Upgrade Search Section - Only show if build is parsed */}
-        {parsedBuild && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {/* Item Slot Selector */}
-              <ItemSlotSelector
-                availableSlots={availableSlots}
-                selectedSlot={selectedSlot}
-                onSlotChange={setSelectedSlot}
-                disabled={parseMutation.isPending || searchMutation.isPending}
-              />
-
-              {/* Upgrade Filters */}
-              <UpgradeFilters
-                filters={filters}
-                onFiltersChange={setFilters}
-                disabled={!canSearch || searchMutation.isPending}
-              />
-            </div>
-
-            {/* Search Button */}
-            <div className="flex justify-center">
-              <Button
-                onClick={() => searchMutation.mutate()}
-                disabled={!canSearch || searchMutation.isPending}
-                size="lg"
-                className="w-full md:w-auto"
-              >
-                <Search className="mr-2 h-5 w-5" />
-                {searchMutation.isPending ? 'Searching...' : 'Search for Upgrades'}
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Upgrade Results */}
-        {upgradeResults && (
-          <UpgradeResults
-            results={upgradeResults.upgrades}
-            currentItem={upgradeResults.current_item}
-          />
-        )}
       </Main>
 
       <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>

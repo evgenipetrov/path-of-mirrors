@@ -7,7 +7,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import type { PoBParseResponse, ParsedItem } from '../types'
+import type { PoBParseResponse, ItemData } from '../types'
 
 interface BuildDisplayProps {
   build: PoBParseResponse
@@ -145,7 +145,7 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
                       {/* Show first 3 mods */}
                       {item.explicit_mods.length > 0 && (
                         <div className="mt-2 space-y-1">
-                          {item.explicit_mods.slice(0, 3).map((mod, idx) => (
+                          {item.explicit_mods.slice(0, 3).map((mod: string, idx: number) => (
                             <p key={idx} className="text-xs text-muted-foreground">
                               {mod}
                             </p>
@@ -196,8 +196,8 @@ function toGroup(slot: string): GroupKey {
   return 'Other'
 }
 
-function groupItemsByCategory(items: Record<string, ParsedItem>) {
-  const groups: Record<GroupKey, { slot: string; item: ParsedItem }[]> = {
+function groupItemsByCategory(items: Record<string, ItemData>) {
+  const groups: Record<GroupKey, { slot: string; item: ItemData }[]> = {
     Weapons: [],
     Armour: [],
     Jewellery: [],
