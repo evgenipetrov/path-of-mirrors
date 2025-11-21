@@ -61,6 +61,7 @@ build/
 .mcp.json
 .serena/
 .roomodes
+.notes.md
 
 # Docker volumes
 postgres_data/
