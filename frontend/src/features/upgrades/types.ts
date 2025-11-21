@@ -28,6 +28,7 @@ export interface PoBParseResponse {
   passive_tree?: Record<string, unknown> | null
   skills?: Array<Record<string, unknown>> | null
   source: string
+  derived_stats?: DerivedStats | null
 }
 
 export interface ItemData {
@@ -78,4 +79,19 @@ export interface UpgradeSearchResponse {
   upgrades: UpgradeResult[]
   total_results: number
   query_time_ms: number
+}
+
+export interface DerivedStats {
+  life?: number
+  es?: number
+  eva?: number
+  armour?: number
+  dps?: number
+  ehp?: number
+  res?: {
+    fire?: number
+    cold?: number
+    lightning?: number
+    chaos?: number
+  }
 }

@@ -17,6 +17,7 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
   const itemCount = build.items ? Object.keys(build.items).length : 0
 
   const groupedItems = groupItemsByCategory(build.items ?? {})
+  const derived = build.derived_stats
 
   return (
     <div className="space-y-4">
@@ -95,6 +96,54 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Derived Stats */}
+      {derived && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Key Stats</CardTitle>
+            <CardDescription>Computed via Path of Building</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {derived.ehp !== undefined && (
+                <StatTile label="EHP" value={derived.ehp} />
+              )}
+              {derived.dps !== undefined && (
+                <StatTile label="Total DPS" value={derived.dps} />
+              )}
+              {derived.es !== undefined && (
+                <StatTile label="Energy Shield" value={derived.es} />
+              )}
+              {derived.life !== undefined && (
+                <StatTile label="Life" value={derived.life} />
+              )}
+              {derived.armour !== undefined && (
+                <StatTile label="Armour" value={derived.armour} />
+              )}
+              {derived.eva !== undefined && (
+                <StatTile label="Evasion" value={derived.eva} />
+              )}
+              {derived.res && (
+                <StatTile
+                  label="Resistances"
+                  value={undefined}
+                  detail={
+                    [
+                      derived.res.fire !== undefined && `Fire ${derived.res.fire}%`,
+                      derived.res.cold !== undefined && `Cold ${derived.res.cold}%`,
+                      derived.res.lightning !== undefined && `Lightning ${derived.res.lightning}%`,
+                      derived.res.chaos !== undefined && `Chaos ${derived.res.chaos}%`,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')
+                  }
+                />
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Items Card */}
       {itemCount > 0 && (
@@ -213,4 +262,26 @@ function groupItemsByCategory(items: Record<string, ItemData>) {
     label,
     items: groups[label],
   })).filter((group) => group.items.length > 0)
+}
+
+type StatTileProps = {
+  label: string
+  value?: number
+  detail?: string
+}
+
+function StatTile({ label, value, detail }: StatTileProps) {
+  return (
+    <div className="rounded-lg border p-3">
+      <p className="text-sm text-muted-foreground">{label}</p>
+      {value !== undefined ? (
+        <p className="text-xl font-semibold">{Math.round(value).toLocaleString()}</p>
+      ) : (
+        <p className="text-sm text-muted-foreground">{detail || '—'}</p>
+      )}
+      {detail && value !== undefined && (
+        <p className="text-xs text-muted-foreground mt-1">{detail}</p>
+      )}
+    </div>
+  )
 }

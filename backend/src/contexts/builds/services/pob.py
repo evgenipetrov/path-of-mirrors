@@ -105,98 +105,58 @@ def parse_pob_xml(xml_content: str, game: Game) -> Build:
     )
 
 
-def parse_pob_code(import_code: str, game: Game) -> Build:
-    """Decode and parse PoB import code.
-
-    PoB import codes are base64-encoded zlib-compressed XML strings.
-
-    Args:
-        import_code: Base64 PoB import string (the long string users paste)
-        game: Game context (POE1 or POE2)
-
-    Returns:
-        Build domain object
-
-    Raises:
-        ValueError: If import code is invalid or cannot be decoded
-
-    Example:
-        >>> code = "eNqVW2uT2zYS_StTqUrtnJpShw..."
-        >>> build = parse_pob_code(code, Game.POE1)
-    """
-    # Clean the import code - remove all whitespace (spaces, tabs, newlines)
-    # PoB codes should be continuous base64 strings
+def decode_pob_code_to_xml(import_code: str) -> str:
+    """Decode PoB import code (base64+zlib) into XML string."""
     cleaned_code = "".join(import_code.split())
 
     if not cleaned_code:
         raise ValueError("PoB import code is empty after removing whitespace")
 
-    # Validate it looks like base64 (basic check)
-    # Support both standard base64 (+/) and URL-safe base64 (-_)
     valid_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=-_"
     if not all(c in valid_chars for c in cleaned_code):
-        # Find the first invalid character to help with debugging
         invalid_chars = {c for c in cleaned_code if c not in valid_chars}
         raise ValueError(
             f"PoB import code contains invalid characters for base64 encoding: {invalid_chars}"
         )
 
     try:
-        # Step 1: Base64 decode
-        # PoB uses URL-safe base64 (- and _ instead of + and /)
-        # Detect which encoding based on characters present
         if "-" in cleaned_code or "_" in cleaned_code:
-            # URL-safe base64
             compressed = base64.urlsafe_b64decode(cleaned_code)
         else:
-            # Standard base64
             compressed = base64.b64decode(cleaned_code)
     except Exception as e:
         raise ValueError(f"Invalid base64 in PoB import code: {e}")
 
-    # Log compression info for debugging
-    logger.debug(
-        "Decoded base64",
-        compressed_size=len(compressed),
-        code_length=len(cleaned_code),
-        first_bytes=compressed[:20].hex() if len(compressed) >= 20 else compressed.hex(),
-    )
-
     try:
-        # Step 2: zlib decompress
         xml_bytes = zlib.decompress(compressed)
-        xml_content = xml_bytes.decode("utf-8")
+        return xml_bytes.decode("utf-8")
     except zlib.error as e:
-        # Check if this might be an incomplete code
-        # Typical PoB codes are 10,000-20,000 characters long
         error_msg = f"Failed to decompress PoB code: {e}"
-
         if len(cleaned_code) < 1000:
             error_msg = (
                 "PoB import code is too short "
-                f"({len(cleaned_code)} characters). Typical codes are 10,000+ characters. "
-                "Please make sure you copied the entire code from Path of Building."
+                f"({len(cleaned_code)} chars). Typical codes are 10,000+."
             )
         elif len(cleaned_code) < 5000:
             error_msg = (
                 "PoB import code may be incomplete "
-                f"({len(cleaned_code)} characters). Typical codes are 10,000+ characters. "
-                "Please verify you copied the entire code."
+                f"({len(cleaned_code)} chars). Typical codes are 10,000+."
             )
         elif "invalid" in str(e).lower() or "incorrect" in str(e).lower():
             error_msg = (
-                "PoB import code appears to be corrupted or incomplete "
-                f"({len(cleaned_code)} characters). Try copying the code again "
-                "from Path of Building."
+                "PoB import code appears corrupted or incomplete "
+                f"({len(cleaned_code)} chars). Try copying again from PoB."
             )
-
         raise ValueError(error_msg)
     except UnicodeDecodeError as e:
         raise ValueError(f"PoB import code decompressed to invalid UTF-8: {e}")
     except Exception as e:
         raise ValueError(f"Failed to decompress PoB import code: {e}")
 
-    # Step 3: Parse XML
+
+def parse_pob_code(import_code: str, game: Game) -> Build:
+    """Decode and parse PoB import code."""
+    xml_content = decode_pob_code_to_xml(import_code)
     return parse_pob_xml(xml_content, game)
 
 

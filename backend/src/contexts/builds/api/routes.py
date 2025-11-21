@@ -21,7 +21,11 @@ from src.contexts.builds.domain.schemas import (
     PoBParseRequest,
     PoBParseResponse,
 )
-from src.contexts.builds.services.pob import parse_pob_code, parse_pob_xml
+from src.contexts.builds.services.pob import (
+    decode_pob_code_to_xml,
+    parse_pob_code,
+    parse_pob_xml,
+)
 from src.contexts.upstream.services.pob_runner import run_pob
 from src.infrastructure import create_session, get_session
 
@@ -74,8 +78,15 @@ async def parse_build(request: PoBParseRequest) -> PoBParseResponse:
             build = parse_pob_xml(request.pob_xml, request.game)  # type: ignore
 
         # Optionally derive stats via headless PoB CLI (graceful fallback)
-        should_run_pob = request.pob_xml or request.pob_code
-        derived_stats = run_pob(request.pob_xml or "", request.game) if should_run_pob else {}
+        xml_for_runner = request.pob_xml
+        if not xml_for_runner and request.pob_code:
+            try:
+                xml_for_runner = decode_pob_code_to_xml(request.pob_code)
+            except Exception as exc:
+                logger.warn("pob_decode_failed_for_runner", error=str(exc))
+                xml_for_runner = None
+
+        derived_stats = run_pob(xml_for_runner or "", request.game) if xml_for_runner else {}
 
         # Store build in Redis session
         session_data = {
