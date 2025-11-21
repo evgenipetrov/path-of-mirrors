@@ -81,6 +81,16 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
   const getWeight = (key: string, fallback = 1) => weights[key] ?? DEFAULT_WEIGHTS[key] ?? fallback
   const onWeightChange = (key: string, value: number) =>
     setWeights((prev) => ({ ...prev, [key]: value }))
+  const [hiddenStats, setHiddenStats] = useState<Set<string>>(new Set())
+
+  const hideStat = (label: string) =>
+    setHiddenStats((prev) => {
+      const next = new Set(prev)
+      next.add(label)
+      return next
+    })
+
+  const isHidden = (label: string) => hiddenStats.has(label)
 
   return (
     <div className="space-y-4">
@@ -146,19 +156,22 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
             <StatColumn
               title="Defensive"
               stats={[
-                { label: 'Life', value: derived?.life ?? build.life, accent: 'text-red-500', weightKey: 'life' },
-                { label: 'Energy Shield', value: derived?.es ?? build.energy_shield, weightKey: 'es' },
-                { label: 'Mana', value: derived?.mana ?? build.mana, weightKey: 'mana' },
-                { label: 'Armour', value: derived?.armour ?? build.armour, weightKey: 'armour' },
-                { label: 'Evasion', value: derived?.eva ?? build.evasion, weightKey: 'evasion' },
-                derived?.block?.attack !== undefined ? { label: 'Block', value: toPercent(derived.block.attack), weightKey: 'block' } : undefined,
-                derived?.block?.spell !== undefined ? { label: 'Spell Block', value: toPercent(derived.block.spell), weightKey: 'spell_block' } : undefined,
+                isHidden('Life') ? undefined : { label: 'Life', value: derived?.life ?? build.life, accent: 'text-red-500', weightKey: 'life' },
+                isHidden('Energy Shield') ? undefined : { label: 'Energy Shield', value: derived?.es ?? build.energy_shield, weightKey: 'es' },
+                isHidden('Mana') ? undefined : { label: 'Mana', value: derived?.mana ?? build.mana, weightKey: 'mana' },
+                isHidden('Armour') ? undefined : { label: 'Armour', value: derived?.armour ?? build.armour, weightKey: 'armour' },
+                isHidden('Evasion') ? undefined : { label: 'Evasion', value: derived?.eva ?? build.evasion, weightKey: 'evasion' },
+                derived?.block?.attack !== undefined && !isHidden('Block') ? { label: 'Block', value: toPercent(derived.block.attack), weightKey: 'block' } : undefined,
+                derived?.block?.spell !== undefined && !isHidden('Spell Block') ? { label: 'Spell Block', value: toPercent(derived.block.spell), weightKey: 'spell_block' } : undefined,
                 derived?.block?.suppression !== undefined
-                  ? { label: 'Spell Suppression', value: toPercent(derived.block.suppression), weightKey: 'spell_suppression' }
+                  ? isHidden('Spell Suppression')
+                    ? undefined
+                    : { label: 'Spell Suppression', value: toPercent(derived.block.suppression), weightKey: 'spell_suppression' }
                   : undefined,
               ].filter((stat) => stat && stat.value !== undefined)}
               getWeight={getWeight}
               onWeightChange={onWeightChange}
+              onRemoveStat={hideStat}
             />
 
             <StatColumn
@@ -166,16 +179,16 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
               stats={
                 derived?.res
                   ? [
-                      derived.res.fire !== undefined
+                      derived.res.fire !== undefined && !isHidden('Fire')
                         ? { label: 'Fire', value: `${derived.res.fire}%`, weightKey: 'res_fire' }
                         : undefined,
-                      derived.res.cold !== undefined
+                      derived.res.cold !== undefined && !isHidden('Cold')
                         ? { label: 'Cold', value: `${derived.res.cold}%`, weightKey: 'res_cold' }
                         : undefined,
-                      derived.res.lightning !== undefined
+                      derived.res.lightning !== undefined && !isHidden('Lightning')
                         ? { label: 'Lightning', value: `${derived.res.lightning}%`, weightKey: 'res_lightning' }
                         : undefined,
-                      derived.res.chaos !== undefined
+                      derived.res.chaos !== undefined && !isHidden('Chaos')
                         ? { label: 'Chaos', value: `${derived.res.chaos}%`, weightKey: 'res_chaos' }
                         : undefined,
                     ].filter(Boolean) as StatTileProps[]
@@ -183,14 +196,15 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
               }
               getWeight={getWeight}
               onWeightChange={onWeightChange}
+              onRemoveStat={hideStat}
             />
 
             <StatColumn
               title="Offensive / Simulated"
               stats={[
-                { label: 'Total DPS', value: derived?.dps, weightKey: 'dps' },
-                { label: 'Effective HP', value: derived?.ehp, weightKey: 'ehp' },
-                derived?.movement_speed !== undefined
+                isHidden('Total DPS') ? undefined : { label: 'Total DPS', value: derived?.dps, weightKey: 'dps' },
+                isHidden('Effective HP') ? undefined : { label: 'Effective HP', value: derived?.ehp, weightKey: 'ehp' },
+                derived?.movement_speed !== undefined && !isHidden('Movement Speed')
                   ? { label: 'Movement Speed', value: toPercent(derived.movement_speed), weightKey: 'ms' }
                   : undefined,
                 derived?.max_hit &&
@@ -201,24 +215,27 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
                   derived.max_hit.lightning,
                   derived.max_hit.chaos,
                 ].some((v) => v && v !== 0)
-                  ? {
-                      label: 'Max Hit',
-                      detail: [
-                        derived.max_hit.physical !== undefined && `Phys ${Math.round(derived.max_hit.physical).toLocaleString()}`,
-                        derived.max_hit.fire !== undefined && `Fire ${Math.round(derived.max_hit.fire).toLocaleString()}`,
-                        derived.max_hit.cold !== undefined && `Cold ${Math.round(derived.max_hit.cold).toLocaleString()}`,
-                        derived.max_hit.lightning !== undefined &&
-                          `Lightning ${Math.round(derived.max_hit.lightning).toLocaleString()}`,
-                        derived.max_hit.chaos !== undefined && `Chaos ${Math.round(derived.max_hit.chaos).toLocaleString()}`,
-                      ]
-                        .filter(Boolean)
-                        .join(' · '),
-                      weightKey: 'max_hit',
-                    }
+                  ? isHidden('Max Hit')
+                    ? undefined
+                    : {
+                        label: 'Max Hit',
+                        detail: [
+                          derived.max_hit.physical !== undefined && `Phys ${Math.round(derived.max_hit.physical).toLocaleString()}`,
+                          derived.max_hit.fire !== undefined && `Fire ${Math.round(derived.max_hit.fire).toLocaleString()}`,
+                          derived.max_hit.cold !== undefined && `Cold ${Math.round(derived.max_hit.cold).toLocaleString()}`,
+                          derived.max_hit.lightning !== undefined &&
+                            `Lightning ${Math.round(derived.max_hit.lightning).toLocaleString()}`,
+                          derived.max_hit.chaos !== undefined && `Chaos ${Math.round(derived.max_hit.chaos).toLocaleString()}`,
+                        ]
+                          .filter(Boolean)
+                          .join(' · '),
+                        weightKey: 'max_hit',
+                      }
                   : undefined,
               ].filter((stat) => stat && (stat.value !== undefined || stat.detail))}
               getWeight={getWeight}
               onWeightChange={onWeightChange}
+              onRemoveStat={hideStat}
             />
           </div>
         </CardContent>
@@ -351,13 +368,22 @@ type StatTileProps = {
   weightKey?: string
   getWeight: (key: string, fallback?: number) => number
   onWeightChange: (key: string, value: number) => void
+  onRemove: () => void
 }
 
-function StatTile({ label, value, detail, accent, weightKey, getWeight, onWeightChange }: StatTileProps) {
+function StatTile({ label, value, detail, accent, weightKey, getWeight, onWeightChange, onRemove }: StatTileProps) {
   return (
-    <div className="rounded-lg border p-3">
-      <div className="flex items-center justify-between gap-2">
-        <div>
+    <div className="relative rounded-lg border p-3">
+      <button
+        type="button"
+        aria-label={`Hide ${label}`}
+        onClick={onRemove}
+        className="absolute right-2 top-2 rounded-full p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+      >
+        ×
+      </button>
+      <div className="flex items-start justify-between gap-2">
+        <div className="pt-1">
           <p className="text-sm text-muted-foreground">{label}</p>
           {value !== undefined ? (
             <p className={`text-xl font-semibold leading-tight ${accent ?? ''}`}>
@@ -395,9 +421,10 @@ type StatColumnProps = {
   stats: Array<{ label: string; value?: number | string; detail?: string; accent?: string; weightKey?: string }>
   getWeight: (key: string, fallback?: number) => number
   onWeightChange: (key: string, value: number) => void
+  onRemoveStat: (label: string) => void
 }
 
-function StatColumn({ title, stats, getWeight, onWeightChange }: StatColumnProps) {
+function StatColumn({ title, stats, getWeight, onWeightChange, onRemoveStat }: StatColumnProps) {
   if (!stats || stats.length === 0) return null
   return (
     <div className="space-y-2">
@@ -409,6 +436,7 @@ function StatColumn({ title, stats, getWeight, onWeightChange }: StatColumnProps
             {...stat}
             getWeight={getWeight}
             onWeightChange={onWeightChange}
+            onRemove={() => onRemoveStat(stat.label)}
           />
         ))}
       </div>
