@@ -4,6 +4,13 @@ import userEvent from '@testing-library/user-event'
 import { Notes } from './index'
 import * as apiHooks from '@/hooks/api'
 import * as gameContextHook from '@/hooks/useGameContext'
+import { SidebarProvider } from '@/components/ui/sidebar'
+import { SearchProvider } from '@/context/search-provider'
+// Mock layout-dependent UI to avoid provider requirements in tests
+vi.mock('@/components/search', () => ({ Search: () => <div data-testid="search-mock" /> }))
+vi.mock('@/components/config-drawer', () => ({ ConfigDrawer: () => <div /> }))
+vi.mock('@/components/theme-switch', () => ({ ThemeSwitch: () => <div /> }))
+vi.mock('@/components/profile-dropdown', () => ({ ProfileDropdown: () => <div /> }))
 
 // Mock the API hooks
 vi.mock('@/hooks/api', async () => {
@@ -95,9 +102,18 @@ describe('Notes', () => {
     )
   })
 
+  const renderNotes = () =>
+    render(
+      <SearchProvider>
+        <SidebarProvider>
+          <Notes />
+        </SidebarProvider>
+      </SearchProvider>
+    )
+
   describe('rendering', () => {
     it('should render with notes data', () => {
-      render(<Notes />)
+      renderNotes()
 
       expect(screen.getByText('Notes')).toBeInTheDocument()
       expect(screen.getByText((_content, element) => {
@@ -112,7 +128,7 @@ describe('Notes', () => {
         setGame: vi.fn(),
       })
 
-      render(<Notes />)
+      renderNotes()
 
       expect(screen.getByText((_content, element) => {
         return element?.textContent === 'Manage your notes for POE2' || false
@@ -120,7 +136,7 @@ describe('Notes', () => {
     })
 
     it('should display notes count', () => {
-      render(<Notes />)
+      renderNotes()
 
       expect(screen.getByText(/2 notes for POE1/i)).toBeInTheDocument()
     })
@@ -134,7 +150,7 @@ describe('Notes', () => {
         error: null,
       } as any)
 
-      render(<Notes />)
+      renderNotes()
 
       expect(screen.getByText('Loading notes...')).toBeInTheDocument()
     })
@@ -148,7 +164,7 @@ describe('Notes', () => {
         error: new Error('Network error'),
       } as any)
 
-      render(<Notes />)
+      renderNotes()
 
       expect(screen.getByText('Error Loading Notes')).toBeInTheDocument()
       expect(screen.getByText(/failed to load notes/i)).toBeInTheDocument()
@@ -163,7 +179,7 @@ describe('Notes', () => {
         error: null,
       } as any)
 
-      render(<Notes />)
+      renderNotes()
 
       expect(screen.getByText(/no notes yet/i)).toBeInTheDocument()
       expect(screen.getByText(/create your first note/i)).toBeInTheDocument()
@@ -173,7 +189,7 @@ describe('Notes', () => {
   describe('create note', () => {
     it('should open form dialog when Create Note button is clicked', async () => {
       const user = userEvent.setup()
-      render(<Notes />)
+      renderNotes()
 
       await user.click(screen.getByRole('button', { name: /create note/i }))
 
@@ -185,7 +201,7 @@ describe('Notes', () => {
 
   describe('game context filtering', () => {
     it('should pass game context to API call', () => {
-      render(<Notes />)
+      renderNotes()
 
       expect(apiHooks.useListNotesApiNotesGet).toHaveBeenCalledWith({
         game: 'poe1',
@@ -198,7 +214,7 @@ describe('Notes', () => {
         setGame: vi.fn(),
       })
 
-      render(<Notes />)
+      renderNotes()
 
       expect(apiHooks.useListNotesApiNotesGet).toHaveBeenCalledWith({
         game: 'poe2',
@@ -208,7 +224,7 @@ describe('Notes', () => {
 
   describe('mutation setup', () => {
     it('should configure create mutation with success handler', () => {
-      render(<Notes />)
+      renderNotes()
 
       expect(apiHooks.useCreateNoteApiNotesPost).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -221,7 +237,7 @@ describe('Notes', () => {
     })
 
     it('should configure update mutation with success handler', () => {
-      render(<Notes />)
+      renderNotes()
 
       expect(apiHooks.useUpdateNoteApiNotesNoteIdPut).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -234,7 +250,7 @@ describe('Notes', () => {
     })
 
     it('should configure delete mutation with success handler', () => {
-      render(<Notes />)
+      renderNotes()
 
       expect(apiHooks.useDeleteNoteApiNotesNoteIdDelete).toHaveBeenCalledWith(
         expect.objectContaining({
