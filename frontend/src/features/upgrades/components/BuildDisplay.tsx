@@ -308,29 +308,33 @@ type StatTileProps = {
 function StatTile({ label, value, detail, accent, weightKey, getWeight, onWeightChange }: StatTileProps) {
   return (
     <div className="rounded-lg border p-3">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      {value !== undefined ? (
-        <p className={`text-xl font-semibold ${accent ?? ''}`}>
-          {typeof value === 'number' ? Math.round(value).toLocaleString() : value}
-        </p>
-      ) : (
-        <p className="text-sm text-muted-foreground">{detail || '—'}</p>
-      )}
-      {weightKey && (
-        <div className="mt-2 flex items-center justify-between gap-2">
-          <label className="text-xs text-muted-foreground" htmlFor={`weight-${weightKey}`}>
-            Priority
-          </label>
-          <input
-            id={`weight-${weightKey}`}
-            type="number"
-            step="0.1"
-            className="w-16 rounded border px-2 py-1 text-right text-xs"
-            value={getWeight(weightKey)}
-            onChange={(e) => onWeightChange(weightKey, parseFloat(e.target.value) || 0)}
-          />
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <p className="text-sm text-muted-foreground">{label}</p>
+          {value !== undefined ? (
+            <p className={`text-xl font-semibold leading-tight ${accent ?? ''}`}>
+              {typeof value === 'number' ? Math.round(value).toLocaleString() : value}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">{detail || '—'}</p>
+          )}
         </div>
-      )}
+        {weightKey && (
+          <div className="flex items-center gap-1 self-end">
+            <label className="text-xs text-muted-foreground" htmlFor={`weight-${weightKey}`}>
+              Priority
+            </label>
+            <input
+              id={`weight-${weightKey}`}
+              type="number"
+              step="0.1"
+              className="w-14 rounded border px-2 py-1 text-right text-xs"
+              value={getWeight(weightKey)}
+              onChange={(e) => onWeightChange(weightKey, parseFloat(e.target.value) || 0)}
+            />
+          </div>
+        )}
+      </div>
       {detail && value !== undefined && (
         <p className="text-xs text-muted-foreground mt-1">{detail}</p>
       )}
