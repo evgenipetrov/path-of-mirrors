@@ -72,17 +72,25 @@ export function PoBInput({ onParse, isLoading = false }: PoBInputProps) {
           <TabsContent value="code" className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="pob-code">PoB Import Code</Label>
-              <Textarea
-                id="pob-code"
-                placeholder="Paste your Path of Building import code here (long base64 string)..."
-                value={pobCode}
-                onChange={(e) => setPobCode(e.target.value)}
-                rows={6}
-                className="font-mono text-xs"
-              />
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Input
+                  id="pob-code"
+                  placeholder="Paste your PoB import code"
+                  value={pobCode}
+                  onChange={(e) => setPobCode(e.target.value)}
+                  className="font-mono text-xs"
+                />
+                <Button
+                  onClick={handleCodeParse}
+                  disabled={!pobCode.trim() || isLoading}
+                  className="sm:w-auto"
+                >
+                  {isLoading ? 'Parsing...' : 'Parse Build'}
+                </Button>
+              </div>
               <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <p>
-                  In Path of Building, go to Import/Export → Generate → Copy to get your code
+                <p className="truncate pr-3">
+                  In Path of Building: Import/Export → Generate → Copy, then paste here.
                 </p>
                 {pobCode && (
                   <p className="font-mono">
@@ -96,37 +104,33 @@ export function PoBInput({ onParse, isLoading = false }: PoBInputProps) {
                 )}
               </div>
             </div>
-            <Button
-              onClick={handleCodeParse}
-              disabled={!pobCode.trim() || isLoading}
-              className="w-full"
-            >
-              {isLoading ? 'Parsing...' : 'Parse Build'}
-            </Button>
           </TabsContent>
 
           <TabsContent value="file" className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="pob-file">PoB XML File</Label>
-              <Input
-                id="pob-file"
-                type="file"
-                accept=".xml"
-                onChange={handleFileChange}
-              />
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Input
+                  id="pob-file"
+                  type="file"
+                  accept=".xml"
+                  onChange={handleFileChange}
+                  className="sm:max-w-xs"
+                />
+                <Button
+                  onClick={handleFileUpload}
+                  disabled={!file || isLoading}
+                  className="sm:w-auto"
+                >
+                  {isLoading ? 'Parsing...' : 'Upload & Parse'}
+                </Button>
+              </div>
               {file && (
                 <p className="text-sm text-muted-foreground">
                   Selected: {file.name}
                 </p>
               )}
             </div>
-            <Button
-              onClick={handleFileUpload}
-              disabled={!file || isLoading}
-              className="w-full"
-            >
-              {isLoading ? 'Parsing...' : 'Upload and Parse'}
-            </Button>
           </TabsContent>
         </Tabs>
       </CardContent>

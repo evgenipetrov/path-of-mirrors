@@ -60,6 +60,7 @@ build/
 .playwright-mcp/
 .mcp.json
 .serena/
+.roomodes
 
 # Docker volumes
 postgres_data/
