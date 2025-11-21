@@ -30,7 +30,7 @@ export const sidebarData: SidebarData = {
           icon: LayoutDashboard,
         },
         {
-          title: 'Focus Build',
+          title: 'Build',
           url: '/build',
           icon: Sparkles,
         },

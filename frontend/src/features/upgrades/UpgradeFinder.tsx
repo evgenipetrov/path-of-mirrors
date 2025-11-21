@@ -73,9 +73,9 @@ export function UpgradeFinder() {
   return (
     <div className="container mx-auto py-8 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Upgrade Finder</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Build</h1>
         <p className="text-muted-foreground mt-2">
-          Import your Path of Building to find better items on the trade site
+          Import a Path of Building to view key stats and equipped items grouped by slot. Then search for upgrades.
         </p>
       </div>
 
