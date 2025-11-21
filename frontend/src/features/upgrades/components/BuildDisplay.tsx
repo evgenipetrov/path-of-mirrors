@@ -4,7 +4,7 @@
  * Shows parsed Path of Building character information and items.
  */
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -38,6 +38,35 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
   const groupedItems = groupItemsByCategory(build.items ?? {})
   const derived = build.derived_stats
   const [weights, setWeights] = useState<Record<string, number>>(DEFAULT_WEIGHTS)
+  const storageKey = `build-name-${build.game}-${build.session_id}`
+  const initialName =
+    (typeof window !== 'undefined' && window.localStorage?.getItem(storageKey)) || build.name || 'Unnamed Build'
+  const [customName, setCustomName] = useState(initialName)
+  const [isEditingName, setIsEditingName] = useState(false)
+  const nameInputRef = useRef<HTMLInputElement | null>(null)
+
+  // Persist name per session
+  useEffect(() => {
+    setCustomName(initialName)
+    setIsEditingName(false)
+  }, [build.game, build.session_id, initialName])
+
+  const handleNameChange = (value: string) => {
+    setCustomName(value)
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(storageKey, value)
+    }
+  }
+
+  const startNameEdit = () => {
+    setIsEditingName(true)
+    requestAnimationFrame(() => {
+      nameInputRef.current?.focus()
+      nameInputRef.current?.select()
+    })
+  }
+
+  const stopNameEdit = () => setIsEditingName(false)
 
   const formatAttributes = (attrs?: { str?: number; dex?: number; int?: number }) => {
     if (!attrs) return undefined
@@ -58,13 +87,32 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
       {/* Character Info Card */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {build.name}
-            <Badge variant="outline">{build.game.toUpperCase()}</Badge>
-          </CardTitle>
-          <CardDescription>
-            Level {build.level} {build.ascendancy || build.character_class}
-          </CardDescription>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1 max-w-sm">
+                <input
+                  aria-label="Build name"
+                  ref={nameInputRef}
+                  readOnly={!isEditingName}
+                  className={`w-full rounded-md border px-3 py-2 pr-10 text-lg font-semibold ${isEditingName ? '' : 'bg-muted'}`}
+                  value={customName}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  onBlur={stopNameEdit}
+                />
+                <button
+                  type="button"
+                  aria-label="Edit build name"
+                  className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
+                  onClick={startNameEdit}
+                >
+                  ✏️
+                </button>
+              </div>
+            </div>
+            <CardDescription>
+              Level {build.level} {build.ascendancy || build.character_class}
+            </CardDescription>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Character quick info inline */}

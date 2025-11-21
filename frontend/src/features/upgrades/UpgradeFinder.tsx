@@ -5,7 +5,7 @@
  * Complete end-to-end flow: Parse → Select Slot → Filter → Search → Display Results
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -27,20 +27,22 @@ import { PoBInput } from './components/PoBInput'
 import { BuildDisplay } from './components/BuildDisplay'
 import { parsePob } from './api'
 import type { Game, PoBParseResponse } from './types'
+import { useGameContext } from '@/hooks/useGameContext'
 
-const SESSION_KEY = 'pob_build_session'
+const SESSION_KEY_PREFIX = 'pob_build_session'
 
 export function UpgradeFinder() {
-  const [game] = useState<Game>('poe1') // TODO: Add game selector
+  const { game } = useGameContext()
+  const sessionKey = `${SESSION_KEY_PREFIX}-${game}`
   const [parsedBuild, setParsedBuild] = useState<PoBParseResponse | null>(() => {
     try {
-      const raw = sessionStorage.getItem(SESSION_KEY)
+      const raw = sessionStorage.getItem(sessionKey)
       return raw ? (JSON.parse(raw) as PoBParseResponse) : null
     } catch {
       return null
     }
   })
-  const [isImportOpen, setIsImportOpen] = useState(() => !sessionStorage.getItem(SESSION_KEY))
+  const [isImportOpen, setIsImportOpen] = useState(() => !sessionStorage.getItem(sessionKey))
 
   const parseMutation = useMutation({
     mutationFn: async (input: { pobXml?: string; pobCode?: string }) => {
@@ -53,9 +55,15 @@ export function UpgradeFinder() {
     onSuccess: (data) => {
       setParsedBuild(data)
       setIsImportOpen(false)
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify(data))
+      sessionStorage.setItem(sessionKey, JSON.stringify(data))
     },
   })
+
+  // Clear stale build when switching game context
+  useEffect(() => {
+    setParsedBuild((prev) => (prev && prev.game !== game ? null : prev))
+    setIsImportOpen(!sessionStorage.getItem(sessionKey))
+  }, [game, sessionKey])
 
   return (
     <>
