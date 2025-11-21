@@ -32,10 +32,20 @@ logger = structlog.get_logger(__name__)
 
 
 def _binary_for_game(game: Game) -> str | None:
+    env_val = None
     if game == Game.POE1:
-        return os.getenv("POB_CLI_POE1")
-    if game == Game.POE2:
-        return os.getenv("POB_CLI_POE2")
+        env_val = os.getenv("POB_CLI_POE1")
+        fallback = os.path.join(os.getcwd(), "bin", "pob-poe1", "Path of Building.exe")
+    elif game == Game.POE2:
+        env_val = os.getenv("POB_CLI_POE2")
+        fallback = os.path.join(os.getcwd(), "bin", "pob-poe2", "Path of Building-PoE2.exe")
+    else:
+        return None
+
+    if env_val:
+        return env_val
+    if os.path.isfile(fallback):
+        return fallback
     return None
 
 
@@ -57,8 +67,21 @@ def run_pob(xml_content: str, game: Game, timeout: int = 15) -> dict[str, Any]:
     """
 
     pob_binary = _binary_for_game(game)
-    luajit = os.getenv("POB_LUAJIT")
-    bridge = os.getenv("POB_BRIDGE")
+    luajit = os.getenv("POB_LUAJIT") or os.path.join(os.getcwd(), "bin", "luajit", "bin", "luajit")
+    bridge = os.getenv("POB_BRIDGE") or os.path.join(
+        os.getcwd(), "bin", "pob_bridge.lua"
+    )
+
+    logger.info(
+        "pob_cli_config",
+        game=game.value,
+        pob_binary=pob_binary,
+        pob_binary_exists=bool(pob_binary and os.path.isfile(pob_binary)),
+        luajit=luajit,
+        luajit_executable=_is_executable(luajit),
+        bridge=bridge,
+        bridge_exists=bool(bridge and os.path.isfile(bridge)),
+    )
 
     missing = _missing_fields(
         [
@@ -89,7 +112,32 @@ def run_pob(xml_content: str, game: Game, timeout: int = 15) -> dict[str, Any]:
     assert bridge is not None
     assert pob_binary is not None
 
+    pob_dir = str(os.path.dirname(pob_binary))
     cmd: list[str] = [luajit, bridge, pob_binary]
+    env = os.environ.copy()
+    lua_path = env.get(
+        "LUA_PATH",
+        "",
+    )
+    env["POB_ROOT"] = pob_dir
+    env["LUA_PATH"] = ";".join(
+        [
+          f"{pob_dir}/?.lua",
+          f"{pob_dir}/lua/?.lua",
+          f"{pob_dir}/lua/?/init.lua",
+          lua_path or ";;",
+        ]
+    )
+    logger.info(
+        "pob_cli_invoking",
+        game=game.value,
+        cmd=cmd,
+        timeout=timeout,
+        pob_root=pob_dir,
+        lua_path=env.get("LUA_PATH"),
+        xml_bytes=len(xml_content.encode("utf-8")),
+    )
+
     try:
         result = subprocess.run(
             cmd,
@@ -97,6 +145,7 @@ def run_pob(xml_content: str, game: Game, timeout: int = 15) -> dict[str, Any]:
             capture_output=True,
             timeout=timeout,
             check=False,
+            env=env,
         )
     except Exception as exc:  # pragma: no cover - defensive
         logger.error("pob_cli_failed_launch", game=game.value, error=str(exc))
@@ -108,15 +157,24 @@ def run_pob(xml_content: str, game: Game, timeout: int = 15) -> dict[str, Any]:
             game=game.value,
             code=result.returncode,
             stderr=result.stderr.decode("utf-8", errors="ignore")[:500],
+            stdout=result.stdout.decode("utf-8", errors="ignore")[:500],
         )
         return {}
 
     stdout = result.stdout.decode("utf-8", errors="ignore")
+    first_brace = stdout.find("{")
+    last_brace = stdout.rfind("}")
+    json_blob = stdout[first_brace : last_brace + 1] if first_brace != -1 and last_brace != -1 else stdout
     try:
-        payload = json.loads(stdout)
+        payload = json.loads(json_blob)
     except json.JSONDecodeError:
         logger.warn("pob_cli_bad_json", sample=stdout[:200])
         return {}
 
-    logger.info("pob_cli_ok", game=game.value)
+    logger.info(
+        "pob_cli_ok",
+        game=game.value,
+        stdout_len=len(stdout),
+        stderr_len=len(result.stderr or b""),
+    )
     return payload if isinstance(payload, dict) else {}

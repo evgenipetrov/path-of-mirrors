@@ -15,5 +15,12 @@ services:
       - ./backend/alembic:/app/alembic
       - ./backend/alembic.ini:/app/alembic.ini
       - ./backend/tests:/app/tests
+      - ./bin:/app/bin
+    environment:
+      POB_CLI_POE1: /app/bin/pob-poe1/Path of Building.exe
+      POB_CLI_POE2: /app/bin/pob-poe2/Path of Building-PoE2.exe
+      POB_LUAJIT: /app/bin/luajit/bin/luajit
+      POB_BRIDGE: /app/bin/pob_bridge.lua
+      UVICORN_ACCESS_LOG: "0"
     # Development command with hot reload
     command: ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/src"]
