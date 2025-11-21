@@ -61,8 +61,21 @@ export function UpgradeFinder() {
 
   // Clear stale build when switching game context
   useEffect(() => {
-    setParsedBuild((prev) => (prev && prev.game !== game ? null : prev))
-    setIsImportOpen(!sessionStorage.getItem(sessionKey))
+    // Load build for this game (if any)
+    const stored = sessionStorage.getItem(sessionKey)
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as PoBParseResponse
+        setParsedBuild(parsed)
+        setIsImportOpen(false)
+        return
+      } catch {
+        // ignore and fall through
+      }
+    }
+    // No stored build: clear view and prompt import
+    setParsedBuild(null)
+    setIsImportOpen(true)
   }, [game, sessionKey])
 
   return (
