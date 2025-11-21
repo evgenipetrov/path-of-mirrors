@@ -65,6 +65,9 @@ build/
 postgres_data/
 redis_data/
 
+# Local tooling (downloaded binaries)
+bin/
+
 # Backups
 *-backup-*/
 *.backup
