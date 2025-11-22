@@ -171,6 +171,8 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
             )}
           </div>
 
+          <Separator />
+
           <div className="grid gap-4 lg:grid-cols-3">
 
             <StatColumn
