@@ -7,14 +7,15 @@ This allows us to:
 - Have fast, deterministic tests
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from src.contexts.upstream.services.trade_api_client import (
-    search_items,
+    build_simple_query,
     fetch_items,
     search_and_fetch_items,
-    build_simple_query,
+    search_items,
 )
 from src.shared import Game
 
@@ -86,7 +87,9 @@ class TestSearchItems:
             "total": 3,
         }
 
-        with patch("src.contexts.upstream.services.trade_api_client.get_http_client") as mock_get_client:
+        with patch(
+            "src.contexts.upstream.services.trade_api_client._get_global_http_client"
+        ) as mock_get_client:
             mock_client = MagicMock()
             mock_client.post = AsyncMock(return_value=mock_response)
             mock_get_client.return_value = mock_client
@@ -111,7 +114,9 @@ class TestSearchItems:
             "total": 5,
         }
 
-        with patch("src.contexts.upstream.services.trade_api_client.get_http_client") as mock_get_client:
+        with patch(
+            "src.contexts.upstream.services.trade_api_client._get_global_http_client"
+        ) as mock_get_client:
             mock_client = MagicMock()
             mock_client.post = AsyncMock(return_value=mock_response)
             mock_get_client.return_value = mock_client
@@ -131,7 +136,9 @@ class TestSearchItems:
             "total": 0,
         }
 
-        with patch("src.contexts.upstream.services.trade_api_client.get_http_client") as mock_get_client:
+        with patch(
+            "src.contexts.upstream.services.trade_api_client._get_global_http_client"
+        ) as mock_get_client:
             mock_client = MagicMock()
             mock_client.post = AsyncMock(return_value=mock_response)
             mock_get_client.return_value = mock_client
@@ -165,7 +172,9 @@ class TestFetchItems:
             ]
         }
 
-        with patch("src.contexts.upstream.services.trade_api_client.get_http_client") as mock_get_client:
+        with patch(
+            "src.contexts.upstream.services.trade_api_client._get_global_http_client"
+        ) as mock_get_client:
             mock_client = MagicMock()
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_get_client.return_value = mock_client
@@ -196,7 +205,9 @@ class TestFetchItems:
         mock_response = MagicMock()
         mock_response.json.return_value = {"result": []}
 
-        with patch("src.contexts.upstream.services.trade_api_client.get_http_client") as mock_get_client:
+        with patch(
+            "src.contexts.upstream.services.trade_api_client._get_global_http_client"
+        ) as mock_get_client:
             mock_client = MagicMock()
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_get_client.return_value = mock_client
@@ -242,7 +253,9 @@ class TestSearchAndFetchItems:
             ]
         }
 
-        with patch("src.contexts.upstream.services.trade_api_client.get_http_client") as mock_get_client:
+        with patch(
+            "src.contexts.upstream.services.trade_api_client._get_global_http_client"
+        ) as mock_get_client:
             mock_client = MagicMock()
             mock_client.post = AsyncMock(return_value=search_response)
             mock_client.get = AsyncMock(return_value=fetch_response)
@@ -268,7 +281,9 @@ class TestSearchAndFetchItems:
             "total": 0,
         }
 
-        with patch("src.contexts.upstream.services.trade_api_client.get_http_client") as mock_get_client:
+        with patch(
+            "src.contexts.upstream.services.trade_api_client._get_global_http_client"
+        ) as mock_get_client:
             mock_client = MagicMock()
             mock_client.post = AsyncMock(return_value=search_response)
             mock_client.get = AsyncMock()  # Should not be called

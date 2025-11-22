@@ -39,7 +39,8 @@ main() {
     local total_failed=0
     local backend_passed=0
     local frontend_passed=0
-    local start_time=$(date +%s)
+    local start_time
+    start_time=$(date +%s)
     local started_services=false
 
     # Run backend tests
@@ -143,7 +144,8 @@ main() {
     fi
 
     # Calculate duration
-    local end_time=$(date +%s)
+    local end_time
+    end_time=$(date +%s)
     local duration=$((end_time - start_time))
 
     # Summary

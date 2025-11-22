@@ -30,7 +30,9 @@ class ValidationResult:
     total: int = 0
     success: int = 0
     failures: list[tuple[str, str, str, str]] = field(default_factory=list)
-    by_source: dict[str, tuple[int, int]] = field(default_factory=lambda: defaultdict(lambda: [0, 0]))
+    by_source: dict[str, tuple[int, int]] = field(
+        default_factory=lambda: defaultdict(lambda: [0, 0])
+    )
     classes: dict[str, int] = field(default_factory=lambda: defaultdict(int))
     ascendancies: dict[str, int] = field(default_factory=lambda: defaultdict(int))
 
@@ -61,7 +63,9 @@ class ValidationResult:
         print(f"Unique ascendancies: {len(self.ascendancies)}")
         print()
         if self.total > 0:
-            print(f"✓ Successful: {self.success}/{self.total} ({self.success/self.total*100:.1f}%)")
+            print(
+                f"✓ Successful: {self.success}/{self.total} ({self.success / self.total * 100:.1f}%)"
+            )
             print(f"✗ Failed: {len(self.failures)}/{self.total}")
         else:
             print("⚠ No builds found to validate")
@@ -77,13 +81,17 @@ class ValidationResult:
             print(f"  {source}: {success}/{total} ({pct:.1f}%)")
 
         print()
-        print(f"Character classes (top 10):")
-        for char_class, count in sorted(self.classes.items(), key=lambda x: x[1], reverse=True)[:10]:
+        print("Character classes (top 10):")
+        for char_class, count in sorted(self.classes.items(), key=lambda x: x[1], reverse=True)[
+            :10
+        ]:
             print(f"  {char_class}: {count}")
 
         print()
-        print(f"Ascendancies (top 10):")
-        for ascendancy, count in sorted(self.ascendancies.items(), key=lambda x: x[1], reverse=True)[:10]:
+        print("Ascendancies (top 10):")
+        for ascendancy, count in sorted(
+            self.ascendancies.items(), key=lambda x: x[1], reverse=True
+        )[:10]:
             print(f"  {ascendancy}: {count}")
 
         if self.failures:
@@ -153,8 +161,14 @@ def parse_pob_build(
         }
 
         # Validate required fields
-        if not all([build_dict["game"], build_dict["name"],
-                   build_dict["character_class"], build_dict["level"]]):
+        if not all(
+            [
+                build_dict["game"],
+                build_dict["name"],
+                build_dict["character_class"],
+                build_dict["level"],
+            ]
+        ):
             raise ValueError("Missing required Build fields")
 
         result.add_success(source, game, xml_path.name, char_class, ascend_class or "None")
@@ -169,8 +183,7 @@ def parse_pob_build(
 
 
 def parse_poeninja_build(
-    build_data: dict, result: ValidationResult, source: str, game: str,
-    league: str, verbose: bool
+    build_data: dict, result: ValidationResult, source: str, game: str, league: str, verbose: bool
 ) -> None:
     """Parse a poe.ninja build snapshot.
 
@@ -223,8 +236,14 @@ def parse_poeninja_build(
             "properties": {},
         }
 
-        if not all([build_dict["game"], build_dict["name"],
-                   build_dict["character_class"], build_dict["level"]]):
+        if not all(
+            [
+                build_dict["game"],
+                build_dict["name"],
+                build_dict["character_class"],
+                build_dict["level"],
+            ]
+        ):
             raise ValueError("Missing required Build fields")
 
         result.add_success(source, game, f"{league}.json", char_class, "Unknown")
@@ -287,7 +306,7 @@ def validate_poeninja_builds(game: str, result: ValidationResult, verbose: bool)
         # Assume builds are in a single builds.json or multiple character files
         for json_file in json_files:
             try:
-                with open(json_file, "r", encoding="utf-8") as f:
+                with open(json_file, encoding="utf-8") as f:
                     data = json.load(f)
 
                 # Data could be single build or array of builds
@@ -297,7 +316,9 @@ def validate_poeninja_builds(game: str, result: ValidationResult, verbose: bool)
                     print(f"    {league_name}: {len(builds)} builds")
 
                 for build in builds:
-                    parse_poeninja_build(build, result, "poeninja_builds", game, league_name, verbose)
+                    parse_poeninja_build(
+                        build, result, "poeninja_builds", game, league_name, verbose
+                    )
 
             except Exception as e:
                 result.add_failure("poeninja_builds", game, league_name, json_file.name, str(e))
@@ -308,12 +329,19 @@ def validate_poeninja_builds(game: str, result: ValidationResult, verbose: bool)
 def main():
     """Main validation entry point."""
     parser = argparse.ArgumentParser(description="Validate Build domain model")
-    parser.add_argument("--game", choices=["poe1", "poe2", "all"], default="all",
-                       help="Game to validate (default: all)")
-    parser.add_argument("--source", choices=["pob", "poeninja", "all"], default="all",
-                       help="Source to validate (default: all)")
-    parser.add_argument("--verbose", "-v", action="store_true",
-                       help="Show detailed output")
+    parser.add_argument(
+        "--game",
+        choices=["poe1", "poe2", "all"],
+        default="all",
+        help="Game to validate (default: all)",
+    )
+    parser.add_argument(
+        "--source",
+        choices=["pob", "poeninja", "all"],
+        default="all",
+        help="Source to validate (default: all)",
+    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Show detailed output")
 
     args = parser.parse_args()
 

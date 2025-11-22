@@ -42,8 +42,11 @@ Path of Mirrors is a full-stack economic intelligence platform for Path of Exile
 ./scripts/run-tests.sh --backend    # Backend only (pytest)
 ./scripts/run-tests.sh --frontend   # Frontend only (vitest)
 
-# Code quality
-./scripts/check-code.sh --fix       # Auto-fix linting/formatting (ruff + mypy + eslint)
+# Code quality & automation
+./scripts/check-code.sh --fix       # All checks: schema, docs, locks, linting, type checking
+./scripts/check-schema.sh           # OpenAPI schema freshness
+./scripts/check-docs.sh             # Route documentation consistency
+./scripts/check-locks.sh            # Dependency lock consistency
 
 # Database migrations
 ./scripts/migrate-db.sh create "description"  # Create migration

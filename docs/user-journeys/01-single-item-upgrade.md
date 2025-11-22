@@ -8,31 +8,31 @@
 
 **Database Required:** No
 
----
+______________________________________________________________________
 
 ## User Flow
 
 1. User navigates to "Upgrade Finder" page
-2. User provides build via:
+1. User provides build via:
    - Upload PoB XML file, OR
    - Paste PoB import code (base64 string)
-3. System parses build and displays current items
-4. User selects item slot to upgrade (e.g., "Amulet")
-5. User optionally sets filters:
+1. System parses build and displays current items
+1. User selects item slot to upgrade (e.g., "Amulet")
+1. User optionally sets filters:
    - Max price (e.g., "50 chaos")
    - Minimum stat improvements (e.g., "+20 life minimum")
-6. User clicks "Find Upgrades"
-7. System:
+1. User clicks "Find Upgrades"
+1. System:
    - Extracts current item stats
    - Queries Trade API for similar items
    - Compares stats and ranks by improvement
-8. User sees ranked list of upgrades with:
+1. User sees ranked list of upgrades with:
    - Item name and stats
    - Stat comparison (before/after)
    - Price
    - Trade whisper command
 
----
+______________________________________________________________________
 
 ## Technical Architecture
 
@@ -51,6 +51,7 @@ frontend/src/routes/upgrades/
 ```
 
 **Key UI interactions:**
+
 - File upload: `<input type="file" accept=".xml" />`
 - Import code: `<textarea>` with validation
 - Results: Sortable table (by price, stat improvement, value ratio)
@@ -70,7 +71,7 @@ backend/src/contexts/upgrades/
 │   └── schemas.py               # Request/response Pydantic models
 ```
 
----
+______________________________________________________________________
 
 ## API Contract
 
@@ -146,7 +147,7 @@ backend/src/contexts/upgrades/
 }
 ```
 
----
+______________________________________________________________________
 
 ## Core Component Details
 
@@ -181,11 +182,12 @@ def extract_item_from_slot(build: Build, slot: str) -> dict:
 ```
 
 **Dependencies:**
+
 - `xml.etree.ElementTree` (standard library)
 - `base64`, `zlib` (standard library)
 - `src.contexts.core.Build` (domain model)
 
----
+______________________________________________________________________
 
 ### 2. Trade API Client (`trade_api_client.py`)
 
@@ -270,14 +272,16 @@ def parse_trade_item(item_data: dict) -> dict:
 ```
 
 **Dependencies:**
+
 - `httpx` (async HTTP client)
 - Trade API documentation: https://www.pathofexile.com/developer/docs/reference
 
 **Rate limiting:**
+
 - Trade API has rate limits (need to implement backoff)
 - Consider caching recent queries (optional for MVP)
 
----
+______________________________________________________________________
 
 ### 3. Stat Extractor (`stat_extractor.py`)
 
@@ -332,7 +336,7 @@ def parse_mod_text(mod_text: str) -> tuple[str, float]:
     return None, 0
 ```
 
----
+______________________________________________________________________
 
 ### 4. Upgrade Ranker (`upgrade_ranker.py`)
 
@@ -418,102 +422,115 @@ def get_default_weights() -> dict:
     }
 ```
 
----
+______________________________________________________________________
 
 ## Implementation Sequence
 
 ### Phase 1: Backend Core (Day 1)
+
 1. ✅ Create `contexts/upgrades/` structure
-2. ✅ Implement PoB parser (XML + import code)
-3. ✅ Write tests for PoB parser with sample builds
-4. ✅ Implement Trade API client (search + fetch)
-5. ✅ Implement stat extractor
-6. ✅ Implement upgrade ranker
+1. ✅ Implement PoB parser (XML + import code)
+1. ✅ Write tests for PoB parser with sample builds
+1. ✅ Implement Trade API client (search + fetch)
+1. ✅ Implement stat extractor
+1. ✅ Implement upgrade ranker
 
 ### Phase 2: API Endpoint (Day 1-2)
+
 7. ✅ Create FastAPI route
-8. ✅ Wire up components
-9. ✅ Add request validation (Pydantic schemas)
-10. ✅ Test end-to-end with Postman/curl
+1. ✅ Wire up components
+1. ✅ Add request validation (Pydantic schemas)
+1. ✅ Test end-to-end with Postman/curl
 
 ### Phase 3: Frontend (Day 2-3)
+
 11. ✅ Create upgrade finder page
-12. ✅ Build PoB input component (file + code tabs)
-13. ✅ Build results table with TanStack Table
-14. ✅ Add filtering and sorting
-15. ✅ Style with Tailwind + shadcn/ui
+01. ✅ Build PoB input component (file + code tabs)
+01. ✅ Build results table with TanStack Table
+01. ✅ Add filtering and sorting
+01. ✅ Style with Tailwind + shadcn/ui
 
 ### Phase 4: Polish (Day 3)
-16. ✅ Error handling (invalid PoB, API failures)
-17. ✅ Loading states
-18. ✅ Empty states
-19. ✅ Trade whisper copy button
-20. ✅ Price conversion (divine/exalt → chaos)
 
----
+16. ✅ Error handling (invalid PoB, API failures)
+01. ✅ Loading states
+01. ✅ Empty states
+01. ✅ Trade whisper copy button
+01. ✅ Price conversion (divine/exalt → chaos)
+
+______________________________________________________________________
 
 ## Testing Strategy
 
 ### Unit Tests
+
 - PoB parser with various XML formats
 - Stat extractor with different mod formats
 - Upgrade ranker with mock data
 
 ### Integration Tests
+
 - Full API endpoint with mock Trade API
 - Test with real PoB exports from samples
 
 ### Manual Testing
+
 - Test with various build archetypes (life, ES, hybrid)
 - Test different item slots
 - Verify trade whispers work in-game
 
----
+______________________________________________________________________
 
 ## Future Enhancements
 
 **Not in MVP, but easy to add later:**
 
 1. **Custom stat weights** - Let user adjust importance of stats
-2. **Multiple results pages** - Pagination for >50 results
-3. **Save searches** - Bookmark specific upgrade searches
-4. **Price history** - Show if item is good deal vs historical prices
-5. **Bulk upgrade** - Find upgrades for multiple slots at once
-6. **DPS calculations** - Use PoB binary for exact DPS improvement (Journey 5)
+1. **Multiple results pages** - Pagination for >50 results
+1. **Save searches** - Bookmark specific upgrade searches
+1. **Price history** - Show if item is good deal vs historical prices
+1. **Bulk upgrade** - Find upgrades for multiple slots at once
+1. **DPS calculations** - Use PoB binary for exact DPS improvement (Journey 5)
 
----
+______________________________________________________________________
 
 ## Open Questions
 
 1. **Price conversion rates** - How to get current divine/exalt → chaos rates?
+
    - Option A: Hardcode (needs manual updates)
    - Option B: Query poe.ninja API (adds dependency)
    - Option C: User provides conversion rate (annoying)
 
-2. **Stat weights** - Should we have build-specific weights?
+1. **Stat weights** - Should we have build-specific weights?
+
    - Option A: Universal weights (simpler, less accurate)
    - Option B: Detect build archetype from passive tree (complex)
    - Option C: User selects archetype (manual but accurate)
 
-3. **Item slot naming** - PoB uses different names than Trade API
+1. **Item slot naming** - PoB uses different names than Trade API
+
    - Need mapping: PoB "Weapon 1" → Trade API "weapon1"
    - Document the canonical slot names
 
-4. **Corrupted items** - Include or exclude?
+1. **Corrupted items** - Include or exclude?
+
    - Default: Exclude (can't modify)
    - Add filter option later
 
----
+______________________________________________________________________
 
 ## Dependencies
 
 **Python packages:**
+
 ```
 httpx          # Async HTTP client
 pydantic       # Request/response validation
 ```
 
 **External APIs:**
+
 - pathofexile.com/trade API (public, rate limited)
 
 **No database required** - All processing is stateless and ephemeral

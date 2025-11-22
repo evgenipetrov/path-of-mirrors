@@ -17,10 +17,10 @@ https://www.pathofexile.com/developer/docs/reference#trade
 
 from typing import Any
 
+import httpx
 import structlog
 
 from src.shared import Game
-from src.shared.http import create_poe_http_client
 
 logger = structlog.get_logger(__name__)
 
@@ -37,6 +37,7 @@ async def search_items(
     league: str,
     query: dict[str, Any],
     limit: int = 10,
+    http_client: httpx.AsyncClient | None = None,
 ) -> list[str]:
     """Search for items on Trade API.
 
@@ -48,6 +49,7 @@ async def search_items(
         league: League name (e.g., "Affliction", "Standard")
         query: Trade API query structure
         limit: Maximum number of results to return (default: 10)
+        http_client: Optional HTTP client (if None, uses global client from main)
 
     Returns:
         List of item result IDs
@@ -77,7 +79,8 @@ async def search_items(
     )
 
     try:
-        client = get_http_client()
+        # Use provided client or fall back to global client
+        client = http_client or _get_global_http_client()
         response = await client.post(search_url, json=query)
         response.raise_for_status()
         data: dict[str, Any] = response.json()
@@ -107,6 +110,7 @@ async def fetch_items(
     game: Game,
     result_ids: list[str],
     query_id: str | None = None,
+    http_client: httpx.AsyncClient | None = None,
 ) -> list[dict[str, Any]]:
     """Fetch item details from Trade API.
 
@@ -114,6 +118,7 @@ async def fetch_items(
         game: Game context (POE1 or POE2)
         result_ids: List of item IDs from search_items()
         query_id: Optional query ID from search (used for tracking)
+        http_client: Optional HTTP client (if None, uses global client from main)
 
     Returns:
         List of item detail dictionaries
@@ -147,7 +152,8 @@ async def fetch_items(
     )
 
     try:
-        client = get_http_client()
+        # Use provided client or fall back to global client
+        client = http_client or _get_global_http_client()
         response = await client.get(fetch_url, params=params)
         response.raise_for_status()
         data: dict[str, Any] = response.json()
@@ -177,6 +183,7 @@ async def search_and_fetch_items(
     league: str,
     query: dict[str, Any],
     limit: int = 10,
+    http_client: httpx.AsyncClient | None = None,
 ) -> list[dict[str, Any]]:
     """Convenience function to search and fetch in one call.
 
@@ -187,6 +194,7 @@ async def search_and_fetch_items(
         league: League name
         query: Trade API query
         limit: Max results (default: 10)
+        http_client: Optional HTTP client (if None, uses global client from main)
 
     Returns:
         List of full item details
@@ -205,14 +213,14 @@ async def search_and_fetch_items(
     )
 
     # Step 1: Search for item IDs
-    result_ids = await search_items(game, league, query, limit)
+    result_ids = await search_items(game, league, query, limit, http_client)
 
     if not result_ids:
         logger.warning("No results found")
         return []
 
     # Step 2: Fetch item details
-    items = await fetch_items(game, result_ids)
+    items = await fetch_items(game, result_ids, http_client=http_client)
 
     logger.info(
         "Search and fetch complete",
@@ -286,10 +294,17 @@ def build_simple_query(
     return query
 
 
-# Adapter retained for testability/backwards compatibility
-def get_http_client():
-    """Return a PoE-configured HTTP client.
+def _get_global_http_client() -> httpx.AsyncClient:
+    """Get the global HTTP client from main app.
 
-    Kept as a separate function so test suites can monkeypatch/magicmock easily.
+    Returns:
+        httpx.AsyncClient: The global HTTP client managed by FastAPI lifespan.
+
+    Raises:
+        RuntimeError: If called before application startup.
     """
-    return create_poe_http_client()
+    # Import here to avoid circular dependency
+    from src.main import get_http_client
+
+    client: httpx.AsyncClient = get_http_client()
+    return client

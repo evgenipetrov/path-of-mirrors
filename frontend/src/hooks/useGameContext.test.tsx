@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { GameProvider, useGameContext, type Game } from './useGameContext'
 
 describe('useGameContext', () => {

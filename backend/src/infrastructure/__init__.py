@@ -13,6 +13,7 @@ from .config import (
     get_poeninja_config,
     get_trade_config,
 )
+from .config.base import ConfigurationError
 from .database import Base, async_engine, get_db, local_session
 from .health import check_database_health, check_redis_health
 from .logging import get_logger, setup_logging
@@ -29,6 +30,7 @@ from .settings import settings
 __all__ = [
     # Config (app-level)
     "settings",
+    "ConfigurationError",
     # Config (upstream sources - global)
     "GlobalConfig",
     "get_global_config",

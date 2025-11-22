@@ -13,7 +13,10 @@ Convenient scripts for managing the Path of Mirrors development environment.
 | `build-images.sh` | Build Docker images | `./scripts/build-images.sh --prod` |
 | `run-tests.sh` | Run tests | `./scripts/run-tests.sh` |
 | `generate-api.sh` | Regenerate frontend API client | `./scripts/generate-api.sh` |
-| `check-code.sh` | Run linters | `./scripts/check-code.sh --fix` |
+| **`check-code.sh`** | **Run all quality checks** | `./scripts/check-code.sh --fix` |
+| **`check-schema.sh`** | **Check OpenAPI freshness** | `./scripts/check-schema.sh` |
+| **`check-docs.sh`** | **Check route docs** | `./scripts/check-docs.sh` |
+| **`check-locks.sh`** | **Check dependency locks** | `./scripts/check-locks.sh` |
 | `migrate-db.sh` | Database migrations | `./scripts/migrate-db.sh` |
 | `reset-db.sh` | Reset database | `./scripts/reset-db.sh --force` |
 | `view-logs.sh` | View logs | `./scripts/view-logs.sh backend -f` |
@@ -198,9 +201,9 @@ Runs all tests (backend and frontend) with optional coverage.
 
 ---
 
-### `check-code.sh` - Run Linters and Formatters
+### `check-code.sh` - Run All Code Quality Checks
 
-Runs all code quality checks (linting, formatting, type checking).
+Runs comprehensive code quality checks including schema freshness, documentation consistency, dependency locks, linting, formatting, and type checking.
 
 ```bash
 # Check all code
@@ -217,14 +220,124 @@ Runs all code quality checks (linting, formatting, type checking).
 ```
 
 **What it does:**
-1. Backend: ruff check, ruff format, mypy type checking
-2. Frontend: eslint, TypeScript type checking
-3. Reports all issues with clear summaries
+1. **Pre-flight checks:**
+   - OpenAPI schema freshness (`check-schema.sh`)
+   - Route documentation consistency (`check-docs.sh`)
+   - Dependency lock consistency (`check-locks.sh`)
+2. **Backend:** ruff check, ruff format, mypy type checking
+3. **Frontend:** eslint, TypeScript type checking
+4. Reports all issues with clear summaries
 
 **Options:**
 - `--fix` - Automatically fix issues where possible
-- `--backend` - Lint backend code only
-- `--frontend` - Lint frontend code only
+- `--backend` - Check backend only
+- `--frontend` - Check frontend only
+
+**Use this before committing** to ensure all quality gates pass.
+
+---
+
+### `check-schema.sh` - Check OpenAPI Schema Freshness
+
+Ensures the committed OpenAPI spec (`backend/openapi.json`) is in sync with the actual backend code.
+
+```bash
+# Check if schema is up to date
+./scripts/check-schema.sh
+
+# Update the committed schema file
+./scripts/check-schema.sh --update
+```
+
+**What it does:**
+1. Starts backend if not running
+2. Fetches current OpenAPI spec from `http://localhost:8000/openapi.json`
+3. Compares with committed `backend/openapi.json`
+4. Fails if they differ (prevents API drift)
+
+**Options:**
+- `--update` - Update the committed schema file
+
+**Typical workflow:**
+```bash
+# After changing backend routes or schemas
+./scripts/check-schema.sh --update
+./scripts/generate-api.sh
+git add backend/openapi.json frontend/src/hooks/api/
+```
+
+**Why this matters:**
+- Prevents backend API drift from documented spec
+- Ensures frontend API client stays in sync
+- Catches undocumented route changes in CI
+
+---
+
+### `check-docs.sh` - Check Route Documentation Consistency
+
+Ensures all API routes are documented in `docs/API_ROUTES.md`.
+
+```bash
+# Check route documentation
+./scripts/check-docs.sh
+```
+
+**What it does:**
+1. Starts backend if not running
+2. Extracts routes from OpenAPI spec
+3. Extracts routes from `docs/API_ROUTES.md`
+4. Reports routes in code but not documented
+5. Reports routes documented but not in code
+
+**Why this matters:**
+- Prevents undocumented API routes
+- Keeps API documentation up to date
+- Helps onboard new developers
+
+**Fix issues by:**
+- Adding missing routes to `docs/API_ROUTES.md`
+- Removing documented routes that no longer exist
+
+---
+
+### `check-locks.sh` - Check Dependency Lock Consistency
+
+Ensures dependency lock files (`uv.lock`, `package-lock.json`) are consistent with package manifests.
+
+```bash
+# Check all lock files
+./scripts/check-locks.sh
+
+# Check backend only
+./scripts/check-locks.sh --backend
+
+# Check frontend only
+./scripts/check-locks.sh --frontend
+```
+
+**What it does:**
+1. **Backend:** Runs `uv sync --locked --check` to verify `uv.lock` matches `pyproject.toml`
+2. **Frontend:** Runs `npm ci --dry-run` to verify `package-lock.json` matches `package.json`
+
+**Options:**
+- `--backend` - Check backend lock only
+- `--frontend` - Check frontend lock only
+
+**Fix issues by:**
+```bash
+# Backend
+cd backend && uv sync
+git add backend/uv.lock
+
+# Frontend
+cd frontend && npm install
+git add frontend/package-lock.json
+```
+
+**Why this matters:**
+- Prevents dependency drift between manifest and lock
+- Ensures reproducible builds
+- Catches forgotten `npm install` or `uv sync`
 
 ---
 
@@ -406,8 +519,9 @@ cd frontend && npm run dev
 ### Pre-Commit Checklist
 
 ```bash
-# 1. Run linters and auto-fix
+# 1. Run all quality checks and auto-fix
 ./scripts/check-code.sh --fix
+# This includes: schema, docs, locks, linting, formatting, type checking
 
 # 2. Run tests
 ./scripts/run-tests.sh
@@ -418,6 +532,18 @@ cd frontend && npm run dev
 # 4. Commit if everything passes
 git add .
 git commit -m "Your message"
+```
+
+**Or use pre-commit hooks to automate:**
+```bash
+# One-time setup
+uv tool install pre-commit
+pre-commit install
+pre-commit install --hook-type pre-push -c .pre-push-hooks.yaml
+
+# Now checks run automatically on commit/push
+git commit -m "Your message"  # Fast checks run automatically
+git push                       # Tests run automatically
 ```
 
 ### Debugging Issues

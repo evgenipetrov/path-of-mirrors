@@ -21,9 +21,6 @@ import json
 import sys
 import xml.etree.ElementTree as ET
 from collections import defaultdict
-from dataclasses import dataclass
-from decimal import Decimal
-from enum import Enum
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +30,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 # Import just the Modifier module to avoid SQLAlchemy initialization
 import importlib.util
+
 spec = importlib.util.spec_from_file_location(
     "modifier",
     Path(__file__).parent.parent / "src" / "contexts" / "core" / "domain" / "modifier.py",
@@ -265,9 +263,7 @@ def validate_trade_api(game: str, result: ValidationResult, verbose: bool = Fals
             parse_trade_api_modifiers(item, result, source, game, sample_file.name)
 
 
-def validate_poeninja_builds(
-    game: str, result: ValidationResult, verbose: bool = False
-) -> None:
+def validate_poeninja_builds(game: str, result: ValidationResult, verbose: bool = False) -> None:
     """Validate Modifier against poe.ninja build samples."""
     source = "poeninja_builds"
     project_root = Path(__file__).parent.parent.parent
@@ -356,7 +352,9 @@ def print_summary(result: ValidationResult, game_filter: str | None = None):
     print(f"Unique modifier texts: {len(result.unique_mods)}")
 
     if result.results:
-        print(f"\n✓ Successful: {len(result.successes)}/{len(result.results)} ({result.success_rate:.1f}%)")
+        print(
+            f"\n✓ Successful: {len(result.successes)}/{len(result.results)} ({result.success_rate:.1f}%)"
+        )
         print(f"✗ Failed: {len(result.failures)}/{len(result.results)}")
 
         # Breakdown by source and game
@@ -385,14 +383,17 @@ def print_summary(result: ValidationResult, game_filter: str | None = None):
         if result.failures:
             print(f"\n⚠ FAILURES ({len(result.failures)}):")
             unique_failures = list(
-                set((source, game, text, error) for _, source, game, _, text, error in result.failures)
+                set(
+                    (source, game, text, error)
+                    for _, source, game, _, text, error in result.failures
+                )
             )
             for source, game, text, error in unique_failures[:10]:
                 print(f"  [{game}/{source}] {text}")
                 print(f"    → {error}")
 
         # Sample successful modifiers
-        print(f"\n✓ Sample modifiers (first 15):")
+        print("\n✓ Sample modifiers (first 15):")
         for mod in sorted(list(result.unique_mods))[:15]:
             print(f"  - {mod}")
     else:
@@ -400,9 +401,7 @@ def print_summary(result: ValidationResult, game_filter: str | None = None):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Validate Modifier design against sample data"
-    )
+    parser = argparse.ArgumentParser(description="Validate Modifier design against sample data")
     parser.add_argument(
         "--game",
         choices=["poe1", "poe2", "all"],
@@ -415,9 +414,7 @@ def main():
         default="all",
         help="Which data source to validate (default: all)",
     )
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Print detailed progress"
-    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Print detailed progress")
 
     args = parser.parse_args()
 

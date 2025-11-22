@@ -5,11 +5,15 @@
  * categories, and default weights. Use this to populate stat selection UIs
  * and ensure consistency between frontend and backend.
  */
-
 import { useQuery } from '@tanstack/react-query'
 import { AXIOS_INSTANCE } from '@/lib/api-client'
 
-export type StatCategory = 'defense' | 'resistance' | 'attribute' | 'damage' | 'utility'
+export type StatCategory =
+  | 'defense'
+  | 'resistance'
+  | 'attribute'
+  | 'damage'
+  | 'utility'
 
 export type Game = 'poe1' | 'poe2'
 
@@ -35,7 +39,9 @@ export function useStatDefinitions(game: Game) {
   return useQuery<StatDefinitionsResponse>({
     queryKey: ['stat-definitions', game],
     queryFn: async () => {
-      const response = await AXIOS_INSTANCE.get<StatDefinitionsResponse>(`/api/v1/${game}/builds/stats`)
+      const response = await AXIOS_INSTANCE.get<StatDefinitionsResponse>(
+        `/api/v1/${game}/builds/stats`
+      )
       return response.data
     },
     staleTime: 5 * 60 * 1000, // 5 minutes - stat definitions rarely change

@@ -13,7 +13,6 @@ from sqlalchemy.orm.session import Session
 
 from src.infrastructure import settings
 from src.infrastructure.database import Base
-from src.contexts.placeholder.domain import models as _placeholder_models  # ensures tables registered
 
 # Import the new app (for Notes API and new architecture tests)
 # Old app tests should use src.app.main directly in their own test files

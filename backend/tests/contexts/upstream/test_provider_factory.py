@@ -3,8 +3,6 @@
 Epic 1.1: Test factory returns correct provider for each game.
 """
 
-import pytest
-
 from src.contexts.upstream.adapters import PoE1Provider, PoE2Provider, get_provider
 from src.shared import Game
 

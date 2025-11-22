@@ -99,6 +99,16 @@ ignore = [
     "F401", # unused import
     "F403", # star imports
 ]
+# Validation scripts and tests have embedded data (URLs, XML) that exceed line length
+"scripts/*.py" = [
+    "E501", # line too long
+    "F841", # unused variable (validation scripts check structure exists)
+    "C401", # unnecessary generator
+    "C414", # unnecessary list call
+]
+"tests/**/*.py" = [
+    "E501", # line too long (embedded test data)
+]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 24

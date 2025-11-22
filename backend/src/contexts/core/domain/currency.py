@@ -27,7 +27,7 @@ class Currency(BaseEntity):
         display_name: Short display name for UI (e.g., "Chaos")
     """
 
-    __tablename__ = "currencies"
+    __tablename__ = "currencies"  # type: ignore[misc]
 
     # Identity (composite unique: game + name)
     game: Mapped[Game] = mapped_column(String(10), index=True)

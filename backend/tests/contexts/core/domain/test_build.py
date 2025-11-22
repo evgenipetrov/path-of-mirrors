@@ -403,9 +403,7 @@ class TestBuildQueries:
         await db_session.commit()
 
         result = await db_session.execute(
-            select(Build).where(
-                Build.game == Game.POE1, Build.ascendancy == "Necromancer"
-            )
+            select(Build).where(Build.game == Game.POE1, Build.ascendancy == "Necromancer")
         )
         necros = result.scalars().all()
         assert len(necros) == 2
@@ -455,9 +453,7 @@ class TestBuildQueries:
         db_session.add_all(builds)
         await db_session.commit()
 
-        result = await db_session.execute(
-            select(Build).where(Build.level >= 90, Build.level <= 95)
-        )
+        result = await db_session.execute(select(Build).where(Build.level >= 90, Build.level <= 95))
         mid_level_builds = result.scalars().all()
         assert len(mid_level_builds) == 2  # Level 90 and 95
 

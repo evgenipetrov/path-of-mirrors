@@ -1,14 +1,22 @@
 #!/usr/bin/env bash
 
 # Script: check-code.sh
-# Description: Run all linters and formatters
+# Description: Run all code quality checks (schema, docs, locks, linting, type checking)
 # Usage: ./scripts/check-code.sh [OPTIONS]
 #
 # Options:
 #   --help        Show this help message
 #   --fix         Auto-fix issues where possible
-#   --backend     Run backend linting only
-#   --frontend    Run frontend linting only
+#   --backend     Run backend checks only
+#   --frontend    Run frontend checks only
+#
+# This script runs comprehensive code quality checks including:
+#   - OpenAPI schema freshness
+#   - Route documentation consistency
+#   - Dependency lock file consistency
+#   - Code linting (ruff, eslint)
+#   - Code formatting (ruff format, prettier)
+#   - Type checking (mypy, tsc)
 
 set -e
 set -u
@@ -29,7 +37,7 @@ RUN_FRONTEND=true
 
 # Helper functions
 show_help() {
-    head -n 11 "$0" | tail -n 9 | sed 's/^# //'
+    head -n 19 "$0" | tail -n 17 | sed 's/^# //'
     exit 0
 }
 
@@ -39,6 +47,39 @@ main() {
     local total_errors=0
     local exit_code=0
     local started_services=false
+
+    # Pre-flight checks (schema, docs, locks)
+    log_step "🔍 Running Pre-flight Checks"
+
+    # Check OpenAPI schema freshness
+    log_step "Checking OpenAPI schema freshness..."
+    if "$SCRIPT_DIR/check-schema.sh"; then
+        log_success "OpenAPI schema is up to date"
+    else
+        log_error "OpenAPI schema check failed"
+        total_errors=$((total_errors + 1))
+        exit_code=1
+    fi
+
+    # Check route documentation consistency
+    log_step "Checking route documentation..."
+    if "$SCRIPT_DIR/check-docs.sh"; then
+        log_success "Route documentation is consistent"
+    else
+        log_error "Route documentation check failed"
+        total_errors=$((total_errors + 1))
+        exit_code=1
+    fi
+
+    # Check dependency lock files
+    log_step "Checking dependency locks..."
+    if "$SCRIPT_DIR/check-locks.sh"; then
+        log_success "Dependency locks are consistent"
+    else
+        log_error "Dependency lock check failed"
+        total_errors=$((total_errors + 1))
+        exit_code=1
+    fi
 
     # Backend linting
     if [ "$RUN_BACKEND" = true ]; then
@@ -126,6 +167,22 @@ main() {
             else
                 log_error "Linting issues found"
                 log_info "Run with --fix to auto-fix"
+                total_errors=$((total_errors + 1))
+                exit_code=1
+            fi
+        fi
+
+        # Prettier formatting
+        log_step "Frontend: prettier formatting"
+        if [ "$AUTO_FIX" = true ]; then
+            npx prettier --write "src/**/*.{ts,tsx,js,jsx,json,css,md}"
+            log_success "Code formatted"
+        else
+            if npx prettier --check "src/**/*.{ts,tsx,js,jsx,json,css,md}"; then
+                log_success "Code is properly formatted"
+            else
+                log_error "Code formatting issues found"
+                log_info "Run with --fix to auto-format"
                 total_errors=$((total_errors + 1))
                 exit_code=1
             fi

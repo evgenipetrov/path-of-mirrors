@@ -1,15 +1,13 @@
 """Tests for upgrade ranking service."""
 
-import pytest
-
 from src.contexts.upstream.services.upgrade_ranker import (
+    DEFAULT_STAT_WEIGHTS,
+    UpgradeScore,
     calculate_stat_improvements,
     calculate_upgrade_score,
+    calculate_value_score,
     compare_items,
     rank_upgrades,
-    calculate_value_score,
-    UpgradeScore,
-    DEFAULT_STAT_WEIGHTS,
 )
 
 

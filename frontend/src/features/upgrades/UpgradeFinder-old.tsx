@@ -3,17 +3,17 @@
  *
  * Main page for finding item upgrades using Path of Building imports.
  */
-
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { AlertCircle, CheckCircle2, ChevronUp } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { AlertCircle, CheckCircle2, ChevronUp } from 'lucide-react'
-import { PoBInput } from './components/PoBInput'
-import { BuildDisplay } from './components/BuildDisplay'
-type ApiError = { response?: { data?: { detail?: string } } }
 import { parsePob } from './api'
+import { BuildDisplay } from './components/BuildDisplay'
+import { PoBInput } from './components/PoBInput'
 import type { Game, PoBParseResponse } from './types'
+
+type ApiError = { response?: { data?: { detail?: string } } }
 
 export function UpgradeFinder() {
   const [game] = useState<Game>('poe1') // TODO: Add game selector
@@ -35,27 +35,29 @@ export function UpgradeFinder() {
   })
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className='container mx-auto space-y-6 py-8'>
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Build Analyzer</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className='text-3xl font-bold tracking-tight'>Build Analyzer</h1>
+        <p className='text-muted-foreground mt-2'>
           Import your Path of Building to analyze your build and find upgrades
         </p>
       </div>
 
       {/* Error Alert */}
       {parseMutation.isError && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
+        <Alert variant='destructive'>
+          <AlertCircle className='h-4 w-4' />
           <AlertTitle>Error parsing build</AlertTitle>
           <AlertDescription>
             {parseMutation.error instanceof Error
               ? parseMutation.error.message
               : 'Failed to parse Path of Building data. Please check your input and try again.'}
             {/* Show backend error detail if available */}
-            {((parseMutation.error as ApiError | undefined)?.response?.data?.detail) && (
-              <div className="mt-2 text-sm">
-                <strong>Details:</strong> {(parseMutation.error as ApiError).response?.data?.detail}
+            {(parseMutation.error as ApiError | undefined)?.response?.data
+              ?.detail && (
+              <div className='mt-2 text-sm'>
+                <strong>Details:</strong>{' '}
+                {(parseMutation.error as ApiError).response?.data?.detail}
               </div>
             )}
           </AlertDescription>
@@ -65,17 +67,19 @@ export function UpgradeFinder() {
       {/* Success Alert with Import Another Build button */}
       {parseMutation.isSuccess && parsedBuild && !isImportOpen && (
         <Alert>
-          <CheckCircle2 className="h-4 w-4" />
+          <CheckCircle2 className='h-4 w-4' />
           <AlertTitle>Build parsed successfully</AlertTitle>
-          <AlertDescription className="flex items-center justify-between">
+          <AlertDescription className='flex items-center justify-between'>
             <span>
-              Loaded {parsedBuild.name} - {parsedBuild.items ? Object.keys(parsedBuild.items).length : 0} items found
+              Loaded {parsedBuild.name} -{' '}
+              {parsedBuild.items ? Object.keys(parsedBuild.items).length : 0}{' '}
+              items found
             </span>
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={() => setIsImportOpen(true)}
-              className="ml-4"
+              className='ml-4'
             >
               Import Another Build
             </Button>
@@ -85,15 +89,15 @@ export function UpgradeFinder() {
 
       {/* PoB Input - Collapsible */}
       {isImportOpen && (
-        <div className="space-y-4">
+        <div className='space-y-4'>
           {parsedBuild && (
-            <div className="flex justify-end">
+            <div className='flex justify-end'>
               <Button
-                variant="ghost"
-                size="sm"
+                variant='ghost'
+                size='sm'
                 onClick={() => setIsImportOpen(false)}
               >
-                <ChevronUp className="h-4 w-4 mr-2" />
+                <ChevronUp className='mr-2 h-4 w-4' />
                 Hide Import
               </Button>
             </div>

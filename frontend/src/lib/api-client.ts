@@ -31,21 +31,24 @@ AXIOS_INSTANCE.interceptors.response.use(
   }
 )
 
-// API client compatible with orval-generated code (uses URL + RequestInit)
-export const apiClient = <T>(url: string, options?: RequestInit): Promise<T> => {
+// API client compatible with orval-generated code
+// Accepts AxiosRequestConfig and returns data from response
+export const apiClient = <T>(
+  config: AxiosRequestConfig,
+  options?: AxiosRequestConfig
+): Promise<T> => {
   const source = Axios.CancelToken.source()
 
+  // Merge config with options and add cancel token
   const axiosConfig: AxiosRequestConfig = {
-    url,
-    method: options?.method || 'GET',
-    headers: options?.headers as Record<string, string>,
-    data: options?.body,
+    ...config,
+    ...options,
     cancelToken: source.token,
   }
 
   const promise = AXIOS_INSTANCE(axiosConfig).then(({ data }) => data)
 
-  // @ts-expect-error - adding cancel method to promise
+  // @ts-expect-error - adding cancel method to promise for TanStack Query cancellation support
   promise.cancel = () => {
     source.cancel('Query was cancelled')
   }

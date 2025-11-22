@@ -14,7 +14,7 @@ from src.shared import Game
 repo_root = os.path.dirname(backend_dir)
 sample_path = os.path.join(repo_root, "samples", "pob", "poe1_sample.xml")
 
-with open(sample_path, "r", encoding="utf-8") as f:
+with open(sample_path, encoding="utf-8") as f:
     xml_content = f.read()
 
 build = parse_pob_xml(xml_content, Game.POE1)
@@ -29,14 +29,14 @@ if build.items:
         print(f"Base Type: {item.get('base_type')}")
         print(f"Rarity: {item.get('rarity')}")
 
-        if item.get('implicit_mods'):
+        if item.get("implicit_mods"):
             print("\nImplicit Mods:")
-            for mod in item['implicit_mods']:
+            for mod in item["implicit_mods"]:
                 print(f"  - {mod}")
 
-        if item.get('explicit_mods'):
+        if item.get("explicit_mods"):
             print("\nExplicit Mods:")
-            for mod in item['explicit_mods'][:5]:  # First 5 mods
+            for mod in item["explicit_mods"][:5]:  # First 5 mods
                 print(f"  - {mod}")
 
         print()

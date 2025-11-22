@@ -1,0 +1,247 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "20"
+
+jobs:
+  # Schema freshness check - ensures OpenAPI spec is up to date
+  check-schema:
+    name: OpenAPI Schema Freshness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start backend services
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d backend
+
+      - name: Wait for backend to be ready
+        run: |
+          max_attempts=30
+          attempt=0
+          while [ $attempt -lt $max_attempts ]; do
+            if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+              echo "Backend ready"
+              break
+            fi
+            attempt=$((attempt + 1))
+            sleep 1
+          done
+          if [ $attempt -eq $max_attempts ]; then
+            echo "Backend failed to become ready"
+            docker compose -f docker-compose.yml -f docker-compose.dev.yml logs backend
+            exit 1
+          fi
+
+      - name: Check OpenAPI schema freshness
+        run: ./scripts/check-schema.sh
+
+      - name: Stop services
+        if: always()
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml down
+
+  # Documentation consistency check - ensures all routes are documented
+  check-docs:
+    name: Route Documentation Consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start backend services
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d backend
+
+      - name: Wait for backend to be ready
+        run: |
+          max_attempts=30
+          attempt=0
+          while [ $attempt -lt $max_attempts ]; do
+            if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+              echo "Backend ready"
+              break
+            fi
+            attempt=$((attempt + 1))
+            sleep 1
+          done
+          if [ $attempt -eq $max_attempts ]; then
+            echo "Backend failed to become ready"
+            docker compose -f docker-compose.yml -f docker-compose.dev.yml logs backend
+            exit 1
+          fi
+
+      - name: Check route-to-documentation consistency
+        run: ./scripts/check-docs.sh
+
+      - name: Stop services
+        if: always()
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml down
+
+  # Dependency lock file consistency check
+  check-locks:
+    name: Dependency Lock Consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Check dependency lock files
+        run: ./scripts/check-locks.sh
+
+  # Backend linting and type checking
+  backend-lint:
+    name: Backend Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start backend service
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d backend
+
+      - name: Wait for backend to be ready
+        run: sleep 5
+
+      - name: Run ruff check
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend uv run ruff check src/
+
+      - name: Run ruff format check
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend uv run ruff format --check src/
+
+      - name: Run mypy type checking
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend bash -c "cd src && uv run mypy . --ignore-missing-imports"
+
+      - name: Stop services
+        if: always()
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml down
+
+  # Backend tests with coverage
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start all services
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+      - name: Wait for services to be ready
+        run: |
+          max_attempts=30
+          attempt=0
+          while [ $attempt -lt $max_attempts ]; do
+            if curl -sf http://localhost:8000/ready > /dev/null 2>&1; then
+              echo "Services ready"
+              break
+            fi
+            attempt=$((attempt + 1))
+            sleep 1
+          done
+          if [ $attempt -eq $max_attempts ]; then
+            echo "Services failed to become ready"
+            docker compose -f docker-compose.yml -f docker-compose.dev.yml logs
+            exit 1
+          fi
+
+      - name: Run pytest with coverage
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T backend \
+            uv run pytest \
+              --maxfail=1 \
+              --disable-warnings \
+              --cov=src \
+              --cov-report=term-missing \
+              --cov-report=xml \
+              --cov-fail-under=70
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          file: ./backend/coverage.xml
+          flags: backend
+          fail_ci_if_error: false
+
+      - name: Stop services
+        if: always()
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
+
+  # Frontend linting and type checking
+  frontend-lint:
+    name: Frontend Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Run TypeScript type checking
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+  # Frontend tests with coverage
+  frontend-test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run tests with coverage
+        working-directory: frontend
+        run: npm test -- --coverage --run
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          file: ./frontend/coverage/coverage-final.json
+          flags: frontend
+          fail_ci_if_error: false

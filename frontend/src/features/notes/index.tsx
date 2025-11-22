@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
 import { Plus } from 'lucide-react'
-import { useGameContext } from '@/hooks/useGameContext'
+import { toast } from 'sonner'
 import {
   useListNotesApiV1GameNotesGet,
   useCreateNoteApiV1GameNotesPost,
@@ -10,8 +9,7 @@ import {
   useDeleteNoteApiV1GameNotesNoteIdDelete,
   type NoteCreate,
 } from '@/hooks/api'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useGameContext } from '@/hooks/useGameContext'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,15 +20,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { ConfigDrawer } from '@/components/config-drawer'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { NotesTable } from './components/notes-table'
-import { createNotesColumns } from './components/notes-columns'
 import { NoteFormDialog } from './components/note-form-dialog'
+import { createNotesColumns } from './components/notes-columns'
+import { NotesTable } from './components/notes-table'
 import type { Note } from './data/schema'
 
 export function Notes() {
@@ -42,19 +48,26 @@ export function Notes() {
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null)
 
   // Fetch notes for current game context
-  const { data: notesData, isLoading, error } = useListNotesApiV1GameNotesGet({ game })
+  const {
+    data: notesData,
+    isLoading,
+    error,
+  } = useListNotesApiV1GameNotesGet({ game })
   const notes = Array.isArray(notesData) ? notesData : []
 
   // Mutations with cache invalidation and toast notifications
   const createMutation = useCreateNoteApiV1GameNotesPost({
     mutation: {
       onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: [`/api/v1/${game}/notes`] })
+        await queryClient.invalidateQueries({
+          queryKey: [`/api/v1/${game}/notes`],
+        })
         toast.success('Note created successfully')
         setIsFormOpen(false)
       },
       onError: (error: unknown) => {
-        const errorMsg = error instanceof Error ? error.message : 'Failed to create note'
+        const errorMsg =
+          error instanceof Error ? error.message : 'Failed to create note'
         toast.error(errorMsg)
       },
     },
@@ -63,13 +76,16 @@ export function Notes() {
   const updateMutation = useUpdateNoteApiV1GameNotesNoteIdPut({
     mutation: {
       onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: [`/api/v1/${game}/notes`] })
+        await queryClient.invalidateQueries({
+          queryKey: [`/api/v1/${game}/notes`],
+        })
         toast.success('Note updated successfully')
         setEditingNote(null)
         setIsFormOpen(false)
       },
       onError: (error: unknown) => {
-        const errorMsg = error instanceof Error ? error.message : 'Failed to update note'
+        const errorMsg =
+          error instanceof Error ? error.message : 'Failed to update note'
         toast.error(errorMsg)
       },
     },
@@ -78,13 +94,16 @@ export function Notes() {
   const deleteMutation = useDeleteNoteApiV1GameNotesNoteIdDelete({
     mutation: {
       onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: [`/api/v1/${game}/notes`] })
+        await queryClient.invalidateQueries({
+          queryKey: [`/api/v1/${game}/notes`],
+        })
         toast.success('Note deleted successfully')
         setDeleteDialogOpen(false)
         setNoteToDelete(null)
       },
       onError: (error: unknown) => {
-        const errorMsg = error instanceof Error ? error.message : 'Failed to delete note'
+        const errorMsg =
+          error instanceof Error ? error.message : 'Failed to delete note'
         toast.error(errorMsg)
       },
     },
@@ -113,7 +132,11 @@ export function Notes() {
 
   const handleSubmit = async (noteData: NoteCreate) => {
     if (editingNote) {
-      await updateMutation.mutateAsync({ game, noteId: editingNote.id, data: noteData })
+      await updateMutation.mutateAsync({
+        game,
+        noteId: editingNote.id,
+        data: noteData,
+      })
     } else {
       await createMutation.mutateAsync({ game, data: noteData })
     }
@@ -123,13 +146,17 @@ export function Notes() {
 
   if (error) {
     return (
-      <div className="p-8">
-        <Card className="border-destructive">
+      <div className='p-8'>
+        <Card className='border-destructive'>
           <CardHeader>
-            <CardTitle className="text-destructive">Error Loading Notes</CardTitle>
+            <CardTitle className='text-destructive'>
+              Error Loading Notes
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">Failed to load notes. Please try again later.</p>
+            <p className='text-muted-foreground'>
+              Failed to load notes. Please try again later.
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -140,23 +167,24 @@ export function Notes() {
     <>
       <Header>
         <Search />
-        <div className="ms-auto flex items-center space-x-4">
+        <div className='ms-auto flex items-center space-x-4'>
           <ThemeSwitch />
           <ConfigDrawer />
           <ProfileDropdown />
         </div>
       </Header>
 
-      <Main fixed className="space-y-6">
-        <div className="flex justify-between items-center">
+      <Main fixed className='space-y-6'>
+        <div className='flex items-center justify-between'>
           <div>
-            <h1 className="text-3xl font-bold">Notes</h1>
-            <p className="text-muted-foreground mt-1">
-              Manage your notes for <span className="font-semibold">{game.toUpperCase()}</span>
+            <h1 className='text-3xl font-bold'>Notes</h1>
+            <p className='text-muted-foreground mt-1'>
+              Manage your notes for{' '}
+              <span className='font-semibold'>{game.toUpperCase()}</span>
             </p>
           </div>
           <Button onClick={handleCreate}>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className='mr-2 h-4 w-4' />
             Create Note
           </Button>
         </div>
@@ -166,17 +194,19 @@ export function Notes() {
           <CardHeader>
             <CardTitle>Your Notes</CardTitle>
             <CardDescription>
-              {isLoading ? 'Loading notes...' : `${notes.length} notes for ${game.toUpperCase()}`}
+              {isLoading
+                ? 'Loading notes...'
+                : `${notes.length} notes for ${game.toUpperCase()}`}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <div className='flex items-center justify-center py-12'>
+                <div className='border-primary h-8 w-8 animate-spin rounded-full border-b-2'></div>
               </div>
             ) : notes.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">
+              <div className='py-12 text-center'>
+                <p className='text-muted-foreground'>
                   No notes yet. Create your first note to get started!
                 </p>
               </div>
@@ -202,14 +232,15 @@ export function Notes() {
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Note</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete this note? This action cannot be undone.
+                Are you sure you want to delete this note? This action cannot be
+                undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
                 onClick={confirmDelete}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
               >
                 Delete
               </AlertDialogAction>

@@ -3,5 +3,5 @@
  */
 
 // All API hooks and schemas
-export * from './generated/pathOfMirrors';
-export * from './generated/pathOfMirrors.schemas';
+export * from './generated/pathOfMirrors'
+export * from './generated/pathOfMirrors.schemas'

@@ -329,9 +329,7 @@ def validate_trade_api(game: str, result: ValidationResult, verbose: bool = Fals
             parse_trade_api_item(item_data, result, source, game, sample_file.name)
 
 
-def validate_poeninja_builds(
-    game: str, result: ValidationResult, verbose: bool = False
-) -> None:
+def validate_poeninja_builds(game: str, result: ValidationResult, verbose: bool = False) -> None:
     """Validate Item against poe.ninja build samples."""
     source = "poeninja_builds"
     project_root = Path(__file__).parent.parent.parent
@@ -443,9 +441,7 @@ def print_summary(result: ValidationResult):
         # Rarity distribution
         if result.rarity_counts:
             print("\nItem rarities:")
-            for rarity, count in sorted(
-                result.rarity_counts.items(), key=lambda x: -x[1]
-            ):
+            for rarity, count in sorted(result.rarity_counts.items(), key=lambda x: -x[1]):
                 print(f"  {rarity}: {count}")
 
         # Show failures if any
@@ -462,7 +458,7 @@ def print_summary(result: ValidationResult):
                 print(f"    → {error}")
 
         # Sample items
-        print(f"\n✓ Sample items (first 15):")
+        print("\n✓ Sample items (first 15):")
         for item in sorted(list(result.unique_items))[:15]:
             print(f"  - {item}")
     else:
@@ -470,9 +466,7 @@ def print_summary(result: ValidationResult):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Validate Item model design against sample data"
-    )
+    parser = argparse.ArgumentParser(description="Validate Item model design against sample data")
     parser.add_argument(
         "--game",
         choices=["poe1", "poe2", "all"],
@@ -485,9 +479,7 @@ def main():
         default="all",
         help="Which data source to validate (default: all)",
     )
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Print detailed progress"
-    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Print detailed progress")
 
     args = parser.parse_args()
 

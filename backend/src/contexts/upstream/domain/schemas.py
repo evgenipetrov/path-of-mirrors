@@ -96,7 +96,10 @@ class PoBParseResponse(BaseModel):
     # Session management (optional - only provided by /builds/parse endpoint)
     session_id: str | None = Field(
         None,
-        description="Temporary session ID for this build (valid for 1 hour). Only provided by /builds/parse endpoint.",
+        description=(
+            "Temporary session ID for this build (valid for 1 hour). "
+            "Only provided by /builds/parse endpoint."
+        ),
     )
 
     # Character info

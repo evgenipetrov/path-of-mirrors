@@ -10,14 +10,17 @@ NOTE: This uses mocked responses to avoid hitting the real Trade API.
 For manual testing with real API, use the script in scripts/manual_trade_test.py
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from src.contexts.upstream.services.pob_parser import parse_pob_xml
-from src.contexts.upstream.services.trade_api_client import search_and_fetch_items, build_simple_query
+from src.contexts.upstream.services.trade_api_client import (
+    build_simple_query,
+    search_and_fetch_items,
+)
 from src.contexts.upstream.services.upgrade_ranker import rank_upgrades
 from src.shared import Game
-
 
 # Sample PoB XML with a simple character
 SAMPLE_POB_XML = """<?xml version="1.0" encoding="UTF-8"?>
@@ -109,7 +112,9 @@ class TestPoBTradeIntegration:
         }
 
         # Step 4: Search Trade API with mocked client
-        with patch("src.contexts.upstream.services.trade_api_client.get_http_client") as mock_get_client:
+        with patch(
+            "src.contexts.upstream.services.trade_api_client._get_global_http_client"
+        ) as mock_get_client:
             mock_client = MagicMock()
             mock_client.post = AsyncMock(return_value=search_response)
             mock_client.get = AsyncMock(return_value=fetch_response)
@@ -225,7 +230,9 @@ class TestFullUpgradeFlow:
         }
 
         # Step 4: Search Trade API
-        with patch("src.contexts.upstream.services.trade_api_client.get_http_client") as mock_get_client:
+        with patch(
+            "src.contexts.upstream.services.trade_api_client._get_global_http_client"
+        ) as mock_get_client:
             mock_client = MagicMock()
             mock_client.post = AsyncMock(return_value=search_response)
             mock_client.get = AsyncMock(return_value=fetch_response)

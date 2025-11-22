@@ -1,4 +1,5 @@
 import { ChevronsUpDown, Command } from 'lucide-react'
+import { useGameContext, type Game } from '@/hooks/useGameContext'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +14,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { useGameContext, type Game } from '@/hooks/useGameContext'
 
 const GAMES = [
   { id: 'poe1' as Game, name: 'Path of Exile 1', shortName: 'POE1' },
@@ -24,7 +24,7 @@ export function TeamSwitcher() {
   const { isMobile } = useSidebar()
   const { game, setGame } = useGameContext()
 
-  const activeGame = GAMES.find(g => g.id === game) || GAMES[0]
+  const activeGame = GAMES.find((g) => g.id === game) || GAMES[0]
 
   return (
     <SidebarMenu>
@@ -39,9 +39,7 @@ export function TeamSwitcher() {
                 <Command className='size-4' />
               </div>
               <div className='grid flex-1 text-start text-sm leading-tight'>
-                <span className='truncate font-semibold'>
-                  Path of Mirrors
-                </span>
+                <span className='truncate font-semibold'>Path of Mirrors</span>
                 <span className='truncate text-xs'>{activeGame.shortName}</span>
               </div>
               <ChevronsUpDown className='ms-auto' />

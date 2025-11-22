@@ -414,9 +414,7 @@ class TestItemQueries:
         await db_session.commit()
 
         result = await db_session.execute(
-            select(Item).where(
-                Item.game == Game.POE1, Item.base_type == "Leather Belt"
-            )
+            select(Item).where(Item.game == Game.POE1, Item.base_type == "Leather Belt")
         )
         belts = result.scalars().all()
         assert len(belts) == 2
@@ -518,9 +516,7 @@ class TestItemQueries:
         db_session.add_all(items)
         await db_session.commit()
 
-        result = await db_session.execute(
-            select(Item).where(Item.base_type_id == base_id)
-        )
+        result = await db_session.execute(select(Item).where(Item.base_type_id == base_id))
         vaal_regalias = result.scalars().all()
         assert len(vaal_regalias) == 2
 

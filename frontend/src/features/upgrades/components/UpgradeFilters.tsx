@@ -3,10 +3,15 @@
  *
  * Filters for price and minimum stat requirements.
  */
-
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export interface UpgradeFiltersState {
   maxPriceChaos: number | null
@@ -21,8 +26,15 @@ interface UpgradeFiltersProps {
   disabled?: boolean
 }
 
-export function UpgradeFilters({ filters, onFiltersChange, disabled = false }: UpgradeFiltersProps) {
-  const handleFilterChange = (key: keyof UpgradeFiltersState, value: string) => {
+export function UpgradeFilters({
+  filters,
+  onFiltersChange,
+  disabled = false,
+}: UpgradeFiltersProps) {
+  const handleFilterChange = (
+    key: keyof UpgradeFiltersState,
+    value: string
+  ) => {
     const numValue = value === '' ? null : Number(value)
     onFiltersChange({
       ...filters,
@@ -34,29 +46,33 @@ export function UpgradeFilters({ filters, onFiltersChange, disabled = false }: U
     <Card>
       <CardHeader>
         <CardTitle>Search Filters</CardTitle>
-        <CardDescription>Customize your upgrade search criteria</CardDescription>
+        <CardDescription>
+          Customize your upgrade search criteria
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="space-y-2">
-            <Label htmlFor="max-price">Max Price (Chaos)</Label>
+      <CardContent className='space-y-4'>
+        <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+          <div className='space-y-2'>
+            <Label htmlFor='max-price'>Max Price (Chaos)</Label>
             <Input
-              id="max-price"
-              type="number"
-              placeholder="No limit"
+              id='max-price'
+              type='number'
+              placeholder='No limit'
               value={filters.maxPriceChaos ?? ''}
-              onChange={(e) => handleFilterChange('maxPriceChaos', e.target.value)}
+              onChange={(e) =>
+                handleFilterChange('maxPriceChaos', e.target.value)
+              }
               disabled={disabled}
               min={0}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="min-life">Min Life</Label>
+          <div className='space-y-2'>
+            <Label htmlFor='min-life'>Min Life</Label>
             <Input
-              id="min-life"
-              type="number"
-              placeholder="No requirement"
+              id='min-life'
+              type='number'
+              placeholder='No requirement'
               value={filters.minLife ?? ''}
               onChange={(e) => handleFilterChange('minLife', e.target.value)}
               disabled={disabled}
@@ -64,14 +80,16 @@ export function UpgradeFilters({ filters, onFiltersChange, disabled = false }: U
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="min-resistance">Min Resistance</Label>
+          <div className='space-y-2'>
+            <Label htmlFor='min-resistance'>Min Resistance</Label>
             <Input
-              id="min-resistance"
-              type="number"
-              placeholder="No requirement"
+              id='min-resistance'
+              type='number'
+              placeholder='No requirement'
               value={filters.minResistance ?? ''}
-              onChange={(e) => handleFilterChange('minResistance', e.target.value)}
+              onChange={(e) =>
+                handleFilterChange('minResistance', e.target.value)
+              }
               disabled={disabled}
               min={0}
               max={75}
@@ -79,18 +97,18 @@ export function UpgradeFilters({ filters, onFiltersChange, disabled = false }: U
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="limit">Max Results</Label>
+        <div className='space-y-2'>
+          <Label htmlFor='limit'>Max Results</Label>
           <Input
-            id="limit"
-            type="number"
+            id='limit'
+            type='number'
             value={filters.limit}
             onChange={(e) => handleFilterChange('limit', e.target.value)}
             disabled={disabled}
             min={1}
             max={50}
           />
-          <p className="text-xs text-muted-foreground">
+          <p className='text-muted-foreground text-xs'>
             Number of results to return (1-50)
           </p>
         </div>

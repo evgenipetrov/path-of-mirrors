@@ -10,11 +10,13 @@ export const createNotesColumns = (
 ): ColumnDef<Note>[] => [
   {
     accessorKey: 'title',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Title" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Title' />
+    ),
     cell: ({ row }) => (
       <button
         onClick={() => onEdit(row.original)}
-        className="font-medium hover:underline text-left"
+        className='text-left font-medium hover:underline'
       >
         {row.getValue('title')}
       </button>
@@ -22,12 +24,15 @@ export const createNotesColumns = (
   },
   {
     accessorKey: 'content',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Content" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Content' />
+    ),
     cell: ({ row }) => {
       const content = row.getValue('content') as string | null
-      if (!content) return <span className="text-muted-foreground italic">No content</span>
+      if (!content)
+        return <span className='text-muted-foreground italic'>No content</span>
       return (
-        <span className="text-muted-foreground max-w-md truncate block">
+        <span className='text-muted-foreground block max-w-md truncate'>
           {content.length > 100 ? `${content.substring(0, 100)}...` : content}
         </span>
       )
@@ -35,12 +40,14 @@ export const createNotesColumns = (
   },
   {
     accessorKey: 'game_context',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Game" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Game' />
+    ),
     cell: ({ row }) => {
       const gameContext = row.getValue('game_context') as string
       return (
         <span
-          className={`px-2 py-1 rounded text-xs font-semibold ${
+          className={`rounded px-2 py-1 text-xs font-semibold ${
             gameContext === 'poe1'
               ? 'bg-blue-500/10 text-blue-500'
               : 'bg-purple-500/10 text-purple-500'
@@ -53,27 +60,33 @@ export const createNotesColumns = (
   },
   {
     accessorKey: 'created_at',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Created' />
+    ),
     cell: ({ row }) => {
       const date = new Date(row.getValue('created_at'))
-      return <span className="text-muted-foreground text-sm">{date.toLocaleDateString()}</span>
+      return (
+        <span className='text-muted-foreground text-sm'>
+          {date.toLocaleDateString()}
+        </span>
+      )
     },
   },
   {
     id: 'actions',
     header: 'Actions',
     cell: ({ row }) => (
-      <div className="flex gap-2">
-        <Button variant="ghost" size="sm" onClick={() => onEdit(row.original)}>
-          <Pencil className="h-4 w-4" />
+      <div className='flex gap-2'>
+        <Button variant='ghost' size='sm' onClick={() => onEdit(row.original)}>
+          <Pencil className='h-4 w-4' />
         </Button>
         <Button
-          variant="ghost"
-          size="sm"
+          variant='ghost'
+          size='sm'
           onClick={() => onDelete(row.original.id)}
-          className="text-destructive hover:text-destructive"
+          className='text-destructive hover:text-destructive'
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className='h-4 w-4' />
         </Button>
       </div>
     ),

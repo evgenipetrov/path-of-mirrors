@@ -26,7 +26,7 @@ class League(BaseEntity):
         - Source of truth for "which leagues exist for which game"
     """
 
-    __tablename__ = "leagues"
+    __tablename__ = "leagues"  # type: ignore[misc]
 
     # Identity (composite unique: game + name)
     game: Mapped[Game] = mapped_column(String(10), index=True)

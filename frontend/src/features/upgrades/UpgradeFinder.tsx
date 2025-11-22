@@ -4,12 +4,12 @@
  * Main page for finding item upgrades using Path of Building imports.
  * Complete end-to-end flow: Parse → Select Slot → Filter → Search → Display Results
  */
-
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { AlertCircle } from 'lucide-react'
+import { useGameContext } from '@/hooks/useGameContext'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { AlertCircle } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -17,31 +17,34 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search as SearchInput } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { ConfigDrawer } from '@/components/config-drawer'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { PoBInput } from './components/PoBInput'
-import { BuildDisplay } from './components/BuildDisplay'
 import { parsePob } from './api'
+import { BuildDisplay } from './components/BuildDisplay'
+import { PoBInput } from './components/PoBInput'
 import type { Game, PoBParseResponse } from './types'
-import { useGameContext } from '@/hooks/useGameContext'
 
 const SESSION_KEY_PREFIX = 'pob_build_session'
 
 function UpgradeFinderInner({ game }: { game: Game }) {
   const sessionKey = `${SESSION_KEY_PREFIX}-${game}`
-  const [parsedBuild, setParsedBuild] = useState<PoBParseResponse | null>(() => {
-    try {
-      const raw = sessionStorage.getItem(sessionKey)
-      return raw ? (JSON.parse(raw) as PoBParseResponse) : null
-    } catch {
-      return null
+  const [parsedBuild, setParsedBuild] = useState<PoBParseResponse | null>(
+    () => {
+      try {
+        const raw = sessionStorage.getItem(sessionKey)
+        return raw ? (JSON.parse(raw) as PoBParseResponse) : null
+      } catch {
+        return null
+      }
     }
-  })
-  const [isImportOpen, setIsImportOpen] = useState(() => !sessionStorage.getItem(sessionKey))
+  )
+  const [isImportOpen, setIsImportOpen] = useState(
+    () => !sessionStorage.getItem(sessionKey)
+  )
 
   const parseMutation = useMutation({
     mutationFn: async (input: { pobXml?: string; pobCode?: string }) => {
@@ -62,44 +65,48 @@ function UpgradeFinderInner({ game }: { game: Game }) {
     <>
       <Header>
         <SearchInput />
-        <div className="ms-auto flex items-center space-x-4">
+        <div className='ms-auto flex items-center space-x-4'>
           <ThemeSwitch />
           <ConfigDrawer />
           <ProfileDropdown />
         </div>
       </Header>
 
-      <Main className="space-y-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <Main className='space-y-6'>
+        <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Build</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className='text-3xl font-bold tracking-tight'>Build</h1>
+            <p className='text-muted-foreground mt-2'>
               Load a Path of Building to view key stats and search for upgrades.
             </p>
           </div>
-          <Button onClick={() => setIsImportOpen(true)} size="lg">
+          <Button onClick={() => setIsImportOpen(true)} size='lg'>
             {parsedBuild ? 'Replace Build' : 'Import Build'}
           </Button>
         </div>
 
         {/* Parse Error Alert */}
         {parseMutation.isError && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
+          <Alert variant='destructive'>
+            <AlertCircle className='h-4 w-4' />
             <AlertTitle>Error parsing build</AlertTitle>
             <AlertDescription>
               {parseMutation.error instanceof Error
                 ? parseMutation.error.message
                 : 'Failed to parse Path of Building data. Please check your input and try again.'}
               {(
-                (parseMutation.error as { response?: { data?: { detail?: string } } } | undefined)?.response?.data
-                  ?.detail
-              ) && (
-                <div className="mt-2 text-sm">
+                parseMutation.error as
+                  | { response?: { data?: { detail?: string } } }
+                  | undefined
+              )?.response?.data?.detail && (
+                <div className='mt-2 text-sm'>
                   <strong>Details:</strong>{' '}
                   {
-                    (parseMutation.error as { response?: { data?: { detail?: string } } } | undefined)?.response?.data
-                      ?.detail
+                    (
+                      parseMutation.error as
+                        | { response?: { data?: { detail?: string } } }
+                        | undefined
+                    )?.response?.data?.detail
                   }
                 </div>
               )}
@@ -108,15 +115,21 @@ function UpgradeFinderInner({ game }: { game: Game }) {
         )}
 
         {/* Build Display */}
-        {parsedBuild && <BuildDisplay key={parsedBuild.session_id ?? sessionKey} build={parsedBuild} />}
+        {parsedBuild && (
+          <BuildDisplay
+            key={parsedBuild.session_id ?? sessionKey}
+            build={parsedBuild}
+          />
+        )}
       </Main>
 
       <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className='max-w-4xl'>
           <DialogHeader>
             <DialogTitle>Import Path of Building</DialogTitle>
             <DialogDescription>
-              Paste your PoB code or upload a PoB XML file to load your build. We’ll keep it for this session.
+              Paste your PoB code or upload a PoB XML file to load your build.
+              We’ll keep it for this session.
             </DialogDescription>
           </DialogHeader>
           <PoBInput

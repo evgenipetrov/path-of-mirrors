@@ -200,23 +200,15 @@ def print_summary(result: ValidationResult):
                 print(f"    → {error}")
 
         # Sample currencies
-        print(f"\n✓ Sample currencies (first 20):")
+        print("\n✓ Sample currencies (first 20):")
         for currency in sorted(result.unique_currencies)[:20]:
             print(f"  - {currency}")
 
         # Show PoE1 vs PoE2 differences
-        poe1_currencies = {
-            r[3]
-            for r in result.results
-            if r[0] == "SUCCESS" and r[1] == "poe1"
-        }
-        poe2_currencies = {
-            r[3]
-            for r in result.results
-            if r[0] == "SUCCESS" and r[1] == "poe2"
-        }
+        poe1_currencies = {r[3] for r in result.results if r[0] == "SUCCESS" and r[1] == "poe1"}
+        poe2_currencies = {r[3] for r in result.results if r[0] == "SUCCESS" and r[1] == "poe2"}
 
-        print(f"\n📊 Currency Counts:")
+        print("\n📊 Currency Counts:")
         print(f"  PoE1: {len(poe1_currencies)} unique currencies")
         print(f"  PoE2: {len(poe2_currencies)} unique currencies")
 
@@ -245,9 +237,7 @@ def main():
         default="all",
         help="Which game to validate (default: all)",
     )
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Print detailed progress"
-    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Print detailed progress")
 
     args = parser.parse_args()
 

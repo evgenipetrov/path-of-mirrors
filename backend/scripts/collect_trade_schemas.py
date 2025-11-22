@@ -12,7 +12,7 @@ These schemas provide:
 
 import asyncio
 import json
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx

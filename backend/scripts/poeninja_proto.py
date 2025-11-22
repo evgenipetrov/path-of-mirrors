@@ -27,6 +27,7 @@ _WIRE_32BIT = 5
 @dataclass(frozen=True)
 class BuildSummary:
     """Summary of a character build from poe.ninja ladder."""
+
     account: str
     character: str
 
@@ -34,6 +35,7 @@ class BuildSummary:
 @dataclass(frozen=True)
 class BuildSearchData:
     """Parsed build search response."""
+
     summaries: list[BuildSummary]
 
 
@@ -85,9 +87,7 @@ def _parse_summaries(columns: list[dict[int, list[Any]]]) -> list[BuildSummary]:
 def _decode_string(value: Any) -> str:
     """Decode a value to string from various protobuf representations."""
     if isinstance(value, dict):
-        return "".join(
-            _decode_string(entry) for entries in value.values() for entry in entries
-        )
+        return "".join(_decode_string(entry) for entries in value.values() for entry in entries)
     if isinstance(value, list):
         return "".join(_decode_string(entry) for entry in value)
     if isinstance(value, bytes | bytearray):
@@ -102,11 +102,7 @@ def _decode_string(value: Any) -> str:
                 pass
         length = max(1, (value.bit_length() + 7) // 8)
         try:
-            return (
-                value.to_bytes(length, "little")
-                .decode("utf-8", errors="replace")
-                .strip("\x00")
-            )
+            return value.to_bytes(length, "little").decode("utf-8", errors="replace").strip("\x00")
         except (OverflowError, ValueError):
             return ""
     return ""
@@ -170,9 +166,7 @@ def _try_parse_message(chunk: bytes) -> tuple[dict[int, list[Any]], bool]:
     return {}, False
 
 
-def _parse_group(
-    buffer: bytes, pos: int, group_field: int
-) -> tuple[dict[int, list[Any]], int]:
+def _parse_group(buffer: bytes, pos: int, group_field: int) -> tuple[dict[int, list[Any]], int]:
     """Parse a protobuf group."""
     fields: dict[int, list[Any]] = {}
     while pos < len(buffer):
@@ -187,9 +181,7 @@ def _parse_group(
     return fields, pos
 
 
-def _parse_value(
-    buffer: bytes, pos: int, wire_type: int, field_number: int
-) -> tuple[Any, int]:
+def _parse_value(buffer: bytes, pos: int, wire_type: int, field_number: int) -> tuple[Any, int]:
     """Parse a single protobuf value."""
     if wire_type == _WIRE_VARINT:
         return _decode_varint(buffer, pos)

@@ -7,7 +7,7 @@ Collects minimal samples for model design - just enough to understand the struct
 
 import asyncio
 import json
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
@@ -101,7 +101,11 @@ async def collect_sample(
                 },
             }
 
-        log.info("search_success", total_results=len(search_data.get("result", [])), fetching=len(result_ids))
+        log.info(
+            "search_success",
+            total_results=len(search_data.get("result", [])),
+            fetching=len(result_ids),
+        )
 
         # Step 2: Fetch (respect rate limit)
         await asyncio.sleep(RATE_LIMIT_DELAY)
@@ -161,8 +165,18 @@ async def main():
         {"game": "poe1", "league": "Keepers", "category": "accessory.amulet", "rarity": "rare"},
         {"game": "poe1", "league": "Keepers", "category": "weapon.onesword", "rarity": "unique"},
         # PoE2 - Rise of the Abyssal (current temp league)
-        {"game": "poe2", "league": "Rise of the Abyssal", "category": "accessory.amulet", "rarity": "rare"},
-        {"game": "poe2", "league": "Rise of the Abyssal", "category": "weapon.onesword", "rarity": "unique"},
+        {
+            "game": "poe2",
+            "league": "Rise of the Abyssal",
+            "category": "accessory.amulet",
+            "rarity": "rare",
+        },
+        {
+            "game": "poe2",
+            "league": "Rise of the Abyssal",
+            "category": "weapon.onesword",
+            "rarity": "unique",
+        },
     ]
 
     output_dir = Path("../_samples/data")

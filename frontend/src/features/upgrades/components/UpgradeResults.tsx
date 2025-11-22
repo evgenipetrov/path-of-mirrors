@@ -3,7 +3,6 @@
  *
  * Display ranked upgrades with sortable table using TanStack Table.
  */
-
 import { useMemo, useState } from 'react'
 import {
   useReactTable,
@@ -13,7 +12,15 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ArrowUpDown, TrendingUp, TrendingDown } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -22,8 +29,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { ArrowUpDown, TrendingUp, TrendingDown } from 'lucide-react'
 import { TradeWhisper } from './TradeWhisper'
 
 export interface UpgradeResultItem {
@@ -60,10 +65,16 @@ export function UpgradeResults({ results, currentItem }: UpgradeResultsProps) {
         accessorKey: 'name',
         header: 'Item',
         cell: ({ row }) => (
-          <div className="space-y-1">
-            <div className="font-medium">{row.original.name || row.original.base_type}</div>
-            <div className="text-sm text-muted-foreground">{row.original.base_type}</div>
-            <Badge variant={getRarityVariant(row.original.rarity)}>{row.original.rarity}</Badge>
+          <div className='space-y-1'>
+            <div className='font-medium'>
+              {row.original.name || row.original.base_type}
+            </div>
+            <div className='text-muted-foreground text-sm'>
+              {row.original.base_type}
+            </div>
+            <Badge variant={getRarityVariant(row.original.rarity)}>
+              {row.original.rarity}
+            </Badge>
           </div>
         ),
       },
@@ -71,54 +82,60 @@ export function UpgradeResults({ results, currentItem }: UpgradeResultsProps) {
         accessorKey: 'price_chaos',
         header: ({ column }) => (
           <div
-            className="flex items-center cursor-pointer"
+            className='flex cursor-pointer items-center'
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             Price
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className='ml-2 h-4 w-4' />
           </div>
         ),
         cell: ({ row }) => (
-          <div className="font-medium">{row.original.price_chaos.toFixed(1)}c</div>
+          <div className='font-medium'>
+            {row.original.price_chaos.toFixed(1)}c
+          </div>
         ),
       },
       {
         accessorKey: 'upgrade_score',
         header: ({ column }) => (
           <div
-            className="flex items-center cursor-pointer"
+            className='flex cursor-pointer items-center'
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             Score
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className='ml-2 h-4 w-4' />
           </div>
         ),
         cell: ({ row }) => (
-          <div className="font-bold text-green-600">{row.original.upgrade_score.toFixed(1)}</div>
+          <div className='font-bold text-green-600'>
+            {row.original.upgrade_score.toFixed(1)}
+          </div>
         ),
       },
       {
         id: 'improvements',
         header: 'Improvements',
         cell: ({ row }) => (
-          <div className="space-y-1 text-sm">
+          <div className='space-y-1 text-sm'>
             {Object.entries(row.original.improvements)
               .slice(0, 3)
               .map(([stat, value]) => (
-                <div key={stat} className="flex items-center gap-1">
+                <div key={stat} className='flex items-center gap-1'>
                   {value > 0 ? (
-                    <TrendingUp className="h-3 w-3 text-green-500" />
+                    <TrendingUp className='h-3 w-3 text-green-500' />
                   ) : (
-                    <TrendingDown className="h-3 w-3 text-red-500" />
+                    <TrendingDown className='h-3 w-3 text-red-500' />
                   )}
-                  <span className={value > 0 ? 'text-green-600' : 'text-red-600'}>
+                  <span
+                    className={value > 0 ? 'text-green-600' : 'text-red-600'}
+                  >
                     {value > 0 ? '+' : ''}
                     {value.toFixed(0)} {formatStatName(stat)}
                   </span>
                 </div>
               ))}
             {Object.keys(row.original.improvements).length > 3 && (
-              <div className="text-xs text-muted-foreground italic">
+              <div className='text-muted-foreground text-xs italic'>
                 +{Object.keys(row.original.improvements).length - 3} more stats
               </div>
             )}
@@ -129,7 +146,10 @@ export function UpgradeResults({ results, currentItem }: UpgradeResultsProps) {
         id: 'actions',
         header: 'Actions',
         cell: ({ row }) => (
-          <TradeWhisper whisper={row.original.whisper} itemName={row.original.name} />
+          <TradeWhisper
+            whisper={row.original.whisper}
+            itemName={row.original.name}
+          />
         ),
       },
     ],
@@ -150,17 +170,17 @@ export function UpgradeResults({ results, currentItem }: UpgradeResultsProps) {
       <CardHeader>
         <CardTitle>Upgrade Results</CardTitle>
         <CardDescription>
-          {results.length} potential upgrade{results.length !== 1 ? 's' : ''} found for{' '}
-          {currentItem.name || currentItem.base_type}
+          {results.length} potential upgrade{results.length !== 1 ? 's' : ''}{' '}
+          found for {currentItem.name || currentItem.base_type}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {results.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className='text-muted-foreground py-8 text-center'>
             No upgrades found. Try adjusting your filters or price range.
           </div>
         ) : (
-          <div className="rounded-md border">
+          <div className='rounded-md border'>
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -169,7 +189,10 @@ export function UpgradeResults({ results, currentItem }: UpgradeResultsProps) {
                       <TableHead key={header.id}>
                         {header.isPlaceholder
                           ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
                       </TableHead>
                     ))}
                   </TableRow>
@@ -180,7 +203,10 @@ export function UpgradeResults({ results, currentItem }: UpgradeResultsProps) {
                   <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -194,7 +220,9 @@ export function UpgradeResults({ results, currentItem }: UpgradeResultsProps) {
   )
 }
 
-function getRarityVariant(rarity: string): 'default' | 'secondary' | 'outline' | 'destructive' {
+function getRarityVariant(
+  rarity: string
+): 'default' | 'secondary' | 'outline' | 'destructive' {
   switch (rarity.toUpperCase()) {
     case 'UNIQUE':
       return 'default'
@@ -208,7 +236,5 @@ function getRarityVariant(rarity: string): 'default' | 'secondary' | 'outline' |
 }
 
 function formatStatName(stat: string): string {
-  return stat
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (l) => l.toUpperCase())
+  return stat.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
 }

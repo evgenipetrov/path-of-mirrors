@@ -18,7 +18,7 @@ import argparse
 import asyncio
 import json
 import sys
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -30,8 +30,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 # Add scripts dir for proto module
 sys.path.insert(0, str(Path(__file__).parent))
 
-from infrastructure import get_global_config, get_poeninja_config
 from poeninja_proto import parse_build_search_payload
+
+from infrastructure import get_global_config, get_poeninja_config
 
 log = structlog.get_logger()
 
@@ -147,7 +148,9 @@ class PoeNinjaSampleCollector:
                 if snapshot_name == league_lower or snapshot_url == league_lower:
                     snapshot_version = snapshot.get("version")
                     snapshot_url_slug = snapshot.get("url")
-                    snapshot_name_slug = snapshot.get("snapshotName") or snapshot.get("name", "").lower().replace(" ", "-")
+                    snapshot_name_slug = snapshot.get("snapshotName") or snapshot.get(
+                        "name", ""
+                    ).lower().replace(" ", "-")
                     if snapshot_version:
                         log.info(
                             "found_snapshot_version",
@@ -163,7 +166,9 @@ class PoeNinjaSampleCollector:
                 if league_lower in snapshot_name or snapshot_url in league_lower:
                     snapshot_version = snapshot.get("version")
                     snapshot_url_slug = snapshot.get("url")
-                    snapshot_name_slug = snapshot.get("snapshotName") or snapshot.get("name", "").lower().replace(" ", "-")
+                    snapshot_name_slug = snapshot.get("snapshotName") or snapshot.get(
+                        "name", ""
+                    ).lower().replace(" ", "-")
                     if snapshot_version:
                         log.info(
                             "found_snapshot_version_partial",
@@ -206,24 +211,28 @@ class PoeNinjaSampleCollector:
             with open(filepath, "w") as f:
                 json.dump(data, f, indent=2)
 
-            self.samples.append({
-                "filename": filename,
-                "type": "index_state",
-                "size_bytes": filepath.stat().st_size,
-                "collected_at": datetime.now(UTC).isoformat(),
-                "status": "success",
-            })
+            self.samples.append(
+                {
+                    "filename": filename,
+                    "type": "index_state",
+                    "size_bytes": filepath.stat().st_size,
+                    "collected_at": datetime.now(UTC).isoformat(),
+                    "status": "success",
+                }
+            )
 
             log.info("index_state_collected", filename=filename)
 
         except Exception as e:
             log.error("index_state_error", error=str(e))
-            self.samples.append({
-                "type": "index_state",
-                "collected_at": datetime.now(UTC).isoformat(),
-                "status": "failed",
-                "error": str(e),
-            })
+            self.samples.append(
+                {
+                    "type": "index_state",
+                    "collected_at": datetime.now(UTC).isoformat(),
+                    "status": "failed",
+                    "error": str(e),
+                }
+            )
 
     async def _collect_economy_snapshot(
         self,
@@ -264,17 +273,19 @@ class PoeNinjaSampleCollector:
                     message="Received empty data - league name may be incorrect or no data available",
                 )
                 # Still record the attempt but mark as empty
-                self.samples.append({
-                    "type": "economy",
-                    "league": league,
-                    "endpoint_type": endpoint_type,
-                    "category": category,
-                    "url": f"{url}?{httpx.QueryParams(params)}",
-                    "item_count": 0,
-                    "collected_at": datetime.now(UTC).isoformat(),
-                    "status": "empty",
-                    "warning": "No items in response",
-                })
+                self.samples.append(
+                    {
+                        "type": "economy",
+                        "league": league,
+                        "endpoint_type": endpoint_type,
+                        "category": category,
+                        "url": f"{url}?{httpx.QueryParams(params)}",
+                        "item_count": 0,
+                        "collected_at": datetime.now(UTC).isoformat(),
+                        "status": "empty",
+                        "warning": "No items in response",
+                    }
+                )
                 return  # Skip saving empty files
 
             # Save to file (only if we have data)
@@ -288,18 +299,20 @@ class PoeNinjaSampleCollector:
                 json.dump(data, f, indent=2)
 
             # Add to metadata
-            self.samples.append({
-                "filename": str(filepath.relative_to(self.output_dir)),
-                "type": "economy",
-                "league": league,
-                "endpoint_type": endpoint_type,
-                "category": category,
-                "url": f"{url}?{httpx.QueryParams(params)}",
-                "item_count": item_count,
-                "size_bytes": filepath.stat().st_size,
-                "collected_at": datetime.now(UTC).isoformat(),
-                "status": "success",
-            })
+            self.samples.append(
+                {
+                    "filename": str(filepath.relative_to(self.output_dir)),
+                    "type": "economy",
+                    "league": league,
+                    "endpoint_type": endpoint_type,
+                    "category": category,
+                    "url": f"{url}?{httpx.QueryParams(params)}",
+                    "item_count": item_count,
+                    "size_bytes": filepath.stat().st_size,
+                    "collected_at": datetime.now(UTC).isoformat(),
+                    "status": "success",
+                }
+            )
 
             log.info(
                 "economy_sample_collected",
@@ -315,16 +328,18 @@ class PoeNinjaSampleCollector:
                 status_code=e.response.status_code,
                 error=str(e),
             )
-            self.samples.append({
-                "type": "economy",
-                "league": league,
-                "endpoint_type": endpoint_type,
-                "category": category,
-                "url": f"{url}?{httpx.QueryParams(params)}",
-                "collected_at": datetime.now(UTC).isoformat(),
-                "status": "failed",
-                "error": f"HTTP {e.response.status_code}",
-            })
+            self.samples.append(
+                {
+                    "type": "economy",
+                    "league": league,
+                    "endpoint_type": endpoint_type,
+                    "category": category,
+                    "url": f"{url}?{httpx.QueryParams(params)}",
+                    "collected_at": datetime.now(UTC).isoformat(),
+                    "status": "failed",
+                    "error": f"HTTP {e.response.status_code}",
+                }
+            )
 
         except Exception as e:
             log.error(
@@ -333,15 +348,17 @@ class PoeNinjaSampleCollector:
                 category=category,
                 error=str(e),
             )
-            self.samples.append({
-                "type": "economy",
-                "league": league,
-                "endpoint_type": endpoint_type,
-                "category": category,
-                "collected_at": datetime.now(UTC).isoformat(),
-                "status": "failed",
-                "error": str(e),
-            })
+            self.samples.append(
+                {
+                    "type": "economy",
+                    "league": league,
+                    "endpoint_type": endpoint_type,
+                    "category": category,
+                    "collected_at": datetime.now(UTC).isoformat(),
+                    "status": "failed",
+                    "error": str(e),
+                }
+            )
 
     async def _collect_build_samples(
         self,
@@ -395,8 +412,7 @@ class PoeNinjaSampleCollector:
             # Save decoded search results as JSON
             search_data = {
                 "summaries": [
-                    {"account": s.account, "character": s.character}
-                    for s in parsed_data.summaries
+                    {"account": s.account, "character": s.character} for s in parsed_data.summaries
                 ],
                 "snapshot_version": snapshot_version,
                 "league": league,
@@ -435,29 +451,36 @@ class PoeNinjaSampleCollector:
                 )
                 await asyncio.sleep(POENINJA_CONFIG.rate_limit)
 
-            self.samples.append({
-                "filename": str(search_path.relative_to(self.output_dir)),
-                "type": "build_search",
-                "league": league,
-                "snapshot_version": snapshot_version,
-                "total_builds": len(characters),
-                "sampled_builds": limit,
-                "json_size_bytes": search_path.stat().st_size,
-                "protobuf_size_bytes": proto_path.stat().st_size,
-                "collected_at": datetime.now(UTC).isoformat(),
-                "status": "success",
-            })
+            self.samples.append(
+                {
+                    "filename": str(search_path.relative_to(self.output_dir)),
+                    "type": "build_search",
+                    "league": league,
+                    "snapshot_version": snapshot_version,
+                    "total_builds": len(characters),
+                    "sampled_builds": limit,
+                    "json_size_bytes": search_path.stat().st_size,
+                    "protobuf_size_bytes": proto_path.stat().st_size,
+                    "collected_at": datetime.now(UTC).isoformat(),
+                    "status": "success",
+                }
+            )
 
         except Exception as e:
             import traceback
-            log.error("build_search_error", league=league, error=str(e), traceback=traceback.format_exc())
-            self.samples.append({
-                "type": "build_search",
-                "league": league,
-                "collected_at": datetime.now(UTC).isoformat(),
-                "status": "failed",
-                "error": str(e),
-            })
+
+            log.error(
+                "build_search_error", league=league, error=str(e), traceback=traceback.format_exc()
+            )
+            self.samples.append(
+                {
+                    "type": "build_search",
+                    "league": league,
+                    "collected_at": datetime.now(UTC).isoformat(),
+                    "status": "failed",
+                    "error": str(e),
+                }
+            )
 
     async def _collect_character_detail(
         self,
@@ -493,15 +516,17 @@ class PoeNinjaSampleCollector:
             with open(filepath, "w") as f:
                 json.dump(data, f, indent=2)
 
-            self.samples.append({
-                "filename": str(filepath.relative_to(self.output_dir)),
-                "type": "character_detail",
-                "account": account,
-                "character": character,
-                "size_bytes": filepath.stat().st_size,
-                "collected_at": datetime.now(UTC).isoformat(),
-                "status": "success",
-            })
+            self.samples.append(
+                {
+                    "filename": str(filepath.relative_to(self.output_dir)),
+                    "type": "character_detail",
+                    "account": account,
+                    "character": character,
+                    "size_bytes": filepath.stat().st_size,
+                    "collected_at": datetime.now(UTC).isoformat(),
+                    "status": "success",
+                }
+            )
 
             log.info("character_collected", account=account, character=character)
 
@@ -532,10 +557,7 @@ class PoeNinjaSampleCollector:
         """Validate league names against index-state and suggest corrections."""
         try:
             index_state = await self._fetch_json(client, self.index_state_url)
-            available_leagues = [
-                league["name"]
-                for league in index_state.get("economyLeagues", [])
-            ]
+            available_leagues = [league["name"] for league in index_state.get("economyLeagues", [])]
 
             if not available_leagues:
                 log.warning("no_available_leagues_in_index_state")
@@ -550,7 +572,8 @@ class PoeNinjaSampleCollector:
                     # Try to find a close match
                     league_lower = league.lower()
                     matches = [
-                        avail for avail in available_leagues
+                        avail
+                        for avail in available_leagues
                         if league_lower in avail.lower() or avail.lower() in league_lower
                     ]
 
@@ -610,9 +633,7 @@ class PoeNinjaSampleCollector:
 
 async def main() -> None:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Collect poe.ninja data samples"
-    )
+    parser = argparse.ArgumentParser(description="Collect poe.ninja data samples")
     parser.add_argument(
         "--game",
         choices=["poe1", "poe2", "all"],
@@ -628,8 +649,12 @@ async def main() -> None:
     args = parser.parse_args()
 
     # Print config summary
-    poe1_total_categories = sum(len(cats) for cats in POENINJA_CONFIG.poe1_economy_categories.values())
-    poe2_total_categories = sum(len(cats) for cats in POENINJA_CONFIG.poe2_economy_categories.values())
+    poe1_total_categories = sum(
+        len(cats) for cats in POENINJA_CONFIG.poe1_economy_categories.values()
+    )
+    poe2_total_categories = sum(
+        len(cats) for cats in POENINJA_CONFIG.poe2_economy_categories.values()
+    )
 
     log.info(
         "config_loaded",

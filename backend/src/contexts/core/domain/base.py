@@ -72,7 +72,7 @@ class BaseEntity(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     __abstract__ = True
 
     # Type annotation for SQLAlchemy table name
-    __tablename__: ClassVar[str]
+    __tablename__: ClassVar[str]  # type: ignore[misc]
 
     def __repr__(self) -> str:
         """String representation showing entity type and ID."""

@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from 'react'
-import { render, type RenderOptions } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { render, type RenderOptions } from '@testing-library/react'
 
 // Create a custom render function that includes providers
 function createTestQueryClient() {
@@ -21,10 +21,7 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   queryClient?: QueryClient
 }
 
-function customRender(
-  ui: ReactElement,
-  options?: CustomRenderOptions,
-) {
+function customRender(ui: ReactElement, options?: CustomRenderOptions) {
   const { queryClient, ...renderOptions } = options || {}
 
   const Wrapper = ({ children }: { children: ReactNode }) => {

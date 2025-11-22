@@ -8,30 +8,30 @@
 
 **Database Required:** YES (build demand patterns, price history)
 
----
+______________________________________________________________________
 
 ## User Flow
 
 1. User navigates to "Flip Finder" dashboard
-2. User selects:
+1. User selects:
    - Game (PoE1/PoE2)
    - League
    - Budget range (e.g., "10-100 chaos investment")
    - Time investment (e.g., "quick flips" vs "hold for profit")
-3. System shows:
+1. System shows:
    - Current flip opportunities (sorted by profit potential)
    - Item demand score (how many builds want this)
    - Expected profit margin
    - Time to sell estimate
    - Risk level (market volatility)
-4. User clicks on opportunity to see:
+1. User clicks on opportunity to see:
    - Which builds want this item
    - Comparable listings (why this is underpriced)
    - Price history chart
    - Recommended flip price
-5. User buys item and relists at suggested price
+1. User buys item and relists at suggested price
 
----
+______________________________________________________________________
 
 ## Technical Architecture
 
@@ -76,7 +76,7 @@ backend/src/contexts/
     │   └── demand_aggregator.py # Calculate item demand from builds
 ```
 
----
+______________________________________________________________________
 
 ## API Contract
 
@@ -170,7 +170,7 @@ backend/src/contexts/
 }
 ```
 
----
+______________________________________________________________________
 
 ## Core Components
 
@@ -270,7 +270,7 @@ def extract_stat_requirements(build: Build) -> dict:
     return gaps
 ```
 
----
+______________________________________________________________________
 
 ### 2. Demand Analyzer (`market/services/demand_analyzer.py`)
 
@@ -333,7 +333,7 @@ def calculate_item_demand(
     }
 ```
 
----
+______________________________________________________________________
 
 ### 3. Price Analyzer (`market/services/price_analyzer.py`)
 
@@ -403,7 +403,7 @@ def estimate_market_price(item: dict, demand_data: dict) -> float:
     return predicted_price[0]
 ```
 
----
+______________________________________________________________________
 
 ### 4. Market Scanner (`market/services/market_scanner.py`)
 
@@ -446,7 +446,7 @@ async def scan_market_continuously(
         await asyncio.sleep(scan_interval_minutes * 60)
 ```
 
----
+______________________________________________________________________
 
 ## Database Schema
 
@@ -521,7 +521,7 @@ CREATE TABLE flip_opportunities (
 );
 ```
 
----
+______________________________________________________________________
 
 ## Data Pipeline
 
@@ -564,47 +564,53 @@ CREATE TABLE flip_opportunities (
          └──────────────────┘
 ```
 
----
+______________________________________________________________________
 
 ## Implementation Sequence
 
 ### Phase 1: Data Collection (Week 1-2)
+
 1. ✅ Build poe.ninja scraper
-2. ✅ Create build_snapshots table
-3. ✅ Ingest top 1000 builds per league
-4. ✅ Implement build clustering
-5. ✅ Test with manual queries
+1. ✅ Create build_snapshots table
+1. ✅ Ingest top 1000 builds per league
+1. ✅ Implement build clustering
+1. ✅ Test with manual queries
 
 ### Phase 2: Demand Analysis (Week 2-3)
+
 6. ✅ Implement demand analyzer
-7. ✅ Create item_demand table
-8. ✅ Calculate demand for common item types
-9. ✅ Validate demand scores manually
+1. ✅ Create item_demand table
+1. ✅ Calculate demand for common item types
+1. ✅ Validate demand scores manually
 
 ### Phase 3: Price Analysis (Week 3-4)
+
 10. ✅ Create price_history table
-11. ✅ Start collecting price snapshots
-12. ✅ Train price prediction model
-13. ✅ Implement underpriced detection
+01. ✅ Start collecting price snapshots
+01. ✅ Train price prediction model
+01. ✅ Implement underpriced detection
 
 ### Phase 4: Market Scanner (Week 4)
+
 14. ✅ Implement continuous scanner
-15. ✅ Create flip_opportunities table
-16. ✅ Build API endpoint
-17. ✅ Add caching and rate limiting
+01. ✅ Create flip_opportunities table
+01. ✅ Build API endpoint
+01. ✅ Add caching and rate limiting
 
 ### Phase 5: Frontend (Week 5)
-18. ✅ Build flip finder dashboard
-19. ✅ Add charts and visualizations
-20. ✅ Implement filters and sorting
 
----
+18. ✅ Build flip finder dashboard
+01. ✅ Add charts and visualizations
+01. ✅ Implement filters and sorting
+
+______________________________________________________________________
 
 ## Machine Learning Components
 
 ### Price Prediction Model
 
 **Training data:**
+
 - Historical price_history records
 - Item stats (life, res, etc.)
 - Demand scores
@@ -614,6 +620,7 @@ CREATE TABLE flip_opportunities (
 **Model:** Random Forest Regressor or Gradient Boosting
 
 **Features:**
+
 ```python
 features = [
     "life", "es", "mana",
@@ -628,7 +635,7 @@ features = [
 
 **Target:** `price_chaos`
 
----
+______________________________________________________________________
 
 ## Performance Considerations
 
@@ -637,62 +644,70 @@ features = [
 **Solutions:**
 
 1. **Batch processing** - Process items in batches of 100-500
-2. **Caching** - Cache demand scores for item types (refresh hourly)
-3. **Incremental updates** - Only reanalyze changed items
-4. **Database indexes** - Optimize queries with proper indexes
-5. **Background jobs** - Use Celery/ARQ for heavy processing
+1. **Caching** - Cache demand scores for item types (refresh hourly)
+1. **Incremental updates** - Only reanalyze changed items
+1. **Database indexes** - Optimize queries with proper indexes
+1. **Background jobs** - Use Celery/ARQ for heavy processing
 
----
+______________________________________________________________________
 
 ## Risks and Mitigations
 
 ### Risk 1: Market Manipulation
+
 **Risk:** Bots might abuse flip finder to corner markets
 
 **Mitigation:**
+
 - Rate limit API
 - Add randomness to opportunity detection
 - Don't show all opportunities (sample)
 - Delay updates (15-30 min lag)
 
 ### Risk 2: Stale Data
+
 **Risk:** Opportunities already bought by time user sees them
 
 **Mitigation:**
+
 - Show "last updated" timestamp
 - Mark opportunities as "likely sold" after N hours
 - Verify item still available before showing
 
 ### Risk 3: Inaccurate Predictions
+
 **Risk:** Price model is wrong, users lose money
 
 **Mitigation:**
+
 - Show confidence scores
 - Conservative profit estimates
 - Risk indicators
 - Disclaimer: "Not financial advice"
 
----
+______________________________________________________________________
 
 ## Future Enhancements
 
 1. **Crafting opportunities** - Items that can be profitably crafted
-2. **Bulk flipping** - Buy 10 similar items, flip all
-3. **Portfolio tracking** - Track user's flip performance
-4. **Alerts** - Notify when great opportunity appears
-5. **Historical analysis** - "This would have made 50ex last league"
+1. **Bulk flipping** - Buy 10 similar items, flip all
+1. **Portfolio tracking** - Track user's flip performance
+1. **Alerts** - Notify when great opportunity appears
+1. **Historical analysis** - "This would have made 50ex last league"
 
----
+______________________________________________________________________
 
 ## Dependencies
 
 **New dependencies:**
+
 - `scikit-learn` - Machine learning (clustering, regression)
 - `pandas` - Data analysis
 - `celery` or `arq` - Background job queue
 - `redis` - Caching and job queue backend
 
 **External APIs:**
+
 - poe.ninja API (build data, economy data)
 - pathofexile.com/trade API (reused from Journey 1)
 

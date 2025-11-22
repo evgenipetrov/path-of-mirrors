@@ -83,3 +83,7 @@ backend/alembic/versions/
 !backend/alembic/versions/.gitkeep
 # Coverage artifacts
 htmlcov/
+
+# Automation bundle (temporary - for manual application)
+automation-bundle.patch
+automation-bundle-README.md

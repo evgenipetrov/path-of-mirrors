@@ -4,7 +4,7 @@ This document outlines the planned work for Phases 1-6 of Path of Mirrors. Each 
 
 **Current Phase:** Phase 1 (see [SPRINT.md](SPRINT.md) for detailed tasks)
 
----
+______________________________________________________________________
 
 ## Deferred from Phase 0
 
@@ -19,7 +19,7 @@ The following items were deferred from Phase 0 and should be addressed as needed
 
 These can be added incrementally during Phase 1+ when capacity allows.
 
----
+______________________________________________________________________
 
 ## Table of Contents
 
@@ -31,7 +31,7 @@ These can be added incrementally during Phase 1+ when capacity allows.
 - [Phase 5: Price Checker](#phase-5-price-checker)
 - [Phase 6: Planner & Ops](#phase-6-planner--ops)
 
----
+______________________________________________________________________
 
 ## Phase 1: Upstream Foundation
 
@@ -50,35 +50,41 @@ Establish a reliable, automated data pipeline that fetches, normalizes, and stor
 ### Key Deliverables
 
 1. **Game Abstraction Layer**
+
    - Game enum (`poe1`, `poe2`)
    - Provider factory pattern
    - Unified interface for game-specific adapters
 
-2. **poe.ninja Integration**
+1. **poe.ninja Integration**
+
    - PoE1 adapter (economy snapshots, build ladders)
    - PoE2 adapter (economy snapshots, build ladders)
    - Error handling and retry logic
    - Rate limiting to respect API limits
 
-3. **Canonical Schemas**
+1. **Canonical Schemas**
+
    - Item model (game-agnostic with game-specific extensions)
    - Modifier model (affixes, implicits, enchants)
    - League model (league names, start/end dates, game context)
    - Currency model (pricing, fluctuations)
 
-4. **Data Normalization**
+1. **Data Normalization**
+
    - PoE1 → Canonical mapping
    - PoE2 → Canonical mapping
    - Modifier parsing and categorization
    - Price normalization (chaos equivalents)
 
-5. **Background Job System**
+1. **Background Job System**
+
    - ARQ job queue configuration
    - Daily snapshot fetch job (PoE1 + PoE2)
    - 28-day retention cleanup job
    - Job monitoring and alerting
 
-6. **Database Schema**
+1. **Database Schema**
+
    - Game-specific snapshot tables (partitioned by date)
    - Normalized item tables
    - Materialized views for trend queries
@@ -89,6 +95,7 @@ Establish a reliable, automated data pipeline that fetches, normalizes, and stor
 #### Epic 1.1: Game Abstraction Layer (8-10 hours)
 
 **Tasks:**
+
 - Define `Game` enum and context models
 - Create provider factory pattern
 - Implement base provider interface
@@ -96,16 +103,18 @@ Establish a reliable, automated data pipeline that fetches, normalizes, and stor
 - Update API endpoints to accept game parameter
 
 **Acceptance Criteria:**
+
 - [ ] Game enum (`poe1`, `poe2`) defined in `shared/game_context.py`
 - [ ] Factory returns correct provider based on game
 - [ ] All database queries filter by game context
 - [ ] API endpoints accept `game` query parameter
 
----
+______________________________________________________________________
 
 #### Epic 1.2: poe.ninja API Integration (12-15 hours)
 
 **Tasks:**
+
 - Research poe.ninja API endpoints (PoE1 and PoE2)
 - Implement HTTP client with retry logic
 - Create PoE1 poe.ninja adapter
@@ -115,6 +124,7 @@ Establish a reliable, automated data pipeline that fetches, normalizes, and stor
 - Write integration tests (mock poe.ninja responses)
 
 **Acceptance Criteria:**
+
 - [ ] Can fetch economy snapshots for PoE1 leagues
 - [ ] Can fetch economy snapshots for PoE2 leagues
 - [ ] Can fetch build ladder data for both games
@@ -123,16 +133,18 @@ Establish a reliable, automated data pipeline that fetches, normalizes, and stor
 - [ ] Integration tests cover success and error cases
 
 **poe.ninja API Endpoints:**
+
 - `https://poe.ninja/api/data/CurrencyOverview?league=X&type=Currency`
 - `https://poe.ninja/api/data/ItemOverview?league=X&type=UniqueArmour`
 - `https://poe.ninja/api/data/ItemOverview?league=X&type=DivinationCard`
 - (Similar for PoE2, different base URL)
 
----
+______________________________________________________________________
 
 #### Epic 1.3: Canonical Schemas (10-12 hours)
 
 **Tasks:**
+
 - Define canonical `Item` model (SQLAlchemy)
 - Define canonical `Modifier` model
 - Define canonical `League` model
@@ -142,6 +154,7 @@ Establish a reliable, automated data pipeline that fetches, normalizes, and stor
 - Document schema design decisions
 
 **Acceptance Criteria:**
+
 - [ ] Item model supports both PoE1 and PoE2 items
 - [ ] Modifier model handles affixes, implicits, enchants
 - [ ] League model tracks active leagues per game
@@ -150,6 +163,7 @@ Establish a reliable, automated data pipeline that fetches, normalizes, and stor
 - [ ] API responses use Pydantic schemas
 
 **Item Model (Example):**
+
 ```python
 class Item(Base):
     id: UUID
@@ -164,11 +178,12 @@ class Item(Base):
     snapshot_date: datetime
 ```
 
----
+______________________________________________________________________
 
 #### Epic 1.4: Data Normalization (10-12 hours)
 
 **Tasks:**
+
 - Implement PoE1 normalizer (poe.ninja → canonical)
 - Implement PoE2 normalizer (poe.ninja → canonical)
 - Parse and categorize modifiers
@@ -177,6 +192,7 @@ class Item(Base):
 - Write unit tests for normalization logic
 
 **Acceptance Criteria:**
+
 - [ ] PoE1 poe.ninja data maps to canonical schema
 - [ ] PoE2 poe.ninja data maps to canonical schema
 - [ ] Modifiers are parsed and categorized correctly
@@ -185,6 +201,7 @@ class Item(Base):
 - [ ] Unit tests cover edge cases
 
 **Normalization Logic (Example):**
+
 ```python
 def normalize_poe1_item(raw_item: dict) -> Item:
     return Item(
@@ -197,11 +214,12 @@ def normalize_poe1_item(raw_item: dict) -> Item:
     )
 ```
 
----
+______________________________________________________________________
 
 #### Epic 1.5: Background Job System (8-10 hours)
 
 **Tasks:**
+
 - Configure ARQ worker
 - Create daily snapshot fetch job
 - Create 28-day retention cleanup job
@@ -210,6 +228,7 @@ def normalize_poe1_item(raw_item: dict) -> Item:
 - Write tests for job execution
 
 **Acceptance Criteria:**
+
 - [ ] ARQ worker runs in Docker Compose
 - [ ] Daily job fetches snapshots for all active leagues (PoE1 + PoE2)
 - [ ] Cleanup job deletes snapshots older than 28 days
@@ -218,6 +237,7 @@ def normalize_poe1_item(raw_item: dict) -> Item:
 - [ ] Tests verify job execution logic
 
 **Job Structure:**
+
 ```python
 # backend/src/contexts/upstream/jobs/fetch_snapshots.py
 async def fetch_daily_snapshots(ctx):
@@ -229,11 +249,12 @@ async def fetch_daily_snapshots(ctx):
             await save_snapshot(snapshot)
 ```
 
----
+______________________________________________________________________
 
 #### Epic 1.6: Database Schema & Optimization (6-8 hours)
 
 **Tasks:**
+
 - Design partitioned snapshot tables (by date)
 - Create indexes for common queries
 - Implement materialized views for trend analysis
@@ -242,14 +263,16 @@ async def fetch_daily_snapshots(ctx):
 - Test query performance
 
 **Acceptance Criteria:**
+
 - [ ] Snapshot tables partitioned by month
 - [ ] Indexes speed up game/league/date queries
 - [ ] Materialized view aggregates daily prices
 - [ ] Foreign keys maintain referential integrity
 - [ ] Migrations apply and rollback cleanly
-- [ ] Common queries execute in <100ms
+- [ ] Common queries execute in \<100ms
 
 **Partitioned Table (Example):**
+
 ```sql
 CREATE TABLE poe1_snapshots (
     id UUID PRIMARY KEY,
@@ -263,7 +286,7 @@ CREATE TABLE poe1_snapshots_2025_11
     FOR VALUES FROM ('2025-11-01') TO ('2025-12-01');
 ```
 
----
+______________________________________________________________________
 
 ### Success Criteria
 
@@ -273,7 +296,7 @@ Phase 1 is complete when:
 - ✅ Data is normalized and stored in canonical schema
 - ✅ 28-day retention policy is enforced
 - ✅ API endpoints expose league and item data by game
-- ✅ Database queries are performant (<100ms for common queries)
+- ✅ Database queries are performant (\<100ms for common queries)
 - ✅ All tests pass (unit + integration)
 - ✅ Job monitoring shows successful daily runs
 
@@ -282,6 +305,7 @@ Phase 1 is complete when:
 **Total:** 40-50 hours
 
 **Breakdown:**
+
 - Game Abstraction: 8-10 hours (20%)
 - poe.ninja Integration: 12-15 hours (30%)
 - Canonical Schemas: 10-12 hours (23%)
@@ -289,7 +313,7 @@ Phase 1 is complete when:
 - Background Jobs: 8-10 hours (18%)
 - Database Schema: 6-8 hours (14%)
 
----
+______________________________________________________________________
 
 ## Phase 2: Market Intelligence
 
@@ -308,24 +332,28 @@ Build the data analysis and visualization layer that transforms raw market data 
 ### Key Deliverables
 
 1. **Market Dashboard UI**
+
    - Currency price trends (line charts)
    - Item price trends (filterable by category)
    - League economy summary
    - Game selector integration
 
-2. **Market Intelligence API**
+1. **Market Intelligence API**
+
    - Trend analysis endpoints (7-day, 28-day)
    - Price prediction (simple moving average)
    - Volatility metrics
    - Top movers (gainers/losers)
 
-3. **Meta Analyzer**
+1. **Meta Analyzer**
+
    - Build popularity tracking (from ladder data)
    - Item usage correlation with builds
    - Modifier prevalence on top gear
    - Underutilized item detection
 
-4. **Data Visualization Components**
+1. **Data Visualization Components**
+
    - Time-series charts (recharts + shadcn/ui)
    - Tables with sorting/filtering
    - Price change indicators
@@ -336,6 +364,7 @@ Build the data analysis and visualization layer that transforms raw market data 
 #### Epic 2.1: Market Intelligence Bounded Context (10-12 hours)
 
 **Tasks:**
+
 - Create `contexts/market/` structure
 - Define domain models (Trend, PricePoint, Volatility)
 - Implement repository pattern
@@ -343,17 +372,19 @@ Build the data analysis and visualization layer that transforms raw market data 
 - Add API routes
 
 **Acceptance Criteria:**
+
 - [ ] Bounded context follows hexagonal architecture
 - [ ] Domain models represent market concepts
 - [ ] Repository abstracts database queries
 - [ ] Service layer contains business logic (no DB coupling)
 - [ ] API routes expose market intelligence
 
----
+______________________________________________________________________
 
 #### Epic 2.2: Trend Analysis Engine (12-15 hours)
 
 **Tasks:**
+
 - Implement 7-day moving average
 - Implement 28-day moving average
 - Calculate price volatility (standard deviation)
@@ -362,17 +393,19 @@ Build the data analysis and visualization layer that transforms raw market data 
 - Add caching for expensive queries
 
 **Acceptance Criteria:**
+
 - [ ] Can calculate moving averages for any item/currency
 - [ ] Volatility metrics are accurate
 - [ ] Top movers endpoint returns ranked results
 - [ ] Anomaly detection flags unusual price movements
 - [ ] Queries are cached (1 hour TTL)
 
----
+______________________________________________________________________
 
 #### Epic 2.3: Market Dashboard UI (15-18 hours)
 
 **Tasks:**
+
 - Create Market Dashboard page
 - Implement currency price chart (line chart)
 - Implement item price chart (filterable by category)
@@ -383,6 +416,7 @@ Build the data analysis and visualization layer that transforms raw market data 
 - Make responsive for mobile
 
 **Acceptance Criteria:**
+
 - [ ] Dashboard shows currency trends for selected game
 - [ ] Item price chart updates when category changes
 - [ ] League selector filters data correctly
@@ -390,11 +424,12 @@ Build the data analysis and visualization layer that transforms raw market data 
 - [ ] Charts render smoothly with real data
 - [ ] Mobile-friendly layout
 
----
+______________________________________________________________________
 
 #### Epic 2.4: Meta Analyzer (10-12 hours)
 
 **Tasks:**
+
 - Fetch build ladder data from poe.ninja
 - Analyze build popularity trends
 - Correlate item usage with build adoption
@@ -403,17 +438,19 @@ Build the data analysis and visualization layer that transforms raw market data 
 - Create Meta Analyzer API endpoints
 
 **Acceptance Criteria:**
+
 - [ ] Can fetch and parse build ladder data
 - [ ] Build popularity ranked by usage
 - [ ] Item usage correlated with builds
 - [ ] Modifier prevalence calculated for top 100 players
 - [ ] Underutilized items flagged (high power, low adoption)
 
----
+______________________________________________________________________
 
 #### Epic 2.5: Visualization Components (8-10 hours)
 
 **Tasks:**
+
 - Install recharts library
 - Create reusable LineChart component
 - Create reusable BarChart component
@@ -422,13 +459,14 @@ Build the data analysis and visualization layer that transforms raw market data 
 - Style with PoE theme (dark mode)
 
 **Acceptance Criteria:**
+
 - [ ] LineChart component is reusable across features
 - [ ] BarChart component supports custom data
 - [ ] PriceTable supports sorting and filtering
 - [ ] Tooltips show detailed data on hover
 - [ ] Charts match PoE dark theme aesthetic
 
----
+______________________________________________________________________
 
 ### Success Criteria
 
@@ -446,13 +484,14 @@ Phase 2 is complete when:
 **Total:** 50-60 hours
 
 **Breakdown:**
+
 - Market Context: 10-12 hours (20%)
 - Trend Analysis: 12-15 hours (25%)
 - Dashboard UI: 15-18 hours (30%)
 - Meta Analyzer: 10-12 hours (20%)
 - Visualization: 8-10 hours (15%)
 
----
+______________________________________________________________________
 
 ## Phase 3: Crafting Assistant
 
@@ -471,25 +510,29 @@ Build a crafting optimization engine that analyzes pasted items, determines the 
 ### Key Deliverables
 
 1. **Item Parser**
+
    - Parse PoE1 item text (copy from game)
    - Parse PoE2 item text
    - Extract base type, modifiers, sockets, links
    - Validate item data
 
-2. **Crafting Path Engine**
+1. **Crafting Path Engine**
+
    - Generate crafting steps (fossil, essence, harvest, etc.)
    - Calculate expected cost per step
    - Compare multiple crafting paths
    - Suggest cheapest path to target modifiers
 
-3. **Crafting Assistant UI**
+1. **Crafting Assistant UI**
+
    - Item paste input
    - Target modifier selection
    - Step-by-step crafting plan display
    - Cost breakdown (materials + expected tries)
    - Integration with Market Dashboard (live pricing)
 
-4. **GGG Schema Integration**
+1. **GGG Schema Integration**
+
    - Fetch GGG base item data
    - Fetch crafting rule exports
    - Map modifiers to crafting methods
@@ -500,6 +543,7 @@ Build a crafting optimization engine that analyzes pasted items, determines the 
 #### Epic 3.1: Item Parser (12-15 hours)
 
 **Tasks:**
+
 - Research PoE1 item text format
 - Research PoE2 item text format
 - Implement regex-based parser
@@ -508,17 +552,19 @@ Build a crafting optimization engine that analyzes pasted items, determines the 
 - Write comprehensive tests (50+ item samples)
 
 **Acceptance Criteria:**
+
 - [ ] Can parse PoE1 item text correctly
 - [ ] Can parse PoE2 item text correctly
 - [ ] Extracts all relevant fields (base, mods, sockets, etc.)
 - [ ] Handles edge cases (corrupted, synthesized, etc.)
 - [ ] Tests cover diverse item types
 
----
+______________________________________________________________________
 
 #### Epic 3.2: GGG Schema Integration (10-12 hours)
 
 **Tasks:**
+
 - Fetch GGG base item schema
 - Fetch GGG crafting rules schema
 - Parse and store in database
@@ -526,16 +572,18 @@ Build a crafting optimization engine that analyzes pasted items, determines the 
 - Set up auto-update job (weekly)
 
 **Acceptance Criteria:**
+
 - [ ] GGG schemas stored in database
 - [ ] API exposes base items and crafting rules
 - [ ] Weekly job updates schemas
 - [ ] Schema versioning tracks game patches
 
----
+______________________________________________________________________
 
 #### Epic 3.3: Crafting Path Engine (15-18 hours)
 
 **Tasks:**
+
 - Define crafting methods (fossil, essence, harvest, etc.)
 - Implement modifier weighting (tier, rarity)
 - Calculate expected cost per method
@@ -544,17 +592,19 @@ Build a crafting optimization engine that analyzes pasted items, determines the 
 - Integrate market pricing from Phase 2
 
 **Acceptance Criteria:**
+
 - [ ] Engine generates valid crafting paths
 - [ ] Cost calculation uses real market prices
 - [ ] Multiple paths compared (fossil vs. essence vs. harvest)
 - [ ] Path ranking prioritizes cost-effectiveness
 - [ ] Handles complex targets (multiple desired mods)
 
----
+______________________________________________________________________
 
 #### Epic 3.4: Crafting Assistant UI (12-15 hours)
 
 **Tasks:**
+
 - Create Crafting Assistant page
 - Add item paste textarea
 - Display parsed item details
@@ -564,13 +614,14 @@ Build a crafting optimization engine that analyzes pasted items, determines the 
 - Integrate market pricing (live updates)
 
 **Acceptance Criteria:**
+
 - [ ] Users can paste item text
 - [ ] Parsed item displays correctly
 - [ ] Users can select target modifiers
 - [ ] Crafting plan shows actionable steps
 - [ ] Cost breakdown is accurate and up-to-date
 
----
+______________________________________________________________________
 
 ### Success Criteria
 
@@ -587,12 +638,13 @@ Phase 3 is complete when:
 **Total:** 50-60 hours
 
 **Breakdown:**
+
 - Item Parser: 12-15 hours (25%)
 - GGG Schema: 10-12 hours (20%)
 - Crafting Engine: 15-18 hours (30%)
 - Assistant UI: 12-15 hours (25%)
 
----
+______________________________________________________________________
 
 ## Phase 4: Deal Finder
 
@@ -611,25 +663,29 @@ Build a character-aware upgrade discovery tool that imports Path of Building cha
 ### Key Deliverables
 
 1. **Path of Building Integration**
+
    - Parse PoB XML exports (PoE1)
    - Parse PoB XML exports (PoE2)
    - Extract stat weights (DPS, EHP, resistances, etc.)
    - Display character summary
 
-2. **Trade API Integration**
+1. **Trade API Integration**
+
    - PoE1 trade API client
    - PoE2 trade API client
    - Build search queries from stat weights
    - Fetch listings for each equipment slot
    - Handle API rate limits
 
-3. **Value Analysis Engine**
+1. **Value Analysis Engine**
+
    - Calculate "power score" per item (weighted stats)
    - Calculate "value score" (power / price)
    - Identify outliers (undervalued items)
    - Rank items by value
 
-4. **Deal Finder UI**
+1. **Deal Finder UI**
+
    - PoB import (file upload or paste)
    - Character summary display
    - Stat weight adjustment sliders
@@ -642,6 +698,7 @@ Build a character-aware upgrade discovery tool that imports Path of Building cha
 #### Epic 4.1: Path of Building Integration (15-18 hours)
 
 **Tasks:**
+
 - Research PoB XML format (PoE1 and PoE2)
 - Implement XML parser
 - Extract character stats (DPS, EHP, resistances, etc.)
@@ -650,17 +707,19 @@ Build a character-aware upgrade discovery tool that imports Path of Building cha
 - Display character summary in UI
 
 **Acceptance Criteria:**
+
 - [ ] Can parse PoB XML for PoE1 characters
 - [ ] Can parse PoB XML for PoE2 characters
 - [ ] Stat weights extracted accurately
 - [ ] API accepts PoB file upload or paste
 - [ ] Character summary displays key stats
 
----
+______________________________________________________________________
 
 #### Epic 4.2: Trade API Integration (18-20 hours)
 
 **Tasks:**
+
 - Research PoE1 trade API
 - Research PoE2 trade API
 - Implement PoE1 trade client
@@ -671,6 +730,7 @@ Build a character-aware upgrade discovery tool that imports Path of Building cha
 - Cache results (1 hour TTL)
 
 **Acceptance Criteria:**
+
 - [ ] Can query PoE1 trade API successfully
 - [ ] Can query PoE2 trade API successfully
 - [ ] Search queries filter by stat weights
@@ -678,11 +738,12 @@ Build a character-aware upgrade discovery tool that imports Path of Building cha
 - [ ] Rate limiting prevents API abuse
 - [ ] Results cached to reduce API calls
 
----
+______________________________________________________________________
 
 #### Epic 4.3: Value Analysis Engine (12-15 hours)
 
 **Tasks:**
+
 - Calculate power score (weighted sum of stats)
 - Normalize prices (chaos equivalents)
 - Calculate value score (power / price)
@@ -691,17 +752,19 @@ Build a character-aware upgrade discovery tool that imports Path of Building cha
 - Add filters (budget, min power, etc.)
 
 **Acceptance Criteria:**
+
 - [ ] Power score reflects character stat priorities
 - [ ] Prices normalized to chaos equivalents
 - [ ] Value score identifies best deals
 - [ ] Outliers flagged for user attention
 - [ ] Filters allow budget constraints
 
----
+______________________________________________________________________
 
 #### Epic 4.4: Deal Finder UI (15-18 hours)
 
 **Tasks:**
+
 - Create Deal Finder page
 - Add PoB import (file upload + paste)
 - Display character summary (stats, current gear)
@@ -712,6 +775,7 @@ Build a character-aware upgrade discovery tool that imports Path of Building cha
 - Add loading/error states
 
 **Acceptance Criteria:**
+
 - [ ] Users can import PoB builds
 - [ ] Character summary is accurate
 - [ ] Stat weight sliders update results in real-time
@@ -719,7 +783,7 @@ Build a character-aware upgrade discovery tool that imports Path of Building cha
 - [ ] Tooltips show full item details on hover
 - [ ] Click item to open trade site listing
 
----
+______________________________________________________________________
 
 ### Success Criteria
 
@@ -736,12 +800,13 @@ Phase 4 is complete when:
 **Total:** 60-70 hours
 
 **Breakdown:**
+
 - PoB Integration: 15-18 hours (25%)
 - Trade API: 18-20 hours (30%)
 - Value Analysis: 12-15 hours (20%)
 - Deal Finder UI: 15-18 hours (25%)
 
----
+______________________________________________________________________
 
 ## Phase 5: Price Checker
 
@@ -760,12 +825,14 @@ Build a fast, accurate item pricing tool that analyzes pasted items, identifies 
 ### Key Deliverables
 
 1. **Valuation Engine**
+
    - Partial trade search (similar items)
    - Modifier value weighting (from Meta Analyzer)
    - Price range estimation (min, median, max)
    - Confidence intervals (based on sample size)
 
-2. **Price Checker UI**
+1. **Price Checker UI**
+
    - Item paste input (reuse from Crafting Assistant)
    - Instant price display (large, prominent)
    - Breakdown by modifier value
@@ -773,7 +840,8 @@ Build a fast, accurate item pricing tool that analyzes pasted items, identifies 
    - Recommended listing price
    - Historical price trend (if available)
 
-3. **Price Alerts** (Optional)
+1. **Price Alerts** (Optional)
+
    - Save items to watchlist
    - Notify when price crosses threshold
    - Requires notification system (Phase 6?)
@@ -783,6 +851,7 @@ Build a fast, accurate item pricing tool that analyzes pasted items, identifies 
 #### Epic 5.1: Valuation Engine (15-18 hours)
 
 **Tasks:**
+
 - Build partial trade search (similar base + mods)
 - Implement modifier weighting (from Meta Analyzer)
 - Calculate price range (percentiles: 10th, 50th, 90th)
@@ -791,17 +860,19 @@ Build a fast, accurate item pricing tool that analyzes pasted items, identifies 
 - Add caching for common items
 
 **Acceptance Criteria:**
+
 - [ ] Trade search finds similar items
 - [ ] Modifier weighting reflects meta value
 - [ ] Price range covers 80% of listings
 - [ ] Confidence interval shown (high/medium/low)
 - [ ] Rare items handled with larger uncertainty
 
----
+______________________________________________________________________
 
 #### Epic 5.2: Price Checker UI (12-15 hours)
 
 **Tasks:**
+
 - Create Price Checker page
 - Reuse item parser from Phase 3
 - Display price estimate (large, prominent)
@@ -811,43 +882,48 @@ Build a fast, accurate item pricing tool that analyzes pasted items, identifies 
 - Show historical trend (if available)
 
 **Acceptance Criteria:**
+
 - [ ] Users can paste item text
 - [ ] Price estimate displays immediately
 - [ ] Modifier breakdown explains valuation
 - [ ] Similar items table shows comparisons
 - [ ] Recommended price is actionable
 
----
+______________________________________________________________________
 
 #### Epic 5.3: Price History Integration (8-10 hours)
 
 **Tasks:**
+
 - Query market data from Phase 2
 - Display 7-day price trend
 - Highlight unusual price movements
 - Add "good time to sell" indicator
 
 **Acceptance Criteria:**
+
 - [ ] Price history chart shows 7-day trend
 - [ ] Unusual movements flagged (>20% change)
 - [ ] Sell indicator suggests optimal timing
 
----
+______________________________________________________________________
 
 #### Epic 5.4: Testing & Refinement (5-7 hours)
 
 **Tasks:**
+
 - Test with 100+ real items
 - Validate accuracy against actual sales
 - Tune modifier weightings
 - Improve edge case handling
 
 **Acceptance Criteria:**
+
 - [ ] Accuracy within 20% of actual sale price
 - [ ] Edge cases handled gracefully
-- [ ] Performance <500ms per valuation
+- [ ] Performance \<500ms per valuation
 
----
+______________________________________________________________________
 
 ### Success Criteria
 
@@ -864,12 +940,13 @@ Phase 5 is complete when:
 **Total:** 40-50 hours
 
 **Breakdown:**
+
 - Valuation Engine: 15-18 hours (35%)
 - Price Checker UI: 12-15 hours (30%)
 - Price History: 8-10 hours (20%)
 - Testing: 5-7 hours (15%)
 
----
+______________________________________________________________________
 
 ## Phase 6: Planner & Ops
 
@@ -888,37 +965,43 @@ Harden the application for production use, optimize performance, add advanced fe
 ### Key Deliverables
 
 1. **Performance Optimization**
+
    - Database query optimization (indexing, explain plans)
    - Frontend bundle optimization (code splitting, lazy loading)
    - API response caching (Redis)
    - CDN for static assets
 
-2. **Monitoring & Alerting**
+1. **Monitoring & Alerting**
+
    - Prometheus metrics
    - Grafana dashboards
    - Error tracking (Sentry or similar)
    - Uptime monitoring
 
-3. **Advanced Features**
+1. **Advanced Features**
+
    - User preferences (saved searches, favorites)
    - Export functionality (CSV, JSON)
    - Dark/light theme toggle
    - Keyboard shortcuts
 
-4. **Security Hardening**
+1. **Security Hardening**
+
    - Rate limiting for public endpoints
    - Input validation and sanitization
    - SQL injection prevention audit
    - XSS prevention audit
    - CORS configuration
 
-5. **Documentation & Onboarding**
+1. **Documentation & Onboarding**
+
    - User guide (how to use each feature)
    - Video tutorials
    - FAQ
    - Glossary of PoE terms
 
-6. **Deployment Preparation** (if going public)
+1. **Deployment Preparation** (if going public)
+
    - Multi-user authentication (JWT)
    - User database schema
    - Production Docker Compose config
@@ -932,6 +1015,7 @@ Harden the application for production use, optimize performance, add advanced fe
 #### Epic 6.1: Performance Optimization (12-15 hours)
 
 **Tasks:**
+
 - Analyze slow queries (EXPLAIN ANALYZE)
 - Add database indexes
 - Implement query result caching (Redis)
@@ -940,16 +1024,18 @@ Harden the application for production use, optimize performance, add advanced fe
 - Benchmark and validate improvements
 
 **Acceptance Criteria:**
-- [ ] 95th percentile API response time <200ms
-- [ ] Frontend bundle size <500KB (gzipped)
-- [ ] Time to Interactive <2s
-- [ ] Database queries <50ms
 
----
+- [ ] 95th percentile API response time \<200ms
+- [ ] Frontend bundle size \<500KB (gzipped)
+- [ ] Time to Interactive \<2s
+- [ ] Database queries \<50ms
+
+______________________________________________________________________
 
 #### Epic 6.2: Monitoring & Alerting (10-12 hours)
 
 **Tasks:**
+
 - Set up Prometheus metrics
 - Create Grafana dashboards (API latency, error rate, job success)
 - Integrate error tracking (Sentry)
@@ -957,16 +1043,18 @@ Harden the application for production use, optimize performance, add advanced fe
 - Configure alerts (email or Discord)
 
 **Acceptance Criteria:**
+
 - [ ] Metrics collected for all API endpoints
 - [ ] Grafana dashboards show system health
 - [ ] Errors tracked and grouped by type
 - [ ] Alerts fire on critical issues (DB down, job failure)
 
----
+______________________________________________________________________
 
 #### Epic 6.3: Advanced Features (15-18 hours)
 
 **Tasks:**
+
 - User preferences (saved searches, favorites)
 - Export functionality (CSV, JSON)
 - Dark/light theme toggle
@@ -974,16 +1062,18 @@ Harden the application for production use, optimize performance, add advanced fe
 - Bulk operations (compare multiple items)
 
 **Acceptance Criteria:**
+
 - [ ] Users can save searches and favorites
 - [ ] Export works for all data views
 - [ ] Theme toggle persists across sessions
 - [ ] Keyboard shortcuts improve power user workflow
 
----
+______________________________________________________________________
 
 #### Epic 6.4: Security Hardening (8-10 hours)
 
 **Tasks:**
+
 - Add rate limiting (per IP, per endpoint)
 - Audit input validation (Pydantic schemas)
 - Run SQL injection scanner
@@ -992,17 +1082,19 @@ Harden the application for production use, optimize performance, add advanced fe
 - Add security headers (CSP, HSTS)
 
 **Acceptance Criteria:**
+
 - [ ] Rate limiting prevents abuse
 - [ ] All inputs validated with Pydantic
 - [ ] No SQL injection vulnerabilities
 - [ ] No XSS vulnerabilities
 - [ ] Security headers pass Mozilla Observatory scan
 
----
+______________________________________________________________________
 
 #### Epic 6.5: Documentation & Onboarding (8-10 hours)
 
 **Tasks:**
+
 - Write user guide (one page per feature)
 - Create video tutorials (screen recordings)
 - Write FAQ
@@ -1010,16 +1102,18 @@ Harden the application for production use, optimize performance, add advanced fe
 - Add in-app tooltips and help text
 
 **Acceptance Criteria:**
+
 - [ ] User guide covers all features
 - [ ] Video tutorials demonstrate key workflows
 - [ ] FAQ answers common questions
 - [ ] Glossary defines PoE-specific terms
 
----
+______________________________________________________________________
 
 #### Epic 6.6: Deployment Preparation (Optional, 10-12 hours)
 
 **Tasks:**
+
 - Set up multi-user authentication (JWT)
 - Create user database schema
 - Configure production Docker Compose
@@ -1029,19 +1123,20 @@ Harden the application for production use, optimize performance, add advanced fe
 - Write disaster recovery plan
 
 **Acceptance Criteria:**
+
 - [ ] Users can register and log in
 - [ ] Production deployment documented
 - [ ] SSL certificates auto-renew
 - [ ] Daily backups to S3/MinIO
 - [ ] Recovery plan tested
 
----
+______________________________________________________________________
 
 ### Success Criteria
 
 Phase 6 is complete when:
 
-- ✅ Application is performant (API <200ms, TTI <2s)
+- ✅ Application is performant (API \<200ms, TTI \<2s)
 - ✅ Monitoring dashboards show system health
 - ✅ Security audit passes (no major vulnerabilities)
 - ✅ User documentation is comprehensive
@@ -1052,6 +1147,7 @@ Phase 6 is complete when:
 **Total:** 50-60 hours
 
 **Breakdown:**
+
 - Performance: 12-15 hours (23%)
 - Monitoring: 10-12 hours (20%)
 - Advanced Features: 15-18 hours (28%)
@@ -1059,57 +1155,60 @@ Phase 6 is complete when:
 - Documentation: 8-10 hours (16%)
 - Deployment (Optional): 10-12 hours
 
----
+______________________________________________________________________
 
 ## Summary: Roadmap Timeline
 
-| Phase | Goal | Duration | Effort |
-|-------|------|----------|--------|
-| **Phase 0** | Template Baseline | 2-3 weeks | 19-25 hours |
-| **Phase 1** | Upstream Foundation | 3-4 weeks | 40-50 hours |
-| **Phase 2** | Market Intelligence | 4-5 weeks | 50-60 hours |
-| **Phase 3** | Crafting Assistant | 4-5 weeks | 50-60 hours |
-| **Phase 4** | Deal Finder | 5-6 weeks | 60-70 hours |
-| **Phase 5** | Price Checker | 3-4 weeks | 40-50 hours |
-| **Phase 6** | Planner & Ops | 4-5 weeks | 50-60 hours |
-| **Total** | - | **25-32 weeks** | **310-375 hours** |
+| Phase       | Goal                | Duration        | Effort            |
+| ----------- | ------------------- | --------------- | ----------------- |
+| **Phase 0** | Template Baseline   | 2-3 weeks       | 19-25 hours       |
+| **Phase 1** | Upstream Foundation | 3-4 weeks       | 40-50 hours       |
+| **Phase 2** | Market Intelligence | 4-5 weeks       | 50-60 hours       |
+| **Phase 3** | Crafting Assistant  | 4-5 weeks       | 50-60 hours       |
+| **Phase 4** | Deal Finder         | 5-6 weeks       | 60-70 hours       |
+| **Phase 5** | Price Checker       | 3-4 weeks       | 40-50 hours       |
+| **Phase 6** | Planner & Ops       | 4-5 weeks       | 50-60 hours       |
+| **Total**   | -                   | **25-32 weeks** | **310-375 hours** |
 
 **At 10 hours/week:** ~31-38 weeks (~7-9 months)
 **At 20 hours/week:** ~16-19 weeks (~4-5 months)
 
----
+______________________________________________________________________
 
 ## Prioritization Framework
 
 When deciding what to work on, prioritize tasks by:
 
 1. **Dependency:** Does another feature need this?
-2. **Impact:** How much value does this deliver to users?
-3. **Effort:** How much time will this take?
-4. **Risk:** Is this blocking or high-uncertainty?
+1. **Impact:** How much value does this deliver to users?
+1. **Effort:** How much time will this take?
+1. **Risk:** Is this blocking or high-uncertainty?
 
 **High Priority = High Impact + Low Effort + High Dependency**
 
----
+______________________________________________________________________
 
 ## Open Questions & Future Considerations
 
 ### Short-term (Phases 1-3)
+
 - Should we support PoE1 and PoE2 equally, or prioritize one?
 - How do we handle league transitions (mid-league, end-of-league)?
 - Do we need a separate analytics warehouse, or is PostgreSQL sufficient?
 
 ### Medium-term (Phases 4-5)
+
 - Should we support account-based character imports (GGG OAuth)?
 - Do we integrate with trade sites directly, or just link to them?
 - How do we monetize (freemium, subscription, donations)?
 
 ### Long-term (Phase 6+)
+
 - Should we support mobile apps (React Native)?
 - Do we extract bounded contexts into microservices?
 - Should we build a public API for third-party developers?
 
----
+______________________________________________________________________
 
 ## Resources
 
@@ -1118,7 +1217,7 @@ When deciding what to work on, prioritize tasks by:
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Developer workflow
 - [SPRINT.md](SPRINT.md) - Current sprint (Phase 0) tasks
 
----
+______________________________________________________________________
 
 **Last Updated:** 2025-11-17
 **Product Owner:** TBD

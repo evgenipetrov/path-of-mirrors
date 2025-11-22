@@ -111,7 +111,8 @@ cmd_history() {
 # Main function
 main() {
     # Ensure backend is running
-    local started_services=$(ensure_backend_running)
+    local started_services
+    started_services=$(ensure_backend_running)
 
     # Parse command
     local command="${1:-upgrade}"

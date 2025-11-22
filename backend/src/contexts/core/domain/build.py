@@ -78,7 +78,7 @@ class Build(BaseEntity):
         properties: Flexible JSONB for source-specific data
     """
 
-    __tablename__ = "builds"
+    __tablename__ = "builds"  # type: ignore[misc]
 
     # Required fields (no defaults - must come first for dataclass)
     # Game and identity

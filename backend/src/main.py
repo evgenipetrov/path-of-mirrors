@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
+import httpx
 from fastapi import Depends, FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -30,6 +31,27 @@ from src.infrastructure import (
 setup_logging()
 logger = get_logger(__name__)
 
+# Global HTTP client instance (initialized in lifespan)
+_http_client: httpx.AsyncClient | None = None
+
+
+def get_http_client() -> httpx.AsyncClient:
+    """Get the global HTTP client instance.
+
+    This client is managed by the FastAPI lifespan context and
+    should be used for all external HTTP calls.
+
+    Raises:
+        RuntimeError: If called before application startup.
+
+    Returns:
+        httpx.AsyncClient: Configured HTTP client.
+    """
+    if _http_client is None:
+        msg = "HTTP client not initialized. Called before application startup?"
+        raise RuntimeError(msg)
+    return _http_client
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -41,6 +63,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     Yields:
         None: Control flow during application lifetime.
     """
+    global _http_client
+
     # Startup
     logger.info(
         "application_startup",
@@ -48,10 +72,27 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         app_name=settings.APP_NAME,
     )
 
+    # Initialize global HTTP client for external API calls
+    _http_client = httpx.AsyncClient(
+        headers={
+            "User-Agent": f"{settings.APP_NAME}/{settings.APP_VERSION or '0.1.0'}",
+            "Accept": "application/json",
+        },
+        timeout=30.0,
+        follow_redirects=True,
+    )
+    logger.info("http_client_initialized")
+
     yield
 
     # Shutdown
     logger.info("application_shutdown")
+
+    # Close HTTP client
+    if _http_client is not None:
+        await _http_client.aclose()
+        logger.info("http_client_closed")
+
     await close_cache()
 
 

@@ -1,5 +1,4 @@
 import sys
-import os
 from pathlib import Path
 
 # Add backend directory to sys.path
@@ -7,8 +6,9 @@ backend_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(backend_dir))
 
 try:
-    from src.main import app
     from fastapi.routing import APIRoute
+
+    from src.main import app
 
     endpoints = []
     for route in app.routes:

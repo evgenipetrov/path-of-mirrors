@@ -21,7 +21,7 @@ def test_parse_real_import_code_from_sample_file():
     import_code_path = REPO_ROOT / "_samples/data/poe1/pob/import_string.txt"
 
     # Read the import code
-    with import_code_path.open('r') as f:
+    with import_code_path.open("r") as f:
         import_code = f.read().strip()
 
     print(f"\nImport code length: {len(import_code)} characters")
@@ -31,7 +31,7 @@ def test_parse_real_import_code_from_sample_file():
     # Parse it
     build = parse_pob_code(import_code, Game.POE1)
 
-    print(f"\n✅ Successfully parsed!")
+    print("\n✅ Successfully parsed!")
     print(f"Build name: {build.name}")
     print(f"Character: Level {build.level} {build.character_class}")
     print(f"Ascendancy: {build.ascendancy}")

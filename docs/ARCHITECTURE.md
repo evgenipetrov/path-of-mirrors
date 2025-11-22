@@ -6,53 +6,78 @@ Path of Mirrors is built as a **modular monolith** with **hexagonal architecture
 
 ### Backend
 
-| Component | Technology | Rationale |
-|-----------|-----------|-----------|
-| **Web Framework** | FastAPI | Modern async framework, excellent OpenAPI support, high performance |
-| **ORM** | SQLAlchemy 2.0 (async) | Mature, powerful query capabilities, async support for data pipelines |
-| **Database** | PostgreSQL 17 | Advanced features (materialized views, JSONB), excellent for analytics |
-| **Migrations** | Alembic | Industry standard, works seamlessly with SQLAlchemy |
-| **Package Manager** | uv | Fast, modern Python package management with lock files |
-| **Background Jobs** | Redis + ARQ | Async task queue for poe.ninja polling and data ingestion |
-| **Python Version** | 3.12+ | Modern Python with performance improvements and better typing |
+| Component           | Technology                         | Rationale                                                                       |
+| ------------------- | ---------------------------------- | ------------------------------------------------------------------------------- |
+| **Web Framework**   | FastAPI                            | Modern async framework, excellent OpenAPI support, high performance             |
+| **ORM**             | SQLAlchemy 2.0 (async)             | Mature, powerful query capabilities, async support for data pipelines           |
+| **Database**        | PostgreSQL 17                      | Advanced features (materialized views, JSONB), excellent for analytics          |
+| **Migrations**      | Alembic                            | Industry standard, works seamlessly with SQLAlchemy                             |
+| **Package Manager** | uv                                 | Fast, modern Python package management with lock files                          |
+| **Background Jobs** | *Planned* (Redis + ARQ or similar) | Async task queue for poe.ninja polling and data ingestion (not yet implemented) |
+| **Python Version**  | 3.12+                              | Modern Python with performance improvements and better typing                   |
 
-**Starting point:** [benavlabs/fastapi-boilerplate](https://github.com/benavlabs/fastapi-boilerplate) - provides uv, SQLAlchemy 2.0, Redis/ARQ, and Docker setup out of the box.
+**Starting point:** [benavlabs/fastapi-boilerplate](https://github.com/benavlabs/fastapi-boilerplate) - provides uv, SQLAlchemy 2.0, and Docker setup out of the box.
 
 ### Frontend
 
-| Component | Technology | Rationale |
-|-----------|-----------|-----------|
-| **Framework** | React 18+ | Industry standard, excellent ecosystem, concurrent rendering |
-| **UI Components** | shadcn/ui | Copy-paste components with full control, AI-friendly, beautiful defaults |
-| **Data Tables** | TanStack Table | Best-in-class for dense data: virtualization, sorting, filtering, grouping for 100k+ rows |
-| **Dashboards/Charts** | Tremor | Purpose-built for data-dense UIs, Tailwind-based, KPIs and charts optimized for decisions |
-| **Styling** | Tailwind CSS | Utility-first, excellent DX, easy theming for PoE aesthetic |
-| **State Management** | TanStack Query | Perfect for server state, built-in caching/refetch/loading states |
-| **Build Tool** | Vite | Fast HMR, modern build pipeline, great DX |
-| **API Client** | orval | Generates TypeScript types + TanStack Query hooks from OpenAPI spec |
-| **Node Version** | LTS (20+) | Long-term support, stable |
+| Component             | Technology     | Rationale                                                                                 |
+| --------------------- | -------------- | ----------------------------------------------------------------------------------------- |
+| **Framework**         | React 18+      | Industry standard, excellent ecosystem, concurrent rendering                              |
+| **UI Components**     | shadcn/ui      | Copy-paste components with full control, AI-friendly, beautiful defaults                  |
+| **Data Tables**       | TanStack Table | Best-in-class for dense data: virtualization, sorting, filtering, grouping for 100k+ rows |
+| **Dashboards/Charts** | Tremor         | Purpose-built for data-dense UIs, Tailwind-based, KPIs and charts optimized for decisions |
+| **Styling**           | Tailwind CSS   | Utility-first, excellent DX, easy theming for PoE aesthetic                               |
+| **State Management**  | TanStack Query | Perfect for server state, built-in caching/refetch/loading states                         |
+| **Build Tool**        | Vite           | Fast HMR, modern build pipeline, great DX                                                 |
+| **API Client**        | orval          | Generates TypeScript types + TanStack Query hooks from OpenAPI spec                       |
+| **Node Version**      | LTS (20+)      | Long-term support, stable                                                                 |
 
 **Stack optimized for:** Displaying thousands of rows of economic data with advanced filtering, sorting, and visualization for data-driven decision making.
 
 ### Infrastructure
 
-| Component | Technology | Rationale |
-|-----------|-----------|-----------|
-| **Container Runtime** | Docker Compose | Local development parity with production, easy multi-service orchestration |
-| **Reverse Proxy** | Traefik | Automatic SSL, service discovery, works well with Docker Compose |
-| **Cache/Queue** | Redis | Fast in-memory store for API caching and background job queue |
-| **Observability** | structlog | Structured logging for Python, easy to query and debug |
+| Component             | Technology                             | Rationale                                                                  |
+| --------------------- | -------------------------------------- | -------------------------------------------------------------------------- |
+| **Container Runtime** | Docker Compose                         | Local development parity with production, easy multi-service orchestration |
+| **Reverse Proxy**     | nginx (production), *none* (local dev) | Simple reverse proxy for production; local dev uses direct service ports   |
+| **Cache**             | Redis                                  | Fast in-memory store for API caching (job queue planned for future)        |
+| **Observability**     | structlog                              | Structured logging for Python, easy to query and debug                     |
 
 ### Testing
 
-| Component | Technology | Rationale |
-|-----------|-----------|-----------|
-| **Backend Tests** | pytest + pytest-asyncio | Standard Python testing, excellent async support |
-| **Frontend Tests** | React Testing Library + Vitest | Component testing best practices, fast test runner |
-| **E2E Tests** | Playwright (Phase 1+) | Reliable cross-browser testing for critical user flows |
-| **CI/CD** | GitHub Actions | Standard CI platform, easy integration with Docker |
+| Component          | Technology                     | Rationale                                              |
+| ------------------ | ------------------------------ | ------------------------------------------------------ |
+| **Backend Tests**  | pytest + pytest-asyncio        | Standard Python testing, excellent async support       |
+| **Frontend Tests** | React Testing Library + Vitest | Component testing best practices, fast test runner     |
+| **E2E Tests**      | Playwright (Phase 1+)          | Reliable cross-browser testing for critical user flows |
+| **CI/CD**          | GitHub Actions                 | Standard CI platform, easy integration with Docker     |
 
----
+______________________________________________________________________
+
+## Current Implementation Status
+
+**What's Implemented:**
+
+- ✅ FastAPI application with hexagonal architecture
+- ✅ PostgreSQL 17 database with SQLAlchemy 2.0 (async)
+- ✅ Redis for caching
+- ✅ Alembic migrations
+- ✅ Docker Compose development environment
+- ✅ Structured logging with structlog
+- ✅ Health check endpoints (`/health`, `/ready`)
+- ✅ Game abstraction layer (PoE1/PoE2 via `Game` enum)
+- ✅ Bounded context structure (notes, catalog, economy, builds, analysis, pob)
+- ✅ Frontend with React, TanStack Router/Query, shadcn/ui
+- ✅ Auto-generated TypeScript API client (orval)
+
+**Not Yet Implemented (Planned):**
+
+- ❌ Background job system (ARQ, Celery, or alternative)
+- ❌ Scheduled data ingestion from poe.ninja
+- ❌ Traefik or advanced reverse proxy (using nginx in production, direct ports in dev)
+- ❌ Most context endpoints (only Notes context has full CRUD as Phase 0 demo)
+
+______________________________________________________________________
 
 ## Architectural Patterns
 
@@ -86,6 +111,7 @@ Path of Mirrors follows hexagonal architecture to isolate domain logic from infr
 ```
 
 **Benefits:**
+
 - Domain logic is testable without infrastructure
 - Easy to swap adapters (e.g., different data sources)
 - Clear dependency direction (infrastructure → domain, never reverse)
@@ -93,6 +119,7 @@ Path of Mirrors follows hexagonal architecture to isolate domain logic from infr
 ### Bounded Contexts
 
 Each major capability is organized into a bounded context with its own:
+
 - Domain models
 - Service layer
 - Repository interfaces
@@ -100,6 +127,7 @@ Each major capability is organized into a bounded context with its own:
 - Tests
 
 **Planned Bounded Contexts (Phase 1+):**
+
 ```
 backend/src/
 ├── contexts/
@@ -113,6 +141,7 @@ backend/src/
 ```
 
 **Phase 0 Structure:**
+
 ```
 backend/src/
 ├── contexts/
@@ -126,6 +155,7 @@ backend/src/
 ```
 
 **Phase 1 Epic 1.1 Structure (Current):**
+
 ```
 backend/src/
 ├── contexts/
@@ -145,7 +175,7 @@ backend/src/
     └── health.py
 ```
 
----
+______________________________________________________________________
 
 ## Game Abstraction Layer
 
@@ -154,8 +184,8 @@ Path of Mirrors supports both **PoE1 and PoE2** from Phase 1 onward through a pl
 ### Design Principles
 
 1. **Shared Core Models:** Common abstractions (Item, Modifier, Build) work across both games
-2. **Game-Specific Adapters:** Each game has its own schema parser, API client, and normalization logic
-3. **Context Switching:** User selects game in UI; all features operate on that game's data context
+1. **Game-Specific Adapters:** Each game has its own schema parser, API client, and normalization logic
+1. **Context Switching:** User selects game in UI; all features operate on that game's data context
 
 ### Structure (Phase 1 Epic 1.1+)
 
@@ -180,6 +210,7 @@ backend/src/contexts/upstream/
 **Design:** Protocol-based interface with factory pattern for game-specific implementations.
 
 **BaseProvider Protocol:**
+
 ```python
 from typing import Any, Protocol
 from src.shared import Game
@@ -208,6 +239,7 @@ class BaseProvider(Protocol):
 ```
 
 **Factory Pattern:**
+
 ```python
 from src.shared import Game
 from ..ports import BaseProvider
@@ -226,6 +258,7 @@ def get_provider(game: Game) -> BaseProvider:
 ```
 
 **Usage Example:**
+
 ```python
 # Domain service (game-agnostic)
 from src.contexts.upstream.adapters import get_provider
@@ -242,34 +275,41 @@ leagues = await get_active_leagues_for_game(Game.POE1)
 ```
 
 **Design Decisions:**
+
 - **Protocol vs ABC**: Using `typing.Protocol` for duck typing and flexibility
-- **dict[str, Any] returns**: Deferring structured models to Epic 1.3 (YAGNI principle)
+- **dict\[str, Any\] returns**: Deferring structured models to Epic 1.3 (YAGNI principle)
 - **Stateless providers**: Factory returns new instances each call (no caching yet)
 - **Match statement**: Python 3.10+ pattern matching for clarity
 
 **Adding New Games:**
-1. Add new game to `src.shared.Game` enum
-2. Create `{game}_provider.py` implementing `BaseProvider`
-3. Add case to `get_provider()` factory function
-4. Write tests in `tests/contexts/upstream/test_providers.py`
 
----
+1. Add new game to `src.shared.Game` enum
+1. Create `{game}_provider.py` implementing `BaseProvider`
+1. Add case to `get_provider()` factory function
+1. Write tests in `tests/contexts/upstream/test_providers.py`
+
+______________________________________________________________________
 
 ## Data Flow
 
 ### Phase 0: Validation Flow
+
 ```
 User → React UI → FastAPI → PostgreSQL → React UI
          (Dummy CRUD entity - proves stack works)
 ```
 
-### Phase 1: Ingestion Flow
+### Phase 1: Ingestion Flow (Planned)
+
 ```
-ARQ Scheduler (daily) → poe.ninja API → Normalizer → PostgreSQL
-                                                    → Redis (cache)
+[TODO: Background Job Scheduler] → poe.ninja API → Normalizer → PostgreSQL
+                                                               → Redis (cache)
 ```
 
+**Note:** Background job infrastructure (ARQ or alternative) is not yet implemented. Ingestion will initially be manual or via scheduled scripts.
+
 ### Phase 2+: Query Flow
+
 ```
 User → React (Game Selector: PoE1/PoE2)
     → TanStack Query → FastAPI → PostgreSQL (filtered by game)
@@ -277,18 +317,20 @@ User → React (Game Selector: PoE1/PoE2)
     → Tremor Charts (price trends, KPIs)
 ```
 
----
+______________________________________________________________________
 
 ## Data Strategy
 
 ### PostgreSQL Schema Design
 
 **Principles:**
+
 - Game-specific tables (e.g., `poe1_items`, `poe2_items`)
 - Shared analytics views (e.g., `market_trends` unions data from both games)
 - Partitioning by date for time-series data (28-day retention)
 
 **Example Schema (Phase 1):**
+
 ```sql
 -- Game-specific tables
 CREATE TABLE poe1_snapshots (
@@ -320,13 +362,14 @@ FROM poe2_snapshots;
 - **Materialized views:** Refreshed daily for trend analysis
 - **Object storage (TBD):** Raw snapshots may be archived to S3/MinIO for replayability (decision deferred to Phase 1)
 
----
+______________________________________________________________________
 
 ## Observability
 
 ### Logging Strategy
 
 **Structured logging with context:**
+
 ```python
 import structlog
 
@@ -341,6 +384,7 @@ log.info("market_snapshot_fetched",
 ```
 
 **Output:**
+
 ```json
 {
   "event": "market_snapshot_fetched",
@@ -364,7 +408,7 @@ log.info("market_snapshot_fetched",
 - Frontend sends `X-Request-ID` header
 - Backend propagates through all service calls
 
----
+______________________________________________________________________
 
 ## Frontend Architecture
 
@@ -402,6 +446,7 @@ frontend/src/
 ### Dense Data Display Patterns
 
 **TanStack Table for Large Datasets:**
+
 ```tsx
 import { useReactTable, getCoreRowModel } from '@tanstack/react-table';
 
@@ -418,6 +463,7 @@ const table = useReactTable({
 ```
 
 **Tremor for Dashboard Metrics:**
+
 ```tsx
 import { Card, Metric, Text, AreaChart } from '@tremor/react';
 
@@ -438,6 +484,7 @@ import { Card, Metric, Text, AreaChart } from '@tremor/react';
 ### State Management Pattern
 
 **Server State (TanStack Query):**
+
 ```tsx
 // Auto-generated by orval from OpenAPI spec
 const { data, isLoading, error } = useGetMarketSnapshot({
@@ -447,6 +494,7 @@ const { data, isLoading, error } = useGetMarketSnapshot({
 ```
 
 **Client State (React Context):**
+
 ```tsx
 // Game selector context
 const { game, setGame } = useGameContext();  // 'poe1' | 'poe2'
@@ -458,6 +506,7 @@ const { tableState, setTableState } = useTableState('market-items');
 ### Theming
 
 Tailwind CSS with custom PoE-inspired dark theme:
+
 ```js
 // tailwind.config.js
 module.exports = {
@@ -476,36 +525,41 @@ module.exports = {
 }
 ```
 
----
+______________________________________________________________________
 
 ## Security Considerations
 
 ### Phase 0-1 (Single-User Local)
+
 - No authentication required
 - CORS disabled (localhost only)
 - No sensitive data stored
 
 ### Phase 2+ (Future Multi-User)
+
 - JWT authentication (already in boilerplate, currently unused)
 - OAuth integration (GGG/Steam) for character imports
 - Rate limiting for public API endpoints
 - Input validation via Pydantic schemas
 
----
+______________________________________________________________________
 
 ## Evolution Path
 
 ### Phase 0 → Phase 1
+
 - Add game abstraction layer (Game enum, provider factory)
 - Implement poe.ninja adapters for PoE1 and PoE2
-- Set up ARQ background jobs for scheduled ingestion
+- **TODO:** Choose and implement background job system (ARQ, Celery, or scheduled tasks) for data ingestion
 
 ### Phase 1 → Phase 2
+
 - Add `contexts/market/` bounded context
 - Implement materialized views for trend queries
 - Build Market Dashboard UI with TanStack Table + Tremor (price trends, KPIs, sortable/filterable item tables)
 
 ### Monolith → Microservices (Phase 6+)
+
 - Extract bounded contexts into separate services if needed
 - Shared database → per-service databases
 - API Gateway for routing
@@ -513,41 +567,46 @@ module.exports = {
 
 **Current decision:** Stay monolith through Phase 5. Only extract if scale demands it.
 
----
+______________________________________________________________________
 
 ## Open Architectural Questions
 
 1. **Object Storage for Raw Snapshots (Phase 1):** S3/MinIO vs PostgreSQL JSONB?
+
    - Tradeoff: Replayability vs complexity
    - Decision deferred until we see data volumes
 
-2. **Analytics Warehouse (Phase 3+):** PostgreSQL materialized views vs DuckDB/Parquet?
+1. **Analytics Warehouse (Phase 3+):** PostgreSQL materialized views vs DuckDB/Parquet?
+
    - Tradeoff: Simplicity vs query performance at scale
    - Start with PostgreSQL, migrate if needed
 
-3. **Real-time Updates (Phase 4+):** WebSockets vs polling?
+1. **Real-time Updates (Phase 4+):** WebSockets vs polling?
+
    - For market alerts and price updates
    - Polling is simpler; defer WebSockets until user demand is clear
 
----
+______________________________________________________________________
 
 ## References
 
 ### Documentation
+
 - [PRODUCT.md](PRODUCT.md) - Product vision and roadmap
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Developer setup and workflow
 - [SPRINT.md](SPRINT.md) - Phase 0 task breakdown
 
 ### Backend
+
 - [benavlabs/fastapi-boilerplate](https://github.com/benavlabs/fastapi-boilerplate) - Starting point for backend
 - [Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/) - Ports and Adapters pattern
 
 ### Frontend
+
 - [shadcn/ui](https://ui.shadcn.com) - UI component philosophy and library
 - [TanStack Table](https://tanstack.com/table) - Headless table library for dense data
 - [Tremor](https://tremor.so) - React components for dashboards and data visualization
 - [TanStack Query](https://tanstack.com/query) - Server state management
-
 
 # Path of Mirrors - Architecture Diagram
 
@@ -992,17 +1051,17 @@ path-of-mirrors/
 └── CLAUDE.md                        # Project instructions
 ```
 
----
+______________________________________________________________________
 
 ## Key Architectural Principles
 
 1. **Hexagonal Architecture** - Core business logic isolated from infrastructure
-2. **Dependency Inversion** - Depend on abstractions (protocols), not concretions
-3. **Single Responsibility** - Each layer has one reason to change
-4. **Bounded Contexts** - Contexts don't import from each other (except shared)
-5. **Provider Pattern** - Game-specific logic abstracted via protocols
-6. **Protocol-Based Repositories** - Duck typing for flexibility
-7. **Pragmatic Trade-offs** - SQLAlchemy as domain (see ADR 001)
+1. **Dependency Inversion** - Depend on abstractions (protocols), not concretions
+1. **Single Responsibility** - Each layer has one reason to change
+1. **Bounded Contexts** - Contexts don't import from each other (except shared)
+1. **Provider Pattern** - Game-specific logic abstracted via protocols
+1. **Protocol-Based Repositories** - Duck typing for flexibility
+1. **Pragmatic Trade-offs** - SQLAlchemy as domain (see ADR 001)
 
 ## Navigation
 

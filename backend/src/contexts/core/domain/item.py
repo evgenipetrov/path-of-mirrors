@@ -50,7 +50,7 @@ class Item(BaseEntity):
         - Map: "Ivory Temple Map"
     """
 
-    __tablename__ = "items"
+    __tablename__ = "items"  # type: ignore[misc]
 
     # Required fields (no defaults - must come first for dataclass)
     # Identity

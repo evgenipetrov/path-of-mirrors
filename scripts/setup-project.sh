@@ -33,7 +33,8 @@ show_help() {
 
 check_command() {
     if command -v "$1" &> /dev/null; then
-        local version=$($2 2>&1 || echo "unknown")
+        local version
+        version=$($2 2>&1 || echo "unknown")
         log_success "$3 installed ($version)"
         return 0
     else

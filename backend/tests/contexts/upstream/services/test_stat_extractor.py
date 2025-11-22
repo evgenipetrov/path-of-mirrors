@@ -1,11 +1,9 @@
 """Tests for stat extraction and normalization."""
 
-import pytest
-
 from src.contexts.upstream.services.stat_extractor import (
+    calculate_total_resistances,
     extract_stats_from_mods,
     extract_stats_from_pob_item,
-    calculate_total_resistances,
     get_item_summary,
 )
 

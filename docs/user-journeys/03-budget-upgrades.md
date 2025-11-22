@@ -8,22 +8,22 @@
 
 **Database Required:** No
 
----
+______________________________________________________________________
 
 ## User Flow
 
 1. User navigates to "Budget Upgrades" or uses Journey 1 with price filter
-2. User provides build (PoB XML/code)
-3. User sets budget constraint:
+1. User provides build (PoB XML/code)
+1. User sets budget constraint:
    - Max price per item (e.g., "50 chaos")
    - Total budget across selected slots (e.g., "200 chaos for 3 slots")
-4. User optionally sets stat priorities:
+1. User optionally sets stat priorities:
    - "Prioritize life upgrades"
    - "Need more resistances"
-5. System finds upgrades within budget, ranked by **value** (improvement per chaos)
-6. User sees items sorted by best bang-for-buck
+1. System finds upgrades within budget, ranked by **value** (improvement per chaos)
+1. User sees items sorted by best bang-for-buck
 
----
+______________________________________________________________________
 
 ## Technical Architecture
 
@@ -35,7 +35,7 @@
 
 This is primarily a **sorting and filtering change**, not new architecture.
 
----
+______________________________________________________________________
 
 ## API Contract
 
@@ -87,7 +87,7 @@ This is primarily a **sorting and filtering change**, not new architecture.
 }
 ```
 
----
+______________________________________________________________________
 
 ## Core Component Changes
 
@@ -144,7 +144,7 @@ def categorize_value(value_ratio: float) -> str:
         return "poor"
 ```
 
----
+______________________________________________________________________
 
 ### 2. Smart Budget Filter
 
@@ -200,7 +200,7 @@ def select_within_budget(upgrades: list[dict], budget: float) -> list[dict]:
     return selected
 ```
 
----
+______________________________________________________________________
 
 ### 3. Stat Priority Weights
 
@@ -251,7 +251,7 @@ def calculate_stat_weights(
     return weights
 ```
 
----
+______________________________________________________________________
 
 ## Frontend Enhancements
 
@@ -301,7 +301,7 @@ def calculate_stat_weights(
 // Fire Res:        [Ignore] [Low] [Medium] ✓ [High] [Required]
 ```
 
----
+______________________________________________________________________
 
 ## Use Case Examples
 
@@ -310,11 +310,13 @@ def calculate_stat_weights(
 **Scenario:** Player found some chaos, wants best upgrades under 20c
 
 **Input:**
+
 - Build: RF Juggernaut
 - Budget: 20 chaos per item
 - Priority: Life > Resistances > Everything else
 
 **Output:**
+
 - 8 affordable upgrades found
 - Best value: Rare ring with +70 life, 30% fire res for 12c (value ratio: 4.2)
 - Total improvement if buying all: +180 life, +90% total res for 95 chaos
@@ -324,15 +326,17 @@ def calculate_stat_weights(
 **Scenario:** Day 3 of league, 50 chaos saved up
 
 **Input:**
+
 - Build: Lightning Arrow Deadeye
 - Total budget: 50 chaos
 - Priority: Life, movement speed, resistances
 
 **Output:**
+
 - Optimal purchases within 50c budget:
   1. Boots: 15c (+25% MS, +60 life)
-  2. Amulet: 20c (+70 life, +50% total res)
-  3. Ring: 12c (+55 life, +35% fire res)
+  1. Amulet: 20c (+70 life, +50% total res)
+  1. Ring: 12c (+55 life, +35% fire res)
 - Total cost: 47c
 - Total improvement: +190 life, +85% res, +25% MS
 
@@ -341,45 +345,49 @@ def calculate_stat_weights(
 **Scenario:** Player needs to cap resistances, limited budget
 
 **Input:**
+
 - Build: Any
 - Budget: 30 chaos total
 - Priority: Fire res (required), Cold res (high), Lightning res (high)
 
 **Output:**
+
 - Focus on resistance items only
 - Ignore life/damage upgrades
 - Find 3 items that cap all res for 28 chaos
 
----
+______________________________________________________________________
 
 ## Implementation Sequence
 
 ### Phase 1: Backend (Easy - extends Journey 1)
+
 1. ✅ Add value ratio calculation to ranker
-2. ✅ Add `sort_by` parameter
-3. ✅ Implement budget filters
-4. ✅ Add stat priority weights
-5. ✅ Test with various budgets
+1. ✅ Add `sort_by` parameter
+1. ✅ Implement budget filters
+1. ✅ Add stat priority weights
+1. ✅ Test with various budgets
 
 ### Phase 2: Frontend
-1. ✅ Add budget slider
-2. ✅ Add value ratio display
-3. ✅ Add stat priority selector
-4. ✅ Add budget summary card
-5. ✅ Add "value" vs "improvement" sort toggle
 
----
+1. ✅ Add budget slider
+1. ✅ Add value ratio display
+1. ✅ Add stat priority selector
+1. ✅ Add budget summary card
+1. ✅ Add "value" vs "improvement" sort toggle
+
+______________________________________________________________________
 
 ## Key Metrics to Track
 
 **For future optimization:**
 
 1. **Price distribution** - What's the typical price range for upgrades?
-2. **Value sweet spot** - What budget gives best value ratio?
-3. **Stat priorities** - What do users prioritize most?
-4. **Budget utilization** - Do users spend their full budget?
+1. **Value sweet spot** - What budget gives best value ratio?
+1. **Stat priorities** - What do users prioritize most?
+1. **Budget utilization** - Do users spend their full budget?
 
----
+______________________________________________________________________
 
 ## Future Enhancements
 
@@ -428,19 +436,19 @@ alert = {
 # Sends notification when matching item found
 ```
 
----
+______________________________________________________________________
 
 ## Differences from Journey 1 & 2
 
-| Aspect | Journey 1 | Journey 2 | Journey 3 |
-|--------|-----------|-----------|-----------|
-| Focus | Best item | All slots | Best value |
-| Sort by | Improvement | Improvement | Value ratio |
-| Budget | Optional | Total budget | Per-item budget |
-| Use case | Rich players | Mid-budget | League start, SSF |
-| Complexity | Low | Medium | Low |
+| Aspect     | Journey 1    | Journey 2    | Journey 3         |
+| ---------- | ------------ | ------------ | ----------------- |
+| Focus      | Best item    | All slots    | Best value        |
+| Sort by    | Improvement  | Improvement  | Value ratio       |
+| Budget     | Optional     | Total budget | Per-item budget   |
+| Use case   | Rich players | Mid-budget   | League start, SSF |
+| Complexity | Low          | Medium       | Low               |
 
----
+______________________________________________________________________
 
 ## Dependencies
 

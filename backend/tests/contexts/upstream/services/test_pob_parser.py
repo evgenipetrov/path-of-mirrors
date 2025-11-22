@@ -13,9 +13,9 @@ from pathlib import Path
 import pytest
 
 from src.contexts.upstream.services.pob_parser import (
-    parse_pob_xml,
-    parse_pob_code,
     extract_item_from_slot,
+    parse_pob_code,
+    parse_pob_xml,
 )
 from src.shared import Game
 
@@ -255,8 +255,9 @@ class TestPoBCodeDecoding:
         # Encode it as PoB import code (zlib compress + base64 encode)
         import base64
         import zlib
-        compressed = zlib.compress(xml.encode('utf-8'))
-        import_code = base64.b64encode(compressed).decode('ascii')
+
+        compressed = zlib.compress(xml.encode("utf-8"))
+        import_code = base64.b64encode(compressed).decode("ascii")
 
         # Parse the code
         build = parse_pob_code(import_code, Game.POE1)
@@ -277,11 +278,14 @@ class TestPoBCodeDecoding:
         # Encode it as PoB import code
         import base64
         import zlib
-        compressed = zlib.compress(xml.encode('utf-8'))
-        import_code = base64.b64encode(compressed).decode('ascii')
+
+        compressed = zlib.compress(xml.encode("utf-8"))
+        import_code = base64.b64encode(compressed).decode("ascii")
 
         # Add various whitespace (spaces, tabs, newlines)
-        import_code_with_whitespace = f"  {import_code[:20]}\n{import_code[20:40]}\t{import_code[40:]}  "
+        import_code_with_whitespace = (
+            f"  {import_code[:20]}\n{import_code[20:40]}\t{import_code[40:]}  "
+        )
 
         # Should still parse correctly after whitespace removal
         build = parse_pob_code(import_code_with_whitespace, Game.POE1)
@@ -313,7 +317,8 @@ class TestPoBCodeDecoding:
         """Test error when code doesn't contain valid zlib data."""
         # Valid base64 but not zlib compressed
         import base64
-        not_compressed = base64.b64encode(b"not zlib data").decode('ascii')
+
+        not_compressed = base64.b64encode(b"not zlib data").decode("ascii")
 
         with pytest.raises(ValueError, match="too short"):
             parse_pob_code(not_compressed, Game.POE1)
@@ -330,8 +335,9 @@ class TestPoBCodeDecoding:
         # Encode it as URL-safe PoB import code
         import base64
         import zlib
-        compressed = zlib.compress(xml.encode('utf-8'))
-        import_code = base64.urlsafe_b64encode(compressed).decode('ascii')
+
+        compressed = zlib.compress(xml.encode("utf-8"))
+        import_code = base64.urlsafe_b64encode(compressed).decode("ascii")
 
         # Should parse correctly with URL-safe base64
         build = parse_pob_code(import_code, Game.POE1)

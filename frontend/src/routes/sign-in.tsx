@@ -10,7 +10,8 @@ export const Route = createFileRoute('/sign-in')({
   component: SignInPage,
   validateSearch: (search: Record<string, unknown>): SignInSearch => {
     return {
-      redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
+      redirect:
+        typeof search.redirect === 'string' ? search.redirect : undefined,
     }
   },
 })

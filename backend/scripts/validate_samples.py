@@ -10,7 +10,6 @@ Checks:
 """
 
 import json
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -139,32 +138,32 @@ def main() -> None:
         results = validate_poeninja_samples(base_path, game)
 
         print(f"\n{game.upper()}:")
-        print(f"  Economy Data:")
+        print("  Economy Data:")
         print(f"    Status: {results['economy']['status']}")
-        if results['economy']['status'] == 'found':
+        if results["economy"]["status"] == "found":
             print(f"    Total Files: {results['economy']['total_files']}")
-            for league, data in results['economy']['leagues'].items():
+            for league, data in results["economy"]["leagues"].items():
                 print(f"    League '{league}':")
                 print(f"      - Files: {data['files']}")
                 print(f"      - Size: {data['total_size']:,} bytes")
                 print(f"      - Categories: {', '.join(data['categories'][:5])}...")
 
-        print(f"\n  Build Data:")
+        print("\n  Build Data:")
         print(f"    Status: {results['builds']['status']}")
-        if results['builds']['status'] == 'found':
+        if results["builds"]["status"] == "found":
             print(f"    Total Files: {results['builds']['total_files']}")
-            for league, data in results['builds']['leagues'].items():
+            for league, data in results["builds"]["leagues"].items():
                 print(f"    League '{league}':")
                 print(f"      - Search files: {data['search_files']}")
                 print(f"      - Character files: {data['character_files']}")
 
-        print(f"\n  Index State:")
+        print("\n  Index State:")
         print(f"    Status: {results['index_state']['status']}")
         print(f"    Files: {results['index_state']['files']}")
 
-        print(f"\n  Metadata:")
+        print("\n  Metadata:")
         print(f"    Status: {results['meta']['status']}")
-        if results['meta']['status'] == 'valid':
+        if results["meta"]["status"] == "valid":
             print(f"    Samples: {results['meta']['samples_count']}")
             print(f"    Data Types: {', '.join(results['meta']['data_types'])}")
             print(f"    Version: {results['meta']['collector_version']}")

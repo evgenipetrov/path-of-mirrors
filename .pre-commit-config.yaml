@@ -1,0 +1,107 @@
+# Path of Mirrors - Pre-commit Configuration
+# Fast per-commit hooks for code quality and security
+# Heavy gates (tests with coverage) run on pre-push stage
+
+default_language_version:
+  python: python3.12
+
+repos:
+  # ===== Universal Checks =====
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: end-of-file-fixer
+        exclude: ^(_samples/|frontend/coverage/)
+      - id: trailing-whitespace
+        exclude: ^(_samples/|frontend/coverage/)
+      - id: check-yaml
+        exclude: ^(_samples/)
+      - id: check-json
+        exclude: ^(_samples/|frontend/coverage/|.*tsconfig.*\.json$)
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      # Disabled: too many false positives with library scripts
+      # - id: check-executables-have-shebangs
+      # - id: check-shebang-scripts-are-executable
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: ["--maxkb=1000"]
+        exclude: ^(_samples/|frontend/coverage/|.*\.lock)$
+
+  # ===== Shell Scripts =====
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.6
+    hooks:
+      - id: shellcheck
+        args: ["-x", "--severity=warning"]
+        files: ^scripts/.*\.sh$
+
+  # ===== Backend (Python) =====
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.13
+    hooks:
+      - id: ruff
+        name: "Backend: ruff check"
+        args: ["--fix"]
+        files: ^backend/.*\.py$
+        exclude: ^backend/src/app/
+      - id: ruff-format
+        name: "Backend: ruff format"
+        files: ^backend/.*\.py$
+        exclude: ^backend/src/app/
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.16.0
+    hooks:
+      - id: mypy
+        name: "Backend: mypy type checking"
+        files: ^backend/src/.*\.py$
+        exclude: ^backend/src/app/
+        args: ["--ignore-missing-imports", "--no-strict-optional"]
+        additional_dependencies:
+          - types-redis
+          - sqlalchemy[mypy]
+
+  # ===== Frontend (TypeScript/React) =====
+  # Using local hooks with system Node.js instead of mirrors to avoid Node.js download issues
+  - repo: local
+    hooks:
+      - id: eslint
+        name: "Frontend: eslint"
+        entry: bash -c 'cd frontend && npx eslint --fix --max-warnings=0 "src/**/*.{ts,tsx,js,jsx}"'
+        language: system
+        files: ^frontend/src/.*\.[jt]sx?$
+        pass_filenames: false
+
+      - id: prettier
+        name: "Frontend: prettier"
+        entry: bash -c 'cd frontend && npx prettier --write "src/**/*.{ts,tsx,js,jsx,json,css,md}"'
+        language: system
+        files: ^frontend/src/.*\.(ts|tsx|js|jsx|json|css|md)$
+        exclude: ^(frontend/src/hooks/api/generated/|frontend/coverage/)
+        pass_filenames: false
+
+  # ===== Markdown/Docs =====
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.17
+    hooks:
+      - id: mdformat
+        name: "Docs: markdown formatting"
+        files: ^docs/.*\.md$
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat_frontmatter
+        exclude: ^(_samples/)
+
+  # ===== Local Project-Specific Hooks =====
+  # NOTE: Schema/docs/locks checks are DISABLED in pre-commit hooks because they:
+  # - Require Docker services (multi-minute startup)
+  # - Require npm ci --dry-run (slow)
+  # - Are better suited for pre-push or manual checks
+  # Run manually: ./scripts/check-code.sh
+  # They WILL run in CI on every PR
+
+# Pre-push hooks configuration (heavy gates - run on push only)
+# To enable: pre-commit install --hook-type pre-push -c .pre-push-hooks.yaml
+# These hooks run comprehensive tests with coverage requirements

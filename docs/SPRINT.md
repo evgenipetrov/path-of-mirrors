@@ -1,68 +1,74 @@
-# Sprint: Backlog Burn — Fix Critical Parity & Stability Gaps
+# Sprint: Automated Codebase Alignment & Governance
 
-**Duration:** 1 week  
-**Goal:** Resolve the six highest-impact issues uncovered in the audit: broken frontend API client, route/docs desync, misleading infra claims, HTTP client leaks, brittle config loading, and dead/stubbed modules.
+## Objective
 
----
+Implement a fully automated "Gold Standard" system to prevent drift between backend code, frontend clients, and documentation. This system replaces human process (CODEOWNERS, manual reviews) with deterministic CI/CD checks and scripts.
 
-## Objectives
-- Restore working frontend→backend calls by aligning the API client contract with Orval-generated hooks.
-- Bring public docs (README/QUICKSTART) into strict agreement with actual FastAPI routes and paths.
-- Remove infra misinformation (Traefik, ARQ) or add the missing pieces; the docs must match the repo.
-- Eliminate HTTP client leaks in upstream trade calls and introduce lifecycle-managed clients.
-- Make config loading fail-safe (no `sys.exit` inside request paths) with startup-time validation.
-- Clarify or excise empty stubs so the code surface reflects reality.
+## 1. Single Source of Truth & Synchronization
 
----
+- [ ] **Enforce OpenAPI Freshness**
+  - Create `scripts/check-schema.sh`: Generates OpenAPI spec in memory and compares with `backend/openapi.json`. Fails if they differ.
+  - Update `scripts/generate-api.sh`: Add auto-commit capability or pre-commit hook integration.
+- [ ] **Automated Client Regeneration**
+  - Ensure `frontend/src/api` is strictly read-only for humans.
+  - Add CI step: Fail if `npm run generate-api` results in file changes (implies committed client is stale).
 
-## Plan (issue-aligned)
+## 2. Automated Drift Guards (The "Docs Check")
 
-1) **Frontend API client contract**
-   - Refactor `frontend/src/lib/api-client.ts` to accept AxiosRequestConfig and return `AXIOS_INSTANCE(config)`; keep cancellation support.
-   - Add a minimal integration test using `useListNotesApiV1GameNotesGet` against a mocked Axios adapter to prevent regressions.
-   - Optional: regenerate hooks with `--client axios` to enforce shape alignment (documented fallback).
+- [ ] **Route-to-Doc Consistency**
+  - Create `scripts/check-docs.sh`:
+    - Introspect FastAPI app to get list of all registered routes (method + path).
+    - Parse `docs/API_ROUTES.md` (and potentially `QUICKSTART.md`).
+    - **Failure Condition**: Any active route not found in markdown tables.
+    - **Failure Condition**: Any documented route that no longer exists in code.
+- [ ] **Dependency Lock Consistency**
+  - Add `uv sync --locked --check` to backend CI.
+  - Add `npm ci --dry-run` to frontend CI.
 
-2) **Docs ↔ Routes parity**
-   - Update `README.md` and `docs/QUICKSTART.md` endpoint sections to the real paths: `/api/v1/{game}/notes` etc.; include working curl examples for all CRUD verbs.
-   - Add a short “route contract” table to `docs/CHANGELOG.md` (or new `docs/API_ROUTES.md`) that lists each context and base path.
+## 3. Interface Fitness Functions (Contract Tests)
 
-3) **Infra claims (Traefik/ARQ) correction**
-   - Edit `docs/ARCHITECTURE.md` to remove Traefik and ARQ assertions; state current stack (nginx only, no job runner yet) and mark ingestion/jobs as “planned”.
-   - If future work is desired, open TODOs in `docs/ARCHITECTURE.md` with prerequisites instead of implying they exist.
+- [ ] **Black-box Contract Test**
+  - Create `scripts/test-contract.sh`:
+    1. Build/Start Backend (Docker).
+    1. Generate *ephemeral* TS client from current `openapi.json`.
+    1. Run a minimal TS script using this client to perform "smoke tests" (Health, Auth, basic resource fetch).
+    1. **Goal**: Verify that the generated types match the actual runtime JSON responses.
+- [ ] **Startup Health Assertions**
+  - Implement `backend/src/initializers/check_resources.py`:
+    - Validate DB connection.
+    - Validate Redis connection.
+    - Validate critical config variables (fail fast if missing).
+  - Run this before `uvicorn` starts serving traffic.
 
-4) **HTTP client lifecycle**
-   - Introduce a shared `httpx.AsyncClient` created in `main.lifespan`; pass/inject into upstream trade services.
-   - Ensure graceful shutdown via `client.aclose()` in lifespan teardown; add a unit test that monkeypatches the client and asserts close is called.
+## 4. Tight Developer Feedback Loop
 
-5) **Config loading resilience**
-   - Replace `sys.exit` calls in `backend/src/infrastructure/config/base.py` with custom exceptions; validate configs once during startup and fail FastAPI boot with clear logs.
-   - Add tests for missing/invalid config files that assert exceptions, not process exit.
+- [ ] **Unified `check-all` Script**
+  - Refactor `scripts/check-code.sh` to include:
+    - `check-schema.sh` (Is OpenAPI up to date?)
+    - `check-docs.sh` (Are docs up to date?)
+    - `check-locks.sh` (Are deps locked?)
+    - Existing linters (ruff, mypy, eslint, tsc).
+- [ ] **Pre-commit / Pre-push Guardrails**
+  - Add `.pre-commit-config.yaml` with fast per-commit hooks:
+    - Backend: `ruff`, `ruff-format`, `mypy`, trailing whitespace, detect-private-key.
+    - Frontend: `eslint`, `prettier --check`, `knip --changed` for dead code on touched files.
+    - Scripts: `shellcheck`, `yamllint`, json/yaml validators.
+  - Add **pre-push** stage (via pre-commit `stages: [push]` or `.git/hooks/pre-push`) running heavy gates:
+    - Backend: `uv run pytest --maxfail=1 --disable-warnings --cov=src --cov-report=term-missing --cov-fail-under=70`.
+    - Frontend: `npm test -- --runInBand --coverage` (or `vitest run --coverage`).
+    - Optional CI-only: `npm run knip` full project, `ruff --select C90` (complexity), `vulture` for dead code.
+  - Document setup in `docs/CONTRIBUTING.md`: `uv tool install pre-commit`, `pre-commit install`, `pre-commit install --hook-type pre-push`, `npm install` in `frontend/`.
+  - Mirror the same commands in CI to ensure local == CI behavior.
 
-6) **Stub cleanup and signaling**
-   - For empty modules (`upstream/services/ingestion_service.py`, `core/ports/repository.py`, `core/adapters/postgres_repository.py`), replace bodies with `NotImplementedError` and a concise module docstring noting planned scope; or delete if out-of-scope.
-   - Update `docs/ARCHITECTURE.md` “Current state” section to match the pared-down surface area.
+## 5. Observability & Hygiene
 
----
+- [ ] **Structured Logging**
+  - Replace standard logging with `structlog` or similar JSON formatter.
+  - Ensure `request_id` is propagated through all logs.
+- [ ] **Stability Budget**
+  - Add middleware to track 5xx rates and latency.
 
-## Deliverables
-- Patched `api-client.ts` + passing integration test.
-- Updated README/QUICKSTART route examples; new/updated route contract table.
-- Corrected architecture doc (no Traefik/ARQ unless implemented).
-- HTTP client lifespan management in backend with tests.
-- Config loader raising exceptions, tested.
-- Stub modules either deleted or explicitly marked; docs aligned.
+## 6. Versioning Strategy
 
----
-
-## Validation & Exit Criteria
-- `npm test` (frontend) passes, including new API client smoke test.
-- `./scripts/run-tests.sh --backend --coverage` passes (config + http client tests included).
-- Hitting `/api/v1/poe1/notes` via generated hook works in dev (manual smoke).
-- Docs reviewed: no claimed component lacks code/config in repo.
-
----
-
-## Risk & Mitigation
-- **Axios contract drift:** lock a test around the generated hook signature and `api-client`.
-- **Unhandled startup failure:** ensure config exceptions surface during app boot, not mid-request; add log guidance.
-- **Doc rot recurrence:** lightweight checklist added to PR template (future work) to touch docs when routes/config change.
+- [ ] **Semantic Release Automation**
+  - Setup `semantic-release` (or similar) to parse commit messages and bump versions in `pyproject.toml` / `package.json` automatically.

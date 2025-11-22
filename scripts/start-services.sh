@@ -56,17 +56,17 @@ if [ "$MODE" = "dev" ]; then
     # Cleanup function for dev mode
     cleanup() {
         echo -e "\n${YELLOW}⚠️  Shutting down services...${NC}"
-        
+
         # Kill frontend if running
         if [ ! -z "$FRONTEND_PID" ]; then
             echo -e "${BLUE}→ Stopping frontend (PID: $FRONTEND_PID)${NC}"
             kill $FRONTEND_PID 2>/dev/null || true
         fi
-        
+
         # Stop Docker services
         echo -e "${BLUE}→ Stopping Docker services${NC}"
         docker compose $COMPOSE_FILES down
-        
+
         echo -e "${GREEN}✓ All services stopped${NC}"
         exit 0
     }

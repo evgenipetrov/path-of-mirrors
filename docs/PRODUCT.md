@@ -13,6 +13,7 @@ Empower Path of Exile players to move beyond the standard gameplay loop of "farm
 ## Target Users
 
 The primary user is a **sophisticated Path of Exile player** who:
+
 - Understands the game's complex economic and crafting systems
 - Wants to optimize their time and currency generation
 - Currently lacks the tools to master market dynamics
@@ -34,14 +35,17 @@ Path of Mirrors will deliver four interconnected capabilities that transform pla
 **Note:** Phase 6 (Planner & Ops) anchors operational hardening. The list below focuses on the four player-facing feature phases (2‑5) that define the core product experience.
 
 ### Phase 2 – Market Intelligence
+
 **Goal:** Provide unified economic and meta insights that power downstream decisions
 
 #### Market Dashboard
+
 - **Economic Trend Analysis:** Track price fluctuations of currencies, crafting materials, and economy items over time
 - **Meta Build Analysis:** Monitor popular and powerful builds in current leagues
 - Enable informed investment and crafting decisions based on trend data
 
 #### Meta Analyzer
+
 - Track build popularity trends within the current league
 - Monitor item usage and price correlations with build adoption
 - Analyze modifier prevalence on top-ranking player gear
@@ -50,6 +54,7 @@ Path of Mirrors will deliver four interconnected capabilities that transform pla
 **Status:** Phase 2 – Core capability providing data foundation for all other features
 
 ### Phase 3 – Crafting Assistant
+
 **Goal:** Help players craft high-end items cost-effectively
 
 - Analyze pasted items to determine optimal crafting paths
@@ -59,6 +64,7 @@ Path of Mirrors will deliver four interconnected capabilities that transform pla
 - **Status:** Phase 3 – Planned after Market Intelligence foundation
 
 ### Phase 4 – Deal Finder
+
 **Goal:** Surface undervalued item upgrades based on character needs
 
 - Integrate with Path of Building (PoB) to extract character stat weights
@@ -68,6 +74,7 @@ Path of Mirrors will deliver four interconnected capabilities that transform pla
 - **Status:** Phase 4 – Depends on PoB bridge implementation
 
 ### Phase 5 – Price Checker
+
 **Goal:** Rapid, accurate item valuation to prevent costly mistakes
 
 - Paste-to-price workflow with confidence intervals
@@ -125,6 +132,7 @@ Path of Mirrors will evolve into a **modular monolith** with hexagonal architect
 ## Current Development Status
 
 **Phase 0 (Next):** Template Baseline
+
 - FastAPI backend with bounded context folder structure (hexagonal architecture pattern)
 - React 18 frontend with shadcn/ui + Tailwind CSS and game selector component
 - PostgreSQL 17 database with SQLAlchemy 2.0
@@ -136,6 +144,7 @@ Path of Mirrors will evolve into a **modular monolith** with hexagonal architect
 - Starting point: [benavlabs/fastapi-boilerplate](https://github.com/benavlabs/fastapi-boilerplate)
 
 **Phase 1 (Planned):** Upstream Foundation
+
 - **Game abstraction layer:** Support both PoE1 and PoE2 from the start with pluggable game-specific adapters
 - Implement league provider for both games (separate endpoints, unified interface)
 - Build modifier ingestion pipeline with game-specific normalization
@@ -151,41 +160,45 @@ Path of Mirrors will evolve into a **modular monolith** with hexagonal architect
 **Note:** These journeys describe the target experience once all phases are complete.
 
 ### New Player Onboarding
+
 1. Clone repo → set up `.env` → run `docker compose watch`
-2. Explore pre-populated league and economy data
-3. Paste first item into Price Checker for instant valuation
-4. Browse Market Dashboard to understand current economic trends
+1. Explore pre-populated league and economy data
+1. Paste first item into Price Checker for instant valuation
+1. Browse Market Dashboard to understand current economic trends
 
 ### Crafting Power User
+
 1. Identify target item for current build
-2. Use Crafting Assistant to generate optimal crafting plan
-3. Cross-reference intermediate steps with Deal Finder for purchase opportunities
-4. Track progress and costs against Market Dashboard price movements
+1. Use Crafting Assistant to generate optimal crafting plan
+1. Cross-reference intermediate steps with Deal Finder for purchase opportunities
+1. Track progress and costs against Market Dashboard price movements
 
 ### Market Speculator
+
 1. Monitor Meta Analyzer for emerging build popularity trends
-2. Use Deal Finder to identify underpriced items in trending categories
-3. Set alerts in Market Dashboard for price movement triggers
-4. Validate purchase decisions with Price Checker before committing currency
+1. Use Deal Finder to identify underpriced items in trending categories
+1. Set alerts in Market Dashboard for price movement triggers
+1. Validate purchase decisions with Price Checker before committing currency
 
 ### Upgrade Items (Deal Finder Core Flow)
+
 1. **Load Character:** Import character from Path of Building (PoE1 or PoE2)
-2. **Analyze Weights:** Deal Finder queries PoB to extract stat weights and optimization focus (EHP, damage, etc.)
-3. **Adjust Priorities:** Player reviews and adjusts stat weights based on their preferences (prioritize survivability vs. DPS, etc.)
-4. **Search Trade Site:** Deal Finder queries the respective game's trade site (PoE1 or PoE2) for available items in each equipment slot
-5. **Value Analysis:** Results displayed on "Power vs. Price" scatter plot using median prices to identify best value-for-money upgrades
-6. **Make Decision:** Player selects undervalued items and purchases directly from trade site
+1. **Analyze Weights:** Deal Finder queries PoB to extract stat weights and optimization focus (EHP, damage, etc.)
+1. **Adjust Priorities:** Player reviews and adjusts stat weights based on their preferences (prioritize survivability vs. DPS, etc.)
+1. **Search Trade Site:** Deal Finder queries the respective game's trade site (PoE1 or PoE2) for available items in each equipment slot
+1. **Value Analysis:** Results displayed on "Power vs. Price" scatter plot using median prices to identify best value-for-money upgrades
+1. **Make Decision:** Player selects undervalued items and purchases directly from trade site
 
 ## Architectural Principles
 
 Path of Mirrors is built following these design principles:
 
 1. **Feature-aligned bounded contexts** – Each capability owns its domain language and lifecycle
-2. **Hexagonal isolation** – Domain cores depend only on ports; adapters are swappable
-3. **Game abstraction layer** – Unified interface with pluggable adapters for PoE1 and PoE2
-4. **Canonical schemas everywhere** – Shared schemas generate Python/TypeScript bindings across backend and frontend
-5. **Observability baked in** – Structured logging, health probes, request tracing from day one
-6. **Evolutionary modularity** – Clear seams enable future service extraction if needed
+1. **Hexagonal isolation** – Domain cores depend only on ports; adapters are swappable
+1. **Game abstraction layer** – Unified interface with pluggable adapters for PoE1 and PoE2
+1. **Canonical schemas everywhere** – Shared schemas generate Python/TypeScript bindings across backend and frontend
+1. **Observability baked in** – Structured logging, health probes, request tracing from day one
+1. **Evolutionary modularity** – Clear seams enable future service extraction if needed
 
 These principles guide development from Phase 0 onward.
 
@@ -202,6 +215,7 @@ These principles guide development from Phase 0 onward.
 ## Go-to-Market Strategy
 
 This section is a placeholder for the go-to-market strategy, which will be developed during Phase 2. Initial thoughts include:
+
 - **Community Engagement:** Announce the project and gather feedback from alpha testers on relevant subreddits (e.g., r/pathofexile, r/poebuilds) and Discord communities.
 - **Content Creation:** Develop blog posts and video tutorials showcasing how to use the tool to achieve specific economic goals in-game.
 - **Phased Rollout:** Invite users in waves, starting with a small group of sophisticated players to gather high-quality feedback before a public launch.
@@ -209,6 +223,7 @@ This section is a placeholder for the go-to-market strategy, which will be devel
 ## Monetization Strategy
 
 This section is a placeholder. A formal monetization strategy will be defined during Phase 2. The leading approach is a **freemium model**:
+
 - **Free Tier:** Core features like the Price Checker and a limited version of the Market Dashboard will be available to all users to provide immediate value.
 - **Premium Tier:** Advanced features like the Crafting Assistant, the full Deal Finder, historical data analysis, and real-time alerts would be part of a subscription tier. This model ensures the project is sustainable while keeping it accessible.
 
@@ -240,11 +255,12 @@ This section is a placeholder. A formal monetization strategy will be defined du
 ## Contributing
 
 Developers contributing to Path of Mirrors should:
-1. Review [`docs/CONTRIBUTING.md`](CONTRIBUTING.md) for setup, testing, and PR guidelines
-2. Consult [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) to understand system design and integration patterns
-3. Check [`docs/SPRINT.md`](SPRINT.md) for current sprint goals and in-progress tasks
-4. Reference this PRODUCT.md when proposing new features to ensure alignment with vision
 
----
+1. Review [`docs/CONTRIBUTING.md`](CONTRIBUTING.md) for setup, testing, and PR guidelines
+1. Consult [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) to understand system design and integration patterns
+1. Check [`docs/SPRINT.md`](SPRINT.md) for current sprint goals and in-progress tasks
+1. Reference this PRODUCT.md when proposing new features to ensure alignment with vision
+
+______________________________________________________________________
 
 Path of Mirrors transforms Path of Exile's economic complexity into player advantage. Every feature, from the Price Checker to the Crafting Assistant, serves the singular mission: **help players get rich and save time.**

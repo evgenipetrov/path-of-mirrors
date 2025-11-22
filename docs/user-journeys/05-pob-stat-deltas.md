@@ -8,39 +8,40 @@
 
 **Database Required:** No (but caching recommended)
 
----
+______________________________________________________________________
 
 ## User Flow
 
 1. User provides build (PoB XML/code)
-2. System displays current build stats:
+1. System displays current build stats:
    - Total DPS (all skills)
    - Effective HP (life + ES + mitigation)
    - Clear speed metrics
    - Other defensive stats
-3. User clicks "Test Item Swap" on any equipment slot
-4. User either:
+1. User clicks "Test Item Swap" on any equipment slot
+1. User either:
    - Selects item from market search (Journey 1)
    - Pastes item from trade (uses Trade API item ID)
    - Manually creates test item (custom stats)
-5. System:
+1. System:
    - Modifies PoB XML with new item
    - Calls PoB binary to recalculate stats
    - Returns exact before/after comparison
-6. User sees detailed stat deltas:
+1. User sees detailed stat deltas:
    - DPS change (total + per skill)
    - HP change (effective + raw)
    - Resistance changes
    - Other defensive metrics
    - Cost-benefit analysis
 
----
+______________________________________________________________________
 
 ## Technical Architecture
 
 ### Why PoB Binary?
 
 **Problem:** Calculating exact DPS is extremely complex
+
 - Skill mechanics
 - Support gems interactions
 - Passive tree modifiers
@@ -49,6 +50,7 @@
 - Buffs, debuffs, configurations
 
 **Solution:** Use Path of Building's calculation engine
+
 - It already handles all mechanics correctly
 - Community-maintained and up-to-date
 - Expose CLI interface for automated calculations
@@ -58,6 +60,7 @@
 **PoB Community Fork:** https://github.com/PathOfBuildingCommunity/PathOfBuilding
 
 **CLI wrapper needed:**
+
 ```lua
 -- pob_cli.lua
 -- Wrapper script to load build XML and return stats
@@ -76,7 +79,7 @@ function main(buildFile, outputFormat)
 end
 ```
 
----
+______________________________________________________________________
 
 ## Backend Components
 
@@ -93,7 +96,7 @@ backend/src/contexts/pob/
     └── routes.py                # POST /api/pob/calculate-delta
 ```
 
----
+______________________________________________________________________
 
 ## API Contract
 
@@ -199,7 +202,7 @@ backend/src/contexts/pob/
 }
 ```
 
----
+______________________________________________________________________
 
 ## Core Components
 
@@ -301,7 +304,7 @@ class PoBWrapper:
         )
 ```
 
----
+______________________________________________________________________
 
 ### 2. XML Modifier (`xml_modifier.py`)
 
@@ -415,7 +418,7 @@ def map_slot_to_id(slot: str) -> int:
     return slot_map.get(slot.lower(), 1)
 ```
 
----
+______________________________________________________________________
 
 ### 3. Stat Calculator (`stat_calculator.py`)
 
@@ -525,41 +528,46 @@ def generate_summary(deltas: dict, item_price: float = None) -> dict:
     }
 ```
 
----
+______________________________________________________________________
 
 ## Implementation Sequence
 
 ### Phase 1: PoB Integration (Week 1)
+
 1. ✅ Set up PoB Community Fork locally
-2. ✅ Create Lua CLI wrapper script
-3. ✅ Test manual stat calculations
-4. ✅ Parse PoB output format
+1. ✅ Create Lua CLI wrapper script
+1. ✅ Test manual stat calculations
+1. ✅ Parse PoB output format
 
 ### Phase 2: Python Wrapper (Week 1)
+
 5. ✅ Implement subprocess wrapper
-6. ✅ Add timeout and error handling
-7. ✅ Write tests with sample builds
-8. ✅ Optimize performance (caching, reuse)
+1. ✅ Add timeout and error handling
+1. ✅ Write tests with sample builds
+1. ✅ Optimize performance (caching, reuse)
 
 ### Phase 3: XML Modification (Week 2)
+
 9. ✅ Implement item XML creation
-10. ✅ Implement item swapping logic
-11. ✅ Test with various item types
-12. ✅ Handle edge cases (corrupted, influenced, etc.)
+1. ✅ Implement item swapping logic
+1. ✅ Test with various item types
+1. ✅ Handle edge cases (corrupted, influenced, etc.)
 
 ### Phase 4: API Endpoint (Week 2)
+
 13. ✅ Create stat calculator service
-14. ✅ Build API endpoint
-15. ✅ Add request validation
-16. ✅ Implement caching (same build + same item = cached)
+01. ✅ Build API endpoint
+01. ✅ Add request validation
+01. ✅ Implement caching (same build + same item = cached)
 
 ### Phase 5: Frontend (Week 3)
-17. ✅ Build stat comparison UI
-18. ✅ Add before/after visualization
-19. ✅ Integrate with Journey 1 (test items from search)
-20. ✅ Polish UX (loading states, error handling)
 
----
+17. ✅ Build stat comparison UI
+01. ✅ Add before/after visualization
+01. ✅ Integrate with Journey 1 (test items from search)
+01. ✅ Polish UX (loading states, error handling)
+
+______________________________________________________________________
 
 ## Performance Optimization
 
@@ -568,28 +576,32 @@ def generate_summary(deltas: dict, item_price: float = None) -> dict:
 **Solutions:**
 
 1. **Caching**
+
    ```python
    cache_key = hash(pob_code + item_json + config)
    if cache_key in redis:
        return cached_result
    ```
 
-2. **Pre-calculation** - Calculate common swaps ahead of time
+1. **Pre-calculation** - Calculate common swaps ahead of time
+
    - Cache results for top 100 builds × common item types
    - Refresh cache periodically
 
-3. **Parallel processing** - Use process pool for multiple calculations
+1. **Parallel processing** - Use process pool for multiple calculations
+
    ```python
    with ProcessPoolExecutor(max_workers=4) as executor:
        futures = [executor.submit(calculate_stats, build) for build in builds]
    ```
 
-4. **Approximation mode** - Fast estimates for UI preview
+1. **Approximation mode** - Fast estimates for UI preview
+
    - Use simplified calculation (no PoB binary)
    - Show "Calculating exact stats..." while PoB runs
    - Update UI when exact results ready
 
----
+______________________________________________________________________
 
 ## Limitations and Workarounds
 
@@ -598,6 +610,7 @@ def generate_summary(deltas: dict, item_price: float = None) -> dict:
 **Problem:** Users need PoB installed to use this feature
 
 **Workarounds:**
+
 - Provide Docker image with PoB pre-installed
 - Cloud-hosted PoB service (run on our servers)
 - Fallback to approximate calculations
@@ -607,6 +620,7 @@ def generate_summary(deltas: dict, item_price: float = None) -> dict:
 **Problem:** 1-2 seconds per calculation is slow
 
 **Workarounds:**
+
 - Show "calculating..." UI with progress
 - Cache aggressively
 - Offer "quick estimate" mode
@@ -616,11 +630,12 @@ def generate_summary(deltas: dict, item_price: float = None) -> dict:
 **Problem:** PoB format might change between versions
 
 **Workarounds:**
+
 - Pin PoB version
 - Add version detection
 - Graceful degradation if format incompatible
 
----
+______________________________________________________________________
 
 ## Alternative: Approximate Calculations
 
@@ -659,7 +674,7 @@ def approximate_dps_change(
     return stat_value / 10
 ```
 
----
+______________________________________________________________________
 
 ## Frontend: Before/After Comparison
 
@@ -722,37 +737,43 @@ def approximate_dps_change(
 </SummaryCard>
 ```
 
----
+______________________________________________________________________
 
 ## Dependencies
 
 **New dependencies:**
+
 - Path of Building Community Fork (external, not Python package)
 - `lupa` or `lunatic-python` (optional, for Lua integration)
 
 **System requirements:**
+
 - PoB binary installed (or Docker image)
 - 1-2GB disk space for PoB data files
 
----
+______________________________________________________________________
 
 ## Open Questions
 
 1. **PoB hosting strategy:**
+
    - Local installation (user installs PoB)?
    - Cloud service (we host PoB)?
    - Docker image (easy deployment)?
 
-2. **Accuracy vs speed trade-off:**
+1. **Accuracy vs speed trade-off:**
+
    - Always use exact PoB calculations (slow)?
    - Approximate first, exact on demand (complex UX)?
    - Cache everything aggressively (stale data)?
 
-3. **Multi-item swaps:**
+1. **Multi-item swaps:**
+
    - Allow testing multiple item changes at once?
    - Show cumulative effect of upgrading all slots?
 
-4. **Config management:**
+1. **Config management:**
+
    - Parse config from PoB build?
    - Let user override (boss DPS, shocked, etc.)?
    - Provide presets ("mapping", "bossing", "tankiness")?

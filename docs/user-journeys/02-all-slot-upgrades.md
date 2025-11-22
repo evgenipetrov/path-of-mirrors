@@ -8,28 +8,28 @@
 
 **Database Required:** No (but caching recommended)
 
----
+______________________________________________________________________
 
 ## User Flow
 
 1. User navigates to "Full Build Analysis" page
-2. User provides build (PoB XML/code)
-3. System parses build and displays all equipped items
-4. User optionally sets global filters:
+1. User provides build (PoB XML/code)
+1. System parses build and displays all equipped items
+1. User optionally sets global filters:
    - Total budget (e.g., "200 chaos across all slots")
    - Minimum improvement threshold
-5. User clicks "Analyze All Slots"
-6. System:
+1. User clicks "Analyze All Slots"
+1. System:
    - Extracts all equipped items
    - Queries Trade API for each slot in parallel
    - Ranks all upgrades across all slots
-7. User sees:
+1. User sees:
    - Current build summary
    - Table of all possible upgrades
    - Sorted by biggest improvement OR best value
    - Total cost for recommended upgrades
 
----
+______________________________________________________________________
 
 ## Technical Architecture
 
@@ -61,7 +61,7 @@ backend/src/contexts/upgrades/
 │   └── upgrade_path_planner.py  # NEW: Determine upgrade order
 ```
 
----
+______________________________________________________________________
 
 ## API Contract
 
@@ -148,7 +148,7 @@ backend/src/contexts/upgrades/
 }
 ```
 
----
+______________________________________________________________________
 
 ## Core Component Details
 
@@ -245,7 +245,7 @@ async def find_upgrades_for_slot(
     return upgrade_ranker.rank_upgrades(current_item, candidates)
 ```
 
----
+______________________________________________________________________
 
 ### 2. Budget Optimizer (`budget_optimizer.py`)
 
@@ -316,7 +316,7 @@ def optimize_budget_allocation(
     pass
 ```
 
----
+______________________________________________________________________
 
 ### 3. Upgrade Path Planner (`upgrade_path_planner.py`)
 
@@ -379,33 +379,36 @@ def get_upgrade_reason(upgrade: dict, position: int) -> str:
         return f"Value ratio: {upgrade['value_ratio']:.1f}"
 ```
 
----
+______________________________________________________________________
 
 ## Implementation Sequence
 
 ### Phase 1: Backend Extension
+
 1. Implement multi-slot analyzer
-2. Add parallel query execution
-3. Implement budget optimizer (simple greedy algorithm)
-4. Implement upgrade path planner
-5. Create new API endpoint
-6. Test with various builds
+1. Add parallel query execution
+1. Implement budget optimizer (simple greedy algorithm)
+1. Implement upgrade path planner
+1. Create new API endpoint
+1. Test with various builds
 
 ### Phase 2: Frontend
+
 1. Create build analysis page
-2. Reuse PoB input from Journey 1
-3. Build all-slots results table
-4. Add slot-by-slot breakdown
-5. Show recommended upgrade path
-6. Add budget allocation controls
+1. Reuse PoB input from Journey 1
+1. Build all-slots results table
+1. Add slot-by-slot breakdown
+1. Show recommended upgrade path
+1. Add budget allocation controls
 
 ### Phase 3: Optimization
-1. Add request caching (same build = cached results)
-2. Implement rate limiting for Trade API
-3. Add retry logic for failed queries
-4. Optimize parallel queries (connection pooling)
 
----
+1. Add request caching (same build = cached results)
+1. Implement rate limiting for Trade API
+1. Add retry logic for failed queries
+1. Optimize parallel queries (connection pooling)
+
+______________________________________________________________________
 
 ## Performance Considerations
 
@@ -414,89 +417,101 @@ def get_upgrade_reason(upgrade: dict, position: int) -> str:
 **Solutions:**
 
 1. **Parallel queries** - Use asyncio to query all slots simultaneously
+
    - Expected time: ~5-10 seconds (vs 50+ seconds sequential)
 
-2. **Result limits** - Only fetch top N items per slot
+1. **Result limits** - Only fetch top N items per slot
+
    - Default: 10-20 items per slot
    - Reduces API calls and processing time
 
-3. **Caching** - Cache build analyses for 5-10 minutes
+1. **Caching** - Cache build analyses for 5-10 minutes
+
    - Same PoB code → return cached results
    - Significantly faster for repeated analyses
 
-4. **Rate limiting** - Respect Trade API limits
+1. **Rate limiting** - Respect Trade API limits
+
    - Implement exponential backoff
    - Queue requests if needed
 
----
+______________________________________________________________________
 
 ## User Experience Enhancements
 
 ### Visual Improvements
+
 - Color-code slots by improvement potential (red/yellow/green)
 - Show current vs upgraded stats side-by-side
 - Highlight biggest upgrades
 - Show cumulative cost as user selects items
 
 ### Interactive Features
+
 - Toggle slots on/off
 - Adjust budget per slot with sliders
 - Filter by stat type (e.g., "only life upgrades")
 - Save upgrade plans for later
 
 ### Smart Defaults
+
 - Auto-detect build archetype (life vs ES vs hybrid)
 - Suggest budget allocation based on current gaps
 - Highlight "low-hanging fruit" (cheap, high-impact upgrades)
 
----
+______________________________________________________________________
 
 ## Differences from Journey 1
 
-| Aspect | Journey 1 | Journey 2 |
-|--------|-----------|-----------|
-| Scope | Single slot | All slots |
-| Queries | 1 Trade API call | 10+ Trade API calls |
-| Complexity | Low | Medium |
-| Response time | 1-2 seconds | 5-10 seconds |
-| Budget | Per-item | Total budget allocation |
-| Optimization | Not needed | Budget optimizer, path planner |
-| Caching | Optional | Recommended |
+| Aspect        | Journey 1        | Journey 2                      |
+| ------------- | ---------------- | ------------------------------ |
+| Scope         | Single slot      | All slots                      |
+| Queries       | 1 Trade API call | 10+ Trade API calls            |
+| Complexity    | Low              | Medium                         |
+| Response time | 1-2 seconds      | 5-10 seconds                   |
+| Budget        | Per-item         | Total budget allocation        |
+| Optimization  | Not needed       | Budget optimizer, path planner |
+| Caching       | Optional         | Recommended                    |
 
----
+______________________________________________________________________
 
 ## Future Enhancements
 
 1. **Synergy detection** - Identify item combinations that work well together
-2. **Incremental upgrades** - Show step-by-step path from current to ideal
-3. **Budget scenarios** - "What if I had 500 chaos vs 100 chaos?"
-4. **Market timing** - "Wait for better deals on these slots"
-5. **Upgrade alerts** - Notify when good upgrades appear on market
+1. **Incremental upgrades** - Show step-by-step path from current to ideal
+1. **Budget scenarios** - "What if I had 500 chaos vs 100 chaos?"
+1. **Market timing** - "Wait for better deals on these slots"
+1. **Upgrade alerts** - Notify when good upgrades appear on market
 
----
+______________________________________________________________________
 
 ## Open Questions
 
 1. **Should we analyze unique items differently?**
+
    - Uniques have fixed rolls, easier to compare
    - Could have curated upgrade paths for popular uniques
 
-2. **How to handle influenced items?**
+1. **How to handle influenced items?**
+
    - Elder/Shaper/Crusader/etc mods are powerful but rare
    - Might blow budget on one slot
 
-3. **Should we consider corruptions?**
+1. **Should we consider corruptions?**
+
    - Corrupted items can't be modified further
    - But might be best-in-slot for budget
 
-4. **What about crafting opportunities?**
+1. **What about crafting opportunities?**
+
    - Sometimes better to craft than buy
    - Out of scope for now, but worth considering
 
----
+______________________________________________________________________
 
 ## Dependencies
 
 **Same as Journey 1, plus:**
+
 - Caching library (e.g., `redis` or `cachetools`)
 - Connection pooling for Trade API queries

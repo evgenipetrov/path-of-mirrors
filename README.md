@@ -120,6 +120,20 @@ The frontend will be available at http://localhost:5173
 - **API Docs:** http://localhost:8000/docs (Swagger UI)
 - **OpenAPI Spec:** http://localhost:8000/openapi.json
 
+### Quick API Test
+
+```bash
+# Test health endpoints
+curl http://localhost:8000/health
+curl http://localhost:8000/ready
+
+# Try the Notes API (Phase 0 demo)
+curl http://localhost:8000/api/v1/poe1/notes
+curl http://localhost:8000/api/v1/poe1/notes/health
+```
+
+**See [docs/API_ROUTES.md](docs/API_ROUTES.md) for complete API reference.**
+
 ## Development Workflow
 
 ### Development Scripts

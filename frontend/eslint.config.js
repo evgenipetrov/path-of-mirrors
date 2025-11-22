@@ -71,6 +71,10 @@ export default defineConfig(
       ],
       // Prevent duplicate imports from the same module
       'no-duplicate-imports': 'error',
+      // Disable React Compiler incompatible-library warnings for TanStack Table
+      // TanStack Table's useReactTable returns functions that cannot be memoized,
+      // which is documented and expected behavior
+      'react-hooks/incompatible-library': 'off',
     },
   }
 )

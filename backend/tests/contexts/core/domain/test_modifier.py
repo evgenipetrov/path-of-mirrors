@@ -1,7 +1,8 @@
 """Tests for Modifier value object."""
 
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from src.contexts.core.domain.modifier import Modifier, ModifierType
 

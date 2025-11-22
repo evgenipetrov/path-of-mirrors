@@ -27,7 +27,7 @@ import asyncio
 import json
 import os
 import sys
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -193,9 +193,7 @@ class TradeAPISampleCollector:
             samples_collected=len(self.samples),
         )
 
-    async def _collect_league_samples(
-        self, client: httpx.AsyncClient, league: str
-    ) -> None:
+    async def _collect_league_samples(self, client: httpx.AsyncClient, league: str) -> None:
         """Collect item search samples for a league."""
         log.info("collecting_league_samples", league=league)
 
@@ -251,15 +249,17 @@ class TradeAPISampleCollector:
                 league=league,
                 search_name=search_name,
             )
-            self.samples.append({
-                "type": "item_search",
-                "league": league,
-                "search_name": search_name,
-                "attempt": attempt,
-                "collected_at": datetime.now(UTC).isoformat(),
-                "status": "empty",
-                "message": "No results found",
-            })
+            self.samples.append(
+                {
+                    "type": "item_search",
+                    "league": league,
+                    "search_name": search_name,
+                    "attempt": attempt,
+                    "collected_at": datetime.now(UTC).isoformat(),
+                    "status": "empty",
+                    "message": "No results found",
+                }
+            )
             return
 
         log.info(
@@ -301,19 +301,21 @@ class TradeAPISampleCollector:
         with open(filepath, "w") as f:
             json.dump(combined_data, f, indent=2)
 
-        self.samples.append({
-            "filename": str(filepath.relative_to(self.output_dir)),
-            "type": "item_search",
-            "league": league,
-            "search_name": search_name,
-            "attempt": attempt,
-            "query_id": query_id,
-            "total_results": len(search_data.get("result", [])),
-            "fetched_items": len(items_data.get("result", [])),
-            "size_bytes": filepath.stat().st_size,
-            "collected_at": datetime.now(UTC).isoformat(),
-            "status": "success",
-        })
+        self.samples.append(
+            {
+                "filename": str(filepath.relative_to(self.output_dir)),
+                "type": "item_search",
+                "league": league,
+                "search_name": search_name,
+                "attempt": attempt,
+                "query_id": query_id,
+                "total_results": len(search_data.get("result", [])),
+                "fetched_items": len(items_data.get("result", [])),
+                "size_bytes": filepath.stat().st_size,
+                "collected_at": datetime.now(UTC).isoformat(),
+                "status": "success",
+            }
+        )
 
         log.info(
             "search_sample_collected",
@@ -321,9 +323,7 @@ class TradeAPISampleCollector:
             items_fetched=len(items_data.get("result", [])),
         )
 
-    async def _collect_bulk_samples(
-        self, client: httpx.AsyncClient, league: str
-    ) -> None:
+    async def _collect_bulk_samples(self, client: httpx.AsyncClient, league: str) -> None:
         """Collect bulk exchange samples for a league."""
         log.info("collecting_bulk_samples", league=league)
 
@@ -385,14 +385,16 @@ class TradeAPISampleCollector:
 
         if not result_ids:
             log.warning("no_bulk_results", league=league, bulk_name=bulk_name)
-            self.samples.append({
-                "type": "bulk_exchange",
-                "league": league,
-                "bulk_name": bulk_name,
-                "collected_at": datetime.now(UTC).isoformat(),
-                "status": "empty",
-                "message": "No results found",
-            })
+            self.samples.append(
+                {
+                    "type": "bulk_exchange",
+                    "league": league,
+                    "bulk_name": bulk_name,
+                    "collected_at": datetime.now(UTC).isoformat(),
+                    "status": "empty",
+                    "message": "No results found",
+                }
+            )
             return
 
         # Fetch detailed exchange listings
@@ -426,18 +428,20 @@ class TradeAPISampleCollector:
         with open(filepath, "w") as f:
             json.dump(combined_data, f, indent=2)
 
-        self.samples.append({
-            "filename": str(filepath.relative_to(self.output_dir)),
-            "type": "bulk_exchange",
-            "league": league,
-            "bulk_name": bulk_name,
-            "query_id": query_id,
-            "total_results": len(exchange_data.get("result", [])),
-            "fetched_listings": len(listings_data.get("result", [])),
-            "size_bytes": filepath.stat().st_size,
-            "collected_at": datetime.now(UTC).isoformat(),
-            "status": "success",
-        })
+        self.samples.append(
+            {
+                "filename": str(filepath.relative_to(self.output_dir)),
+                "type": "bulk_exchange",
+                "league": league,
+                "bulk_name": bulk_name,
+                "query_id": query_id,
+                "total_results": len(exchange_data.get("result", [])),
+                "fetched_listings": len(listings_data.get("result", [])),
+                "size_bytes": filepath.stat().st_size,
+                "collected_at": datetime.now(UTC).isoformat(),
+                "status": "success",
+            }
+        )
 
         log.info(
             "bulk_sample_collected",
@@ -483,9 +487,7 @@ class TradeAPISampleCollector:
 
 async def main() -> None:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Collect Path of Exile Trade API samples"
-    )
+    parser = argparse.ArgumentParser(description="Collect Path of Exile Trade API samples")
     parser.add_argument(
         "--game",
         choices=["poe1", "poe2", "all"],

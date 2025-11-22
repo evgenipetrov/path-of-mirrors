@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@/test-utils'
 import userEvent from '@testing-library/user-event'
-import { NoteFormDialog } from './note-form-dialog'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Note } from '../data/schema'
+import { NoteFormDialog } from './note-form-dialog'
 
 describe('NoteFormDialog', () => {
   const mockOnOpenChange = vi.fn()
@@ -36,19 +36,25 @@ describe('NoteFormDialog', () => {
 
       expect(screen.getByText('Create New Note')).toBeInTheDocument()
       expect(screen.getByText('Create a new note for POE1')).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /create note/i })).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /create note/i })
+      ).toBeInTheDocument()
     })
 
     it('should render edit mode when note is provided', () => {
       render(<NoteFormDialog {...defaultProps} note={mockNote} />)
 
       expect(screen.getByText('Edit Note')).toBeInTheDocument()
-      expect(screen.getByText('Update your note details below')).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /update note/i })).toBeInTheDocument()
+      expect(
+        screen.getByText('Update your note details below')
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /update note/i })
+      ).toBeInTheDocument()
     })
 
     it('should render for poe2 game context', () => {
-      render(<NoteFormDialog {...defaultProps} gameContext="poe2" />)
+      render(<NoteFormDialog {...defaultProps} gameContext='poe2' />)
 
       expect(screen.getByText('Create a new note for POE2')).toBeInTheDocument()
     })
@@ -78,8 +84,12 @@ describe('NoteFormDialog', () => {
     it('should have proper placeholders', () => {
       render(<NoteFormDialog {...defaultProps} />)
 
-      expect(screen.getByPlaceholderText('Enter note title...')).toBeInTheDocument()
-      expect(screen.getByPlaceholderText('Enter note content...')).toBeInTheDocument()
+      expect(
+        screen.getByPlaceholderText('Enter note title...')
+      ).toBeInTheDocument()
+      expect(
+        screen.getByPlaceholderText('Enter note content...')
+      ).toBeInTheDocument()
     })
 
     it('should have maxLength attribute on title input', () => {
@@ -124,7 +134,7 @@ describe('NoteFormDialog', () => {
 
     it('should not include game_context in submitted data', async () => {
       const user = userEvent.setup()
-      render(<NoteFormDialog {...defaultProps} gameContext="poe2" />)
+      render(<NoteFormDialog {...defaultProps} gameContext='poe2' />)
 
       await user.type(screen.getByLabelText(/title/i), 'New Note')
       await user.click(screen.getByRole('button', { name: /create note/i }))
@@ -142,7 +152,9 @@ describe('NoteFormDialog', () => {
       render(<NoteFormDialog {...defaultProps} />)
 
       const titleInput = screen.getByLabelText(/title/i) as HTMLInputElement
-      const contentInput = screen.getByLabelText(/content/i) as HTMLTextAreaElement
+      const contentInput = screen.getByLabelText(
+        /content/i
+      ) as HTMLTextAreaElement
 
       await user.type(titleInput, 'New Note')
       await user.type(contentInput, 'Note content')
@@ -169,11 +181,21 @@ describe('NoteFormDialog', () => {
 
     it('should handle note with null content', () => {
       const noteWithNullContent = { ...mockNote, content: null }
-      const { rerender } = render(<NoteFormDialog {...defaultProps} open={false} />)
+      const { rerender } = render(
+        <NoteFormDialog {...defaultProps} open={false} />
+      )
 
-      rerender(<NoteFormDialog {...defaultProps} open={true} note={noteWithNullContent} />)
+      rerender(
+        <NoteFormDialog
+          {...defaultProps}
+          open={true}
+          note={noteWithNullContent}
+        />
+      )
 
-      const contentInput = screen.getByLabelText(/content/i) as HTMLTextAreaElement
+      const contentInput = screen.getByLabelText(
+        /content/i
+      ) as HTMLTextAreaElement
       expect(contentInput.value).toBe('')
     })
   })
@@ -244,7 +266,9 @@ describe('NoteFormDialog', () => {
       render(<NoteFormDialog {...defaultProps} />)
 
       const titleInput = screen.getByLabelText(/title/i) as HTMLInputElement
-      const contentInput = screen.getByLabelText(/content/i) as HTMLTextAreaElement
+      const contentInput = screen.getByLabelText(
+        /content/i
+      ) as HTMLTextAreaElement
 
       await user.type(titleInput, 'Test Title')
       await user.type(contentInput, 'Test Content')

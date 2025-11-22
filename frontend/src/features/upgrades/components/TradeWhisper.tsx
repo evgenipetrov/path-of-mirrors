@@ -3,11 +3,10 @@
  *
  * Button to copy Trade API whisper command to clipboard.
  */
-
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
 import { Copy, Check } from 'lucide-react'
 import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
 
 interface TradeWhisperProps {
   whisper: string
@@ -34,19 +33,19 @@ export function TradeWhisper({ whisper, itemName }: TradeWhisperProps) {
 
   return (
     <Button
-      variant="outline"
-      size="sm"
+      variant='outline'
+      size='sm'
       onClick={handleCopy}
-      className="flex items-center gap-2"
+      className='flex items-center gap-2'
     >
       {copied ? (
         <>
-          <Check className="h-4 w-4" />
+          <Check className='h-4 w-4' />
           Copied!
         </>
       ) : (
         <>
-          <Copy className="h-4 w-4" />
+          <Copy className='h-4 w-4' />
           Copy Whisper
         </>
       )}

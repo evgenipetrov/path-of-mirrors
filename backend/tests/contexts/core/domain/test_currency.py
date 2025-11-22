@@ -1,9 +1,9 @@
 """Tests for Currency domain entity."""
 
+import asyncpg
 import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-import asyncpg
 
 from src.contexts.core.domain.currency import Currency
 from src.shared import Game
@@ -96,9 +96,7 @@ class TestCurrencyUniqueConstraint:
         await db_session.commit()
 
         # Both should exist
-        result = await db_session.execute(
-            select(Currency).where(Currency.name == "Chaos Orb")
-        )
+        result = await db_session.execute(select(Currency).where(Currency.name == "Chaos Orb"))
         currencies = result.scalars().all()
 
         assert len(currencies) == 2
@@ -148,9 +146,7 @@ class TestCurrencyUniqueConstraint:
         await db_session.commit()
 
         # Both should exist
-        result = await db_session.execute(
-            select(Currency).where(Currency.game == Game.POE1)
-        )
+        result = await db_session.execute(select(Currency).where(Currency.game == Game.POE1))
         currencies = result.scalars().all()
 
         assert len(currencies) == 2
@@ -181,9 +177,7 @@ class TestCurrencyQueries:
         await db_session.commit()
 
         # Query PoE1 currencies
-        result = await db_session.execute(
-            select(Currency).where(Currency.game == Game.POE1)
-        )
+        result = await db_session.execute(select(Currency).where(Currency.game == Game.POE1))
         poe1_results = result.scalars().all()
 
         assert len(poe1_results) == 2
@@ -191,9 +185,7 @@ class TestCurrencyQueries:
         assert {c.name for c in poe1_results} == {"Chaos Orb", "Divine Orb"}
 
         # Query PoE2 currencies
-        result = await db_session.execute(
-            select(Currency).where(Currency.game == Game.POE2)
-        )
+        result = await db_session.execute(select(Currency).where(Currency.game == Game.POE2))
         poe2_results = result.scalars().all()
 
         assert len(poe2_results) == 2
@@ -246,9 +238,7 @@ class TestCurrencyQueries:
         await db_session.commit()
 
         # Query by display_name
-        result = await db_session.execute(
-            select(Currency).where(Currency.display_name == "Chaos")
-        )
+        result = await db_session.execute(select(Currency).where(Currency.display_name == "Chaos"))
         chaos_currencies = result.scalars().all()
 
         assert len(chaos_currencies) == 2
@@ -290,9 +280,7 @@ class TestCurrencyRealExamples:
 
         await db_session.commit()
 
-        result = await db_session.execute(
-            select(Currency).where(Currency.game == Game.POE1)
-        )
+        result = await db_session.execute(select(Currency).where(Currency.game == Game.POE1))
         saved_currencies = result.scalars().all()
 
         assert len(saved_currencies) == 2
@@ -313,9 +301,7 @@ class TestCurrencyRealExamples:
 
         await db_session.commit()
 
-        result = await db_session.execute(
-            select(Currency).where(Currency.game == Game.POE2)
-        )
+        result = await db_session.execute(select(Currency).where(Currency.game == Game.POE2))
         saved_currencies = result.scalars().all()
 
         assert len(saved_currencies) == 3
@@ -431,9 +417,7 @@ class TestCurrencyDeletion:
         await db_session.commit()
 
         # Verify deletion
-        result = await db_session.execute(
-            select(Currency).where(Currency.id == currency_id)
-        )
+        result = await db_session.execute(select(Currency).where(Currency.id == currency_id))
         deleted_currency = result.scalar_one_or_none()
 
         assert deleted_currency is None
@@ -463,9 +447,7 @@ class TestCurrencyDeletion:
         await db_session.commit()
 
         # PoE2 version should still exist
-        result = await db_session.execute(
-            select(Currency).where(Currency.name == "Chaos Orb")
-        )
+        result = await db_session.execute(select(Currency).where(Currency.name == "Chaos Orb"))
         remaining_currencies = result.scalars().all()
 
         assert len(remaining_currencies) == 1

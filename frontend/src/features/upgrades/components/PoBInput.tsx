@@ -3,14 +3,19 @@
  *
  * Tabbed interface for uploading PoB XML files or pasting import codes.
  */
-
 import { useState } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
 import { Upload, Code } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { Game } from '../types'
 
 interface PoBInputProps {
@@ -48,7 +53,7 @@ export function PoBInput({ onParse, isLoading = false }: PoBInputProps) {
   }
 
   return (
-    <Card className="w-full">
+    <Card className='w-full'>
       <CardHeader>
         <CardTitle>Import Path of Building</CardTitle>
         <CardDescription>
@@ -56,42 +61,45 @@ export function PoBInput({ onParse, isLoading = false }: PoBInputProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'file' | 'code')}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="code">
-              <Code className="mr-2 h-4 w-4" />
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as 'file' | 'code')}
+        >
+          <TabsList className='grid w-full grid-cols-2'>
+            <TabsTrigger value='code'>
+              <Code className='mr-2 h-4 w-4' />
               Import Code
             </TabsTrigger>
-            <TabsTrigger value="file">
-              <Upload className="mr-2 h-4 w-4" />
+            <TabsTrigger value='file'>
+              <Upload className='mr-2 h-4 w-4' />
               Upload File
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="code" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="pob-code">PoB Import Code</Label>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <TabsContent value='code' className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='pob-code'>PoB Import Code</Label>
+              <div className='flex flex-col gap-2 sm:flex-row sm:items-center'>
                 <Input
-                  id="pob-code"
-                  placeholder="Paste your PoB import code"
+                  id='pob-code'
+                  placeholder='Paste your PoB import code'
                   value={pobCode}
                   onChange={(e) => setPobCode(e.target.value)}
-                  className="font-mono text-xs sm:flex-1"
+                  className='font-mono text-xs sm:flex-1'
                 />
                 <Button
                   onClick={handleCodeParse}
                   disabled={!pobCode.trim() || isLoading}
-                  className="sm:w-auto"
+                  className='sm:w-auto'
                 >
                   {isLoading ? 'Parsing...' : 'Parse Build'}
                 </Button>
               </div>
               {pobCode && (
-                <div className="text-sm text-muted-foreground font-mono">
+                <div className='text-muted-foreground font-mono text-sm'>
                   {pobCode.length.toLocaleString()} chars
                   {pobCode.length < 5000 && (
-                    <span className="text-amber-500 ml-2">
+                    <span className='ml-2 text-amber-500'>
                       (typical codes are 10,000+ chars)
                     </span>
                   )}
@@ -100,27 +108,27 @@ export function PoBInput({ onParse, isLoading = false }: PoBInputProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="file" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="pob-file">PoB XML File</Label>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <TabsContent value='file' className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='pob-file'>PoB XML File</Label>
+              <div className='flex flex-col gap-2 sm:flex-row sm:items-center'>
                 <Input
-                  id="pob-file"
-                  type="file"
-                  accept=".xml"
+                  id='pob-file'
+                  type='file'
+                  accept='.xml'
                   onChange={handleFileChange}
-                  className="sm:flex-1"
+                  className='sm:flex-1'
                 />
                 <Button
                   onClick={handleFileUpload}
                   disabled={!file || isLoading}
-                  className="sm:w-auto"
+                  className='sm:w-auto'
                 >
                   {isLoading ? 'Parsing...' : 'Upload & Parse'}
                 </Button>
               </div>
               {file && (
-                <p className="text-sm text-muted-foreground">
+                <p className='text-muted-foreground text-sm'>
                   Selected: {file.name}
                 </p>
               )}

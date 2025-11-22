@@ -1,16 +1,21 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@/test-utils'
 import userEvent from '@testing-library/user-event'
-import { Notes } from './index'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { SearchProvider } from '@/context/search-provider'
 import * as apiHooks from '@/hooks/api'
 import * as gameContextHook from '@/hooks/useGameContext'
 import { SidebarProvider } from '@/components/ui/sidebar'
-import { SearchProvider } from '@/context/search-provider'
+import { Notes } from './index'
+
 // Mock layout-dependent UI to avoid provider requirements in tests
-vi.mock('@/components/search', () => ({ Search: () => <div data-testid="search-mock" /> }))
+vi.mock('@/components/search', () => ({
+  Search: () => <div data-testid='search-mock' />,
+}))
 vi.mock('@/components/config-drawer', () => ({ ConfigDrawer: () => <div /> }))
 vi.mock('@/components/theme-switch', () => ({ ThemeSwitch: () => <div /> }))
-vi.mock('@/components/profile-dropdown', () => ({ ProfileDropdown: () => <div /> }))
+vi.mock('@/components/profile-dropdown', () => ({
+  ProfileDropdown: () => <div />,
+}))
 
 // Mock the API hooks
 vi.mock('@/hooks/api', async () => {
@@ -116,10 +121,14 @@ describe('Notes', () => {
       renderNotes()
 
       expect(screen.getByText('Notes')).toBeInTheDocument()
-      expect(screen.getByText((_content, element) => {
-        return element?.textContent === 'Manage your notes for POE1' || false
-      })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /create note/i })).toBeInTheDocument()
+      expect(
+        screen.getByText((_content, element) => {
+          return element?.textContent === 'Manage your notes for POE1' || false
+        })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /create note/i })
+      ).toBeInTheDocument()
     })
 
     it('should show correct game context in header', () => {
@@ -130,9 +139,11 @@ describe('Notes', () => {
 
       renderNotes()
 
-      expect(screen.getByText((_content, element) => {
-        return element?.textContent === 'Manage your notes for POE2' || false
-      })).toBeInTheDocument()
+      expect(
+        screen.getByText((_content, element) => {
+          return element?.textContent === 'Manage your notes for POE2' || false
+        })
+      ).toBeInTheDocument()
     })
 
     it('should display notes count', () => {
@@ -239,7 +250,9 @@ describe('Notes', () => {
     it('should configure update mutation with success handler', () => {
       renderNotes()
 
-      expect(apiHooks.useUpdateNoteApiV1GameNotesNoteIdPut).toHaveBeenCalledWith(
+      expect(
+        apiHooks.useUpdateNoteApiV1GameNotesNoteIdPut
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
           mutation: expect.objectContaining({
             onSuccess: expect.any(Function),
@@ -252,7 +265,9 @@ describe('Notes', () => {
     it('should configure delete mutation with success handler', () => {
       renderNotes()
 
-      expect(apiHooks.useDeleteNoteApiV1GameNotesNoteIdDelete).toHaveBeenCalledWith(
+      expect(
+        apiHooks.useDeleteNoteApiV1GameNotesNoteIdDelete
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
           mutation: expect.objectContaining({
             onSuccess: expect.any(Function),

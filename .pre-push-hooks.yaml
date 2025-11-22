@@ -1,0 +1,43 @@
+# Path of Mirrors - Pre-push Hooks Configuration
+# Heavy gates that run comprehensive tests before pushing to remote
+# Install with: pre-commit install --hook-type pre-push -c .pre-push-hooks.yaml
+#
+# These hooks run ~2-3 minutes total (Docker startup, tests, all checks)
+
+default_language_version:
+  python: python3.12
+  node: "20"
+
+repos:
+  - repo: local
+    hooks:
+      # Full code quality check (runs schema, docs, locks, linting, type checking)
+      # This includes Docker-heavy checks that are too slow for pre-commit
+      - id: check-all
+        name: "Check: All code quality checks (schema, docs, locks, linting)"
+        entry: ./scripts/check-code.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [push]
+        verbose: true
+
+      # Backend tests with coverage requirement (≥70%)
+      - id: backend-test
+        name: "Backend: pytest with coverage ≥70%"
+        entry: ./scripts/run-tests.sh --backend
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [push]
+        verbose: true
+
+      # Frontend tests with coverage
+      - id: frontend-test
+        name: "Frontend: vitest with coverage"
+        entry: ./scripts/run-tests.sh --frontend
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [push]
+        verbose: true
