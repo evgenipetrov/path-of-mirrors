@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
-import { X } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { X, Pencil } from 'lucide-react'
 import type { PoBParseResponse, ItemData } from '../types'
 
 interface BuildDisplayProps {
@@ -102,23 +103,25 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <div className="relative flex-1 max-w-sm">
-                <input
+                <Input
                   aria-label="Build name"
                   ref={nameInputRef}
                   readOnly={!isEditingName}
-                  className={`w-full rounded-md border px-3 py-2 pr-10 text-lg font-semibold ${isEditingName ? '' : 'bg-muted'}`}
+                  className={`pr-10 text-lg font-semibold ${isEditingName ? '' : 'bg-muted'}`}
                   value={customName}
                   onChange={(e) => handleNameChange(e.target.value)}
                   onBlur={stopNameEdit}
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   aria-label="Edit build name"
-                  className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
+                  className="absolute inset-y-0 right-0 h-full"
                   onClick={startNameEdit}
                 >
-                  ✏️
-                </button>
+                  <Pencil className="size-4" />
+                </Button>
               </div>
             </div>
             <CardDescription>
@@ -402,11 +405,11 @@ function StatTile({ label, value, detail, accent, weightKey, getWeight, onWeight
             <label className="text-xs text-muted-foreground" htmlFor={`weight-${weightKey}`}>
               Priority
             </label>
-            <input
+            <Input
               id={`weight-${weightKey}`}
               type="number"
               step="0.1"
-              className="w-14 rounded border px-2 py-1 text-right text-xs"
+              className="w-14 h-7 text-right text-xs px-2"
               value={getWeight(weightKey)}
               onChange={(e) => onWeightChange(weightKey, parseFloat(e.target.value) || 0)}
             />

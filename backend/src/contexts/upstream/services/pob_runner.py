@@ -68,9 +68,7 @@ def run_pob(xml_content: str, game: Game, timeout: int = 15) -> dict[str, Any]:
 
     pob_binary = _binary_for_game(game)
     luajit = os.getenv("POB_LUAJIT") or os.path.join(os.getcwd(), "bin", "luajit", "bin", "luajit")
-    bridge = os.getenv("POB_BRIDGE") or os.path.join(
-        os.getcwd(), "bin", "pob_bridge.lua"
-    )
+    bridge = os.getenv("POB_BRIDGE") or os.path.join(os.getcwd(), "bin", "pob_bridge.lua")
 
     logger.info(
         "pob_cli_config",
@@ -122,10 +120,10 @@ def run_pob(xml_content: str, game: Game, timeout: int = 15) -> dict[str, Any]:
     env["POB_ROOT"] = pob_dir
     env["LUA_PATH"] = ";".join(
         [
-          f"{pob_dir}/?.lua",
-          f"{pob_dir}/lua/?.lua",
-          f"{pob_dir}/lua/?/init.lua",
-          lua_path or ";;",
+            f"{pob_dir}/?.lua",
+            f"{pob_dir}/lua/?.lua",
+            f"{pob_dir}/lua/?/init.lua",
+            lua_path or ";;",
         ]
     )
     logger.info(
@@ -164,7 +162,9 @@ def run_pob(xml_content: str, game: Game, timeout: int = 15) -> dict[str, Any]:
     stdout = result.stdout.decode("utf-8", errors="ignore")
     first_brace = stdout.find("{")
     last_brace = stdout.rfind("}")
-    json_blob = stdout[first_brace : last_brace + 1] if first_brace != -1 and last_brace != -1 else stdout
+    json_blob = (
+        stdout[first_brace : last_brace + 1] if first_brace != -1 and last_brace != -1 else stdout
+    )
     try:
         payload = json.loads(json_blob)
     except json.JSONDecodeError:
