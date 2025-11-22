@@ -130,29 +130,44 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Character quick info inline */}
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            <InfoBlock label="Class" lines={[build.character_class]} />
-            {build.ascendancy && <InfoBlock label="Ascendancy" lines={[build.ascendancy]} />}
-            <InfoBlock label="Level" lines={[build.level.toString()]} />
-            {build.league && <InfoBlock label="League" lines={[build.league]} />}
+          {/* Character quick info - compact stats bar */}
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <Badge variant="secondary" className="font-medium">
+              Class: {build.character_class}
+            </Badge>
+            {build.ascendancy && (
+              <Badge variant="secondary" className="font-medium">
+                Asc: {build.ascendancy}
+              </Badge>
+            )}
+            <Badge variant="secondary" className="font-medium">
+              Lv: {build.level}
+            </Badge>
+            {build.league && (
+              <>
+                <Separator orientation="vertical" className="h-4" />
+                <Badge variant="outline" className="font-medium">
+                  {build.league}
+                </Badge>
+              </>
+            )}
             {derived?.attributes && (
-              <InfoBlock
-                label="Attributes"
-                lines={[
-                  formatAttributes(derived.attributes) ?? '—',
-                  'Str / Dex / Int',
-                ]}
-              />
+              <>
+                <Separator orientation="vertical" className="h-4" />
+                <span className="text-muted-foreground font-medium">
+                  {formatAttributes(derived.attributes)}
+                </span>
+                <span className="text-xs text-muted-foreground">Str/Dex/Int</span>
+              </>
             )}
             {derived?.charges && (
-              <InfoBlock
-                label="Charges"
-                lines={[
-                  `${derived.charges.endurance ?? 0} / ${derived.charges.frenzy ?? 0} / ${derived.charges.power ?? 0}`,
-                  'Endurance / Frenzy / Power',
-                ]}
-              />
+              <>
+                <Separator orientation="vertical" className="h-4" />
+                <span className="text-muted-foreground font-medium">
+                  {derived.charges.endurance ?? 0}/{derived.charges.frenzy ?? 0}/{derived.charges.power ?? 0}
+                </span>
+                <span className="text-xs text-muted-foreground">E/F/P</span>
+              </>
             )}
           </div>
 
