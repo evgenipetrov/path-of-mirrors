@@ -38,6 +38,12 @@ DEFAULT_STAT_WEIGHTS = {
     # Defenses (high priority for most builds)
     "life": 1.0,
     "energy_shield": 0.8,
+    "mana": 0.5,
+    "armour": 0.5,
+    "evasion": 0.5,
+    "block": 0.5,
+    "spell_block": 0.5,
+    "spell_suppression": 0.5,
     "fire_res": 0.6,
     "cold_res": 0.6,
     "lightning_res": 0.6,
@@ -51,6 +57,10 @@ DEFAULT_STAT_WEIGHTS = {
     "phys_damage_percent": 0.4,
     "crit_multi": 0.5,
     "crit_chance": 0.4,
+    "dps": 0.8,
+    # Derived stats
+    "ehp": 0.7,
+    "max_hit": 0.6,
     # Utility
     "movement_speed": 0.7,
     "attack_speed": 0.5,

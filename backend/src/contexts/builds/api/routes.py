@@ -20,14 +20,17 @@ from src.contexts.builds.domain.schemas import (
     BuildAnalysisResponse,
     PoBParseRequest,
     PoBParseResponse,
+    StatDefinitionsResponse,
 )
 from src.contexts.builds.services.pob import (
     decode_pob_code_to_xml,
     parse_pob_code,
     parse_pob_xml,
 )
+from src.contexts.builds.services.stat_definitions import get_stat_definitions
 from src.contexts.upstream.services.pob_runner import run_pob
 from src.infrastructure import create_session, get_session
+from src.shared import Game
 
 logger = structlog.get_logger(__name__)
 
@@ -221,6 +224,61 @@ async def analyze_build_endpoint(request: BuildAnalysisRequest) -> BuildAnalysis
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to analyze build: {str(e)}",
+        )
+
+
+@router.get("/stats/{game}", response_model=StatDefinitionsResponse, status_code=status.HTTP_200_OK)
+async def get_canonical_stats(game: Game) -> StatDefinitionsResponse:
+    """Get canonical stat definitions for a specific game.
+
+    This endpoint provides the single source of truth for valid stat names,
+    categories, and default weights. Use this to populate stat selection UIs
+    and ensure consistency between frontend and backend.
+
+    Args:
+        game: Game context (poe1 or poe2)
+
+    Returns:
+        List of canonical stat definitions
+
+    Example:
+        GET /api/v1/builds/stats/poe1
+
+        Response:
+        {
+            "game": "poe1",
+            "stats": [
+                {
+                    "key": "life",
+                    "display_name": "Life",
+                    "category": "defense",
+                    "default_weight": 1.0
+                },
+                ...
+            ]
+        }
+    """
+    logger.info("Fetching stat definitions", game=game.value)
+
+    try:
+        stats = get_stat_definitions(game)
+
+        logger.info(
+            "Stat definitions fetched",
+            game=game.value,
+            stat_count=len(stats),
+        )
+
+        return StatDefinitionsResponse(
+            game=game,
+            stats=stats,
+        )
+
+    except Exception as e:
+        logger.error("Failed to fetch stat definitions", game=game.value, error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch stat definitions: {str(e)}",
         )
 
 

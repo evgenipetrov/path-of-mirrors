@@ -5,6 +5,79 @@ from pydantic import BaseModel, ConfigDict, Field
 from src.shared import Game
 
 
+class StatDefinition(BaseModel):
+    """Canonical stat definition.
+
+    Represents a single stat that can be weighted and tracked.
+    """
+
+    key: str = Field(
+        ...,
+        description="Canonical stat key (e.g., 'life', 'fire_res', 'energy_shield')",
+    )
+    display_name: str = Field(
+        ...,
+        description="Human-readable display name",
+    )
+    category: str = Field(
+        ...,
+        description="Stat category (e.g., 'defense', 'resistance', 'damage', 'utility')",
+    )
+    default_weight: float = Field(
+        ...,
+        description="Default weight for this stat",
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "key": "life",
+                "display_name": "Life",
+                "category": "defense",
+                "default_weight": 1.0,
+            }
+        }
+    )
+
+
+class StatDefinitionsResponse(BaseModel):
+    """Response schema for stat definitions endpoint.
+
+    Returns all canonical stat definitions for a specific game.
+    """
+
+    game: Game = Field(
+        ...,
+        description="Game context (poe1 or poe2)",
+    )
+    stats: list[StatDefinition] = Field(
+        ...,
+        description="List of canonical stat definitions",
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "game": "poe1",
+                "stats": [
+                    {
+                        "key": "life",
+                        "display_name": "Life",
+                        "category": "defense",
+                        "default_weight": 1.0,
+                    },
+                    {
+                        "key": "fire_res",
+                        "display_name": "Fire Resistance",
+                        "category": "resistance",
+                        "default_weight": 0.6,
+                    },
+                ],
+            }
+        }
+    )
+
+
 class BuildAnalysisRequest(BaseModel):
     """Request schema for build analysis endpoint."""
 
