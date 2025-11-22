@@ -4,35 +4,43 @@
  * Shows parsed Path of Building character information and items.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { X, Pencil } from 'lucide-react'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { X, Pencil, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react'
 import type { PoBParseResponse, ItemData } from '../types'
 
 interface BuildDisplayProps {
   build: PoBParseResponse
 }
 
-const DEFAULT_WEIGHTS: Record<string, number> = {
-  life: 2,
-  es: 1,
-  mana: 1,
-  armour: 0.5,
-  evasion: 0.5,
-  block: 0.5,
-  spell_block: 0.5,
-  spell_suppression: 0.5,
-  res_fire: 1,
-  res_cold: 1,
-  res_lightning: 1,
-  res_chaos: 1,
-  dps: 3,
-  ehp: 2,
-  max_hit: 1,
+type StatWeight = {
+  percentWeight: number
+  flatWeight: number
+  gainType: 'percent' | 'flat'
+}
+
+const DEFAULT_WEIGHTS: Record<string, StatWeight> = {
+  life: { percentWeight: 0.5, flatWeight: 2, gainType: 'percent' },
+  es: { percentWeight: 0.5, flatWeight: 1, gainType: 'flat' },
+  mana: { percentWeight: 0.5, flatWeight: 1, gainType: 'flat' },
+  armour: { percentWeight: 0.3, flatWeight: 0.5, gainType: 'flat' },
+  evasion: { percentWeight: 0.3, flatWeight: 0.5, gainType: 'flat' },
+  block: { percentWeight: 0.5, flatWeight: 0.5, gainType: 'percent' },
+  spell_block: { percentWeight: 0.5, flatWeight: 0.5, gainType: 'percent' },
+  spell_suppression: { percentWeight: 0.5, flatWeight: 0.5, gainType: 'percent' },
+  res_fire: { percentWeight: 5, flatWeight: 0.05, gainType: 'flat' },
+  res_cold: { percentWeight: 5, flatWeight: 0.05, gainType: 'flat' },
+  res_lightning: { percentWeight: 5, flatWeight: 0.05, gainType: 'flat' },
+  res_chaos: { percentWeight: 5, flatWeight: 0.05, gainType: 'flat' },
+  dps: { percentWeight: 3, flatWeight: 0.001, gainType: 'percent' },
+  ehp: { percentWeight: 2, flatWeight: 0.001, gainType: 'percent' },
+  ms: { percentWeight: 1, flatWeight: 0.1, gainType: 'percent' },
+  max_hit: { percentWeight: 1, flatWeight: 0.001, gainType: 'percent' },
 }
 
 export function BuildDisplay({ build }: BuildDisplayProps) {
@@ -40,19 +48,13 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
 
   const groupedItems = groupItemsByCategory(build.items ?? {})
   const derived = build.derived_stats
-  const [weights, setWeights] = useState<Record<string, number>>(DEFAULT_WEIGHTS)
+  const [weights, setWeights] = useState<Record<string, StatWeight>>(DEFAULT_WEIGHTS)
   const storageKey = `build-name-${build.game}-${build.session_id}`
   const initialName =
     (typeof window !== 'undefined' && window.localStorage?.getItem(storageKey)) || build.name || 'Unnamed Build'
   const [customName, setCustomName] = useState(initialName)
   const [isEditingName, setIsEditingName] = useState(false)
   const nameInputRef = useRef<HTMLInputElement | null>(null)
-
-  // Persist name per session
-  useEffect(() => {
-    setCustomName(initialName)
-    setIsEditingName(false)
-  }, [build.game, build.session_id, initialName])
 
   const handleNameChange = (value: string) => {
     setCustomName(value)
@@ -81,10 +83,21 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
   const toPercent = (value?: number) =>
     value === undefined ? undefined : `${Math.round(value >= 10 ? value : value * 100)}%`
 
-  const getWeight = (key: string, fallback = 1) => weights[key] ?? DEFAULT_WEIGHTS[key] ?? fallback
-  const onWeightChange = (key: string, value: number) =>
-    setWeights((prev) => ({ ...prev, [key]: value }))
+  const getWeight = (key: string): StatWeight =>
+    weights[key] ?? DEFAULT_WEIGHTS[key] ?? { percentWeight: 1, flatWeight: 1, gainType: 'percent' }
+
+  const onWeightChange = (key: string, field: 'percentWeight' | 'flatWeight' | 'gainType', value: number | string) => {
+    setWeights((prev) => ({
+      ...prev,
+      [key]: {
+        ...getWeight(key),
+        [field]: value,
+      },
+    }))
+  }
+
   const [hiddenStats, setHiddenStats] = useState<Set<string>>(new Set())
+  const [isStatsCollapsed, setIsStatsCollapsed] = useState(false)
 
   const hideStat = (label: string) =>
     setHiddenStats((prev) => {
@@ -94,6 +107,11 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
     })
 
   const isHidden = (label: string) => hiddenStats.has(label)
+
+  const resetWeights = () => {
+    setWeights(DEFAULT_WEIGHTS)
+    setHiddenStats(new Set())
+  }
 
   return (
     <div className="space-y-4">
@@ -173,61 +191,71 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
 
           <Separator />
 
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Build Statistics</p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetWeights}
+                className="h-8"
+              >
+                <RotateCcw className="size-4 mr-1" />
+                Reset
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsStatsCollapsed(!isStatsCollapsed)}
+                className="h-8"
+              >
+                {isStatsCollapsed ? (
+                  <>
+                    <ChevronDown className="size-4 mr-1" />
+                    Expand
+                  </>
+                ) : (
+                  <>
+                    <ChevronUp className="size-4 mr-1" />
+                    Collapse
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
 
-            <StatColumn
-              title="Defensive"
-              stats={[
-                isHidden('Life') ? undefined : { label: 'Life', value: derived?.life ?? build.life, accent: 'text-red-500', weightKey: 'life' },
-                isHidden('Energy Shield') ? undefined : { label: 'Energy Shield', value: derived?.es ?? build.energy_shield, weightKey: 'es' },
-                isHidden('Mana') ? undefined : { label: 'Mana', value: derived?.mana ?? build.mana, weightKey: 'mana' },
-                isHidden('Armour') ? undefined : { label: 'Armour', value: derived?.armour ?? build.armour, weightKey: 'armour' },
-                isHidden('Evasion') ? undefined : { label: 'Evasion', value: derived?.eva ?? build.evasion, weightKey: 'evasion' },
-                derived?.block?.attack !== undefined && !isHidden('Block') ? { label: 'Block', value: toPercent(derived.block.attack), weightKey: 'block' } : undefined,
-                derived?.block?.spell !== undefined && !isHidden('Spell Block') ? { label: 'Spell Block', value: toPercent(derived.block.spell), weightKey: 'spell_block' } : undefined,
-                derived?.block?.suppression !== undefined
-                  ? isHidden('Spell Suppression')
-                    ? undefined
-                    : { label: 'Spell Suppression', value: toPercent(derived.block.suppression), weightKey: 'spell_suppression' }
+          {!isStatsCollapsed && (
+            <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[180px] px-3">Stat</TableHead>
+                <TableHead className="text-right w-[120px] px-3">Value</TableHead>
+                <TableHead className="text-right w-[100px] px-3">% Weight</TableHead>
+                <TableHead className="text-right w-[100px] px-3">Flat Weight</TableHead>
+                <TableHead className="w-[120px] px-3">Gain</TableHead>
+                <TableHead className="w-[50px] px-2"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[
+                isHidden('Life') ? undefined : { label: 'Life', value: derived?.life ?? build.life, numericValue: derived?.life ?? build.life, accent: 'text-red-500', weightKey: 'life' },
+                isHidden('Energy Shield') ? undefined : { label: 'Energy Shield', value: derived?.es ?? build.energy_shield, numericValue: derived?.es ?? build.energy_shield, weightKey: 'es' },
+                isHidden('Mana') ? undefined : { label: 'Mana', value: derived?.mana ?? build.mana, numericValue: derived?.mana ?? build.mana, weightKey: 'mana' },
+                isHidden('Armour') ? undefined : { label: 'Armour', value: derived?.armour ?? build.armour, numericValue: derived?.armour ?? build.armour, weightKey: 'armour' },
+                isHidden('Evasion') ? undefined : { label: 'Evasion', value: derived?.eva ?? build.evasion, numericValue: derived?.eva ?? build.evasion, weightKey: 'evasion' },
+                derived?.block?.attack !== undefined && !isHidden('Block') ? { label: 'Block', value: toPercent(derived.block.attack), numericValue: derived.block.attack, weightKey: 'block' } : undefined,
+                derived?.block?.spell !== undefined && !isHidden('Spell Block') ? { label: 'Spell Block', value: toPercent(derived.block.spell), numericValue: derived.block.spell, weightKey: 'spell_block' } : undefined,
+                derived?.block?.suppression !== undefined && !isHidden('Spell Suppression')
+                  ? { label: 'Spell Suppression', value: toPercent(derived.block.suppression), numericValue: derived.block.suppression, weightKey: 'spell_suppression' }
                   : undefined,
-              ].filter((stat) => stat && stat.value !== undefined)}
-              getWeight={getWeight}
-              onWeightChange={onWeightChange}
-              onRemoveStat={hideStat}
-            />
-
-            <StatColumn
-              title="Resistances"
-              stats={
-                derived?.res
-                  ? [
-                      derived.res.fire !== undefined && !isHidden('Fire')
-                        ? { label: 'Fire', value: `${derived.res.fire}%`, weightKey: 'res_fire' }
-                        : undefined,
-                      derived.res.cold !== undefined && !isHidden('Cold')
-                        ? { label: 'Cold', value: `${derived.res.cold}%`, weightKey: 'res_cold' }
-                        : undefined,
-                      derived.res.lightning !== undefined && !isHidden('Lightning')
-                        ? { label: 'Lightning', value: `${derived.res.lightning}%`, weightKey: 'res_lightning' }
-                        : undefined,
-                      derived.res.chaos !== undefined && !isHidden('Chaos')
-                        ? { label: 'Chaos', value: `${derived.res.chaos}%`, weightKey: 'res_chaos' }
-                        : undefined,
-                    ].filter(Boolean) as StatTileProps[]
-                  : []
-              }
-              getWeight={getWeight}
-              onWeightChange={onWeightChange}
-              onRemoveStat={hideStat}
-            />
-
-            <StatColumn
-              title="Offensive / Simulated"
-              stats={[
-                isHidden('Total DPS') ? undefined : { label: 'Total DPS', value: derived?.dps, weightKey: 'dps' },
-                isHidden('Effective HP') ? undefined : { label: 'Effective HP', value: derived?.ehp, weightKey: 'ehp' },
+                derived?.res?.fire !== undefined && !isHidden('Fire') ? { label: 'Fire Res', value: `${derived.res.fire}%`, numericValue: derived.res.fire, weightKey: 'res_fire' } : undefined,
+                derived?.res?.cold !== undefined && !isHidden('Cold') ? { label: 'Cold Res', value: `${derived.res.cold}%`, numericValue: derived.res.cold, weightKey: 'res_cold' } : undefined,
+                derived?.res?.lightning !== undefined && !isHidden('Lightning') ? { label: 'Lightning Res', value: `${derived.res.lightning}%`, numericValue: derived.res.lightning, weightKey: 'res_lightning' } : undefined,
+                derived?.res?.chaos !== undefined && !isHidden('Chaos') ? { label: 'Chaos Res', value: `${derived.res.chaos}%`, numericValue: derived.res.chaos, weightKey: 'res_chaos' } : undefined,
+                isHidden('Total DPS') ? undefined : { label: 'Total DPS', value: derived?.dps, numericValue: derived?.dps, weightKey: 'dps' },
+                isHidden('Effective HP') ? undefined : { label: 'Effective HP', value: derived?.ehp, numericValue: derived?.ehp, weightKey: 'ehp' },
                 derived?.movement_speed !== undefined && !isHidden('Movement Speed')
-                  ? { label: 'Movement Speed', value: toPercent(derived.movement_speed), weightKey: 'ms' }
+                  ? { label: 'Movement Speed', value: toPercent(derived.movement_speed), numericValue: derived.movement_speed, weightKey: 'ms' }
                   : undefined,
                 derived?.max_hit &&
                 [
@@ -241,25 +269,93 @@ export function BuildDisplay({ build }: BuildDisplayProps) {
                     ? undefined
                     : {
                         label: 'Max Hit',
-                        detail: [
+                        value: [
                           derived.max_hit.physical !== undefined && `Phys ${Math.round(derived.max_hit.physical).toLocaleString()}`,
                           derived.max_hit.fire !== undefined && `Fire ${Math.round(derived.max_hit.fire).toLocaleString()}`,
                           derived.max_hit.cold !== undefined && `Cold ${Math.round(derived.max_hit.cold).toLocaleString()}`,
-                          derived.max_hit.lightning !== undefined &&
-                            `Lightning ${Math.round(derived.max_hit.lightning).toLocaleString()}`,
+                          derived.max_hit.lightning !== undefined && `Lightning ${Math.round(derived.max_hit.lightning).toLocaleString()}`,
                           derived.max_hit.chaos !== undefined && `Chaos ${Math.round(derived.max_hit.chaos).toLocaleString()}`,
                         ]
                           .filter(Boolean)
                           .join(' · '),
+                        numericValue: Math.max(
+                          derived.max_hit.physical ?? 0,
+                          derived.max_hit.fire ?? 0,
+                          derived.max_hit.cold ?? 0,
+                          derived.max_hit.lightning ?? 0,
+                          derived.max_hit.chaos ?? 0,
+                        ),
                         weightKey: 'max_hit',
                       }
                   : undefined,
-              ].filter((stat) => stat && (stat.value !== undefined || stat.detail))}
-              getWeight={getWeight}
-              onWeightChange={onWeightChange}
-              onRemoveStat={hideStat}
-            />
-          </div>
+              ]
+                .filter((stat) => stat && stat.value !== undefined)
+                .map((stat, idx) => {
+                  const weight = stat.weightKey ? getWeight(stat.weightKey) : null
+                  return (
+                    <TableRow key={`stat-${idx}-${stat.label}`}>
+                      <TableCell className="font-medium px-3">{stat.label}</TableCell>
+                      <TableCell className={`text-right px-3 ${stat.accent ?? ''}`}>
+                        {typeof stat.value === 'number' ? Math.round(stat.value).toLocaleString() : stat.value}
+                      </TableCell>
+                      <TableCell className="px-3">
+                        {weight && (
+                          <Input
+                            type="number"
+                            step="0.05"
+                            min="0"
+                            className="h-7 w-full text-right text-xs px-2"
+                            value={weight.percentWeight}
+                            onChange={(e) => onWeightChange(stat.weightKey!, 'percentWeight', parseFloat(e.target.value) || 0)}
+                            disabled={weight.gainType === 'flat'}
+                            title="Weight for 1% more"
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell className="px-3">
+                        {weight && (
+                          <Input
+                            type="number"
+                            step="0.05"
+                            min="0"
+                            className="h-7 w-full text-right text-xs px-2"
+                            value={weight.flatWeight}
+                            onChange={(e) => onWeightChange(stat.weightKey!, 'flatWeight', parseFloat(e.target.value) || 0)}
+                            disabled={weight.gainType === 'percent'}
+                            title="Weight for +1 flat"
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell className="px-3">
+                        {weight && (
+                          <select
+                            className="h-7 w-full text-xs rounded-md border border-input bg-background px-2 cursor-pointer hover:bg-accent"
+                            value={weight.gainType}
+                            onChange={(e) => onWeightChange(stat.weightKey!, 'gainType', e.target.value)}
+                          >
+                            <option value="percent">1% more</option>
+                            <option value="flat">+1 flat</option>
+                          </select>
+                        )}
+                      </TableCell>
+                      <TableCell className="px-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Hide ${stat.label}`}
+                          onClick={() => hideStat(stat.label)}
+                          className="size-6"
+                        >
+                          <X className="size-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+            </TableBody>
+          </Table>
+          )}
         </CardContent>
       </Card>
 
@@ -380,119 +476,4 @@ function groupItemsByCategory(items: Record<string, ItemData>) {
     label,
     items: groups[label],
   })).filter((group) => group.items.length > 0)
-}
-
-type StatTileProps = {
-  label: string
-  value?: number | string
-  detail?: string
-  accent?: string
-  weightKey?: string
-  getWeight: (key: string, fallback?: number) => number
-  onWeightChange: (key: string, value: number) => void
-  onRemove: () => void
-}
-
-function StatTile({ label, value, detail, accent, weightKey, getWeight, onWeightChange, onRemove }: StatTileProps) {
-  return (
-    <div className="relative rounded-lg border p-3">
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        aria-label={`Hide ${label}`}
-        onClick={onRemove}
-        className="absolute right-1 top-1 size-6"
-      >
-        <X className="size-4" />
-      </Button>
-      <div className="flex items-start justify-between gap-2">
-        <div className="pt-1">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          {value !== undefined ? (
-            <p className={`text-xl font-semibold leading-tight ${accent ?? ''}`}>
-              {typeof value === 'number' ? Math.round(value).toLocaleString() : value}
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground">{detail || '—'}</p>
-          )}
-        </div>
-        {weightKey && (
-          <div className="flex items-center gap-1 self-end">
-            <label className="text-xs text-muted-foreground" htmlFor={`weight-${weightKey}`}>
-              Priority
-            </label>
-            <Input
-              id={`weight-${weightKey}`}
-              type="number"
-              step="0.1"
-              className="w-14 h-7 text-right text-xs px-2"
-              value={getWeight(weightKey)}
-              onChange={(e) => onWeightChange(weightKey, parseFloat(e.target.value) || 0)}
-            />
-          </div>
-        )}
-      </div>
-      {detail && value !== undefined && (
-        <p className="text-xs text-muted-foreground mt-1">{detail}</p>
-      )}
-    </div>
-  )
-}
-
-type StatColumnProps = {
-  title: string
-  stats: Array<{ label: string; value?: number | string; detail?: string; accent?: string; weightKey?: string }>
-  getWeight: (key: string, fallback?: number) => number
-  onWeightChange: (key: string, value: number) => void
-  onRemoveStat: (label: string) => void
-}
-
-function StatColumn({ title, stats, getWeight, onWeightChange, onRemoveStat }: StatColumnProps) {
-  if (!stats || stats.length === 0) return null
-  return (
-    <div className="space-y-2">
-      <p className="text-xs font-semibold uppercase text-muted-foreground">{title}</p>
-      <div className="grid gap-2">
-        {stats.map((stat, idx) => (
-          <StatTile
-            key={`${title}-${idx}-${stat.label}`}
-            {...stat}
-            getWeight={getWeight}
-            onWeightChange={onWeightChange}
-            onRemove={() => onRemoveStat(stat.label)}
-          />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-type InfoLineProps = {
-  label: string
-  value: string
-  detail?: string
-}
-
-function InfoLine({ label, value, detail }: InfoLineProps) {
-  return (
-    <div className="flex flex-col">
-      <span className="text-xs uppercase text-muted-foreground font-semibold">{label}</span>
-      <span className="text-sm font-medium">{value}</span>
-      {detail && <span className="text-xs text-muted-foreground">{detail}</span>}
-    </div>
-  )
-}
-
-function InfoBlock({ label, lines }: { label: string; lines: string[] }) {
-  return (
-    <div className="rounded-lg border px-3 py-2 flex flex-col gap-1">
-      <span className="text-xs uppercase text-muted-foreground font-semibold">{label}</span>
-      {lines.map((line, idx) => (
-        <span key={`${label}-${idx}`} className={idx === 0 ? 'text-sm font-medium' : 'text-xs text-muted-foreground'}>
-          {line}
-        </span>
-      ))}
-    </div>
-  )
 }

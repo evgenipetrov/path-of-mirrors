@@ -5,7 +5,7 @@
  * Complete end-to-end flow: Parse → Select Slot → Filter → Search → Display Results
  */
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -31,8 +31,7 @@ import { useGameContext } from '@/hooks/useGameContext'
 
 const SESSION_KEY_PREFIX = 'pob_build_session'
 
-export function UpgradeFinder() {
-  const { game } = useGameContext()
+function UpgradeFinderInner({ game }: { game: Game }) {
   const sessionKey = `${SESSION_KEY_PREFIX}-${game}`
   const [parsedBuild, setParsedBuild] = useState<PoBParseResponse | null>(() => {
     try {
@@ -58,25 +57,6 @@ export function UpgradeFinder() {
       sessionStorage.setItem(sessionKey, JSON.stringify(data))
     },
   })
-
-  // Clear stale build when switching game context
-  useEffect(() => {
-    // Load build for this game (if any)
-    const stored = sessionStorage.getItem(sessionKey)
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as PoBParseResponse
-        setParsedBuild(parsed)
-        setIsImportOpen(false)
-        return
-      } catch {
-        // ignore and fall through
-      }
-    }
-    // No stored build: clear view and prompt import
-    setParsedBuild(null)
-    setIsImportOpen(true)
-  }, [game, sessionKey])
 
   return (
     <>
@@ -128,7 +108,7 @@ export function UpgradeFinder() {
         )}
 
         {/* Build Display */}
-        {parsedBuild && <BuildDisplay build={parsedBuild} />}
+        {parsedBuild && <BuildDisplay key={parsedBuild.session_id ?? sessionKey} build={parsedBuild} />}
       </Main>
 
       <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
@@ -148,4 +128,9 @@ export function UpgradeFinder() {
       </Dialog>
     </>
   )
+}
+
+export function UpgradeFinder() {
+  const { game } = useGameContext()
+  return <UpgradeFinderInner key={game} game={game} />
 }
