@@ -60,8 +60,18 @@ def _get_stat_category(stat_key: str) -> str:
     Returns:
         Category name
     """
-    if stat_key in ("life", "energy_shield", "mana", "armour", "evasion",
-                     "block", "spell_block", "spell_suppression", "ehp", "max_hit"):
+    if stat_key in (
+        "life",
+        "energy_shield",
+        "mana",
+        "armour",
+        "evasion",
+        "block",
+        "spell_block",
+        "spell_suppression",
+        "ehp",
+        "max_hit",
+    ):
         return "defense"
     if stat_key.endswith("_res"):
         return "resistance"

@@ -14,9 +14,10 @@ import type { PoBParseRequest, PoBParseResponse, UpgradeSearchRequest, UpgradeSe
 export async function parsePob(
   request: PoBParseRequest
 ): Promise<PoBParseResponse> {
+  const { game, ...body } = request
   const { data } = await AXIOS_INSTANCE.post<PoBParseResponse>(
-    '/api/v1/builds/parse',
-    request
+    `/api/v1/${game}/builds/parse`,
+    body
   )
 
   return data

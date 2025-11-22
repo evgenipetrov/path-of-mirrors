@@ -1,3 +1,4 @@
+
 # Sprint: API URL Consistency (poe1/poe2)
 
 **Duration:** 1 week
@@ -26,10 +27,10 @@
 - **Compatibility:** no legacy routes or shims; clients must adopt the new paths.
 
 ## Deliverables
-1) Updated FastAPI routers reflecting the new URL scheme.
-2) Migration shim (temporary) to accept old URLs with deprecation warnings (if feasible within week).
-3) Regenerated OpenAPI spec + frontend API client.
-4) Brief change log for frontend/backend consumers.
+1) ✅ Updated FastAPI routers reflecting the new URL scheme.
+2) ❌ Migration shim (temporary) to accept old URLs with deprecation warnings - **SKIPPED** (greenfield assumption; no production users to migrate).
+3) ✅ Regenerated OpenAPI spec + frontend API client.
+4) ✅ Brief change log for frontend/backend consumers (docs/CHANGELOG.md).
 
 ## Plan (step-by-step)
 1) **Inventory & mapping** – enumerate every current route, map old → new URL, decide which require shims.

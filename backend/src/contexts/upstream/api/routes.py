@@ -9,14 +9,28 @@ from fastapi import APIRouter, HTTPException, status
 
 from src.contexts.upstream.domain.schemas import PoBParseRequest, PoBParseResponse
 from src.contexts.upstream.services.pob_parser import parse_pob_code, parse_pob_xml
+from src.shared import Game
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/api/v1/pob", tags=["pob"])
+router = APIRouter(prefix="/api/v1/{game}/pob", tags=["pob"])
+
+
+@router.get("/health", summary="pob context healthcheck")
+async def pob_health(game: Game) -> dict[str, str]:
+    """PoB context health check.
+
+    Args:
+        game: Game context (poe1 or poe2).
+
+    Returns:
+        Health status.
+    """
+    return {"status": "ok", "context": "pob", "game": game.value}
 
 
 @router.post("/parse", response_model=PoBParseResponse, status_code=status.HTTP_200_OK)
-async def parse_pob(request: PoBParseRequest) -> PoBParseResponse:
+async def parse_pob(game: Game, request: PoBParseRequest) -> PoBParseResponse:
     """Parse Path of Building file or import code into standardized Build object.
 
     This is a universal endpoint that can be used by any feature:
@@ -25,6 +39,7 @@ async def parse_pob(request: PoBParseRequest) -> PoBParseResponse:
     - Meta Analyzer: Parse ladder builds, analyze trends
 
     Args:
+        game: Game context (poe1 or poe2).
         request: PoB parsing request with either XML or import code
 
     Returns:
@@ -35,10 +50,9 @@ async def parse_pob(request: PoBParseRequest) -> PoBParseResponse:
         HTTPException 422: If PoB data is invalid or cannot be parsed
 
     Example:
-        POST /api/v1/pob/parse
+        POST /api/v1/poe1/pob/parse
         {
-            "pob_code": "eNqVW2uT2zYS...",
-            "game": "poe1"
+            "pob_code": "eNqVW2uT2zYS..."
         }
 
         Response:
@@ -62,7 +76,7 @@ async def parse_pob(request: PoBParseRequest) -> PoBParseResponse:
         "Parsing PoB request",
         has_xml=bool(request.pob_xml),
         has_code=bool(request.pob_code),
-        game=request.game,
+        game=game.value,
         code_length=len(request.pob_code) if request.pob_code else 0,
         xml_length=len(request.pob_xml) if request.pob_xml else 0,
     )
@@ -70,9 +84,9 @@ async def parse_pob(request: PoBParseRequest) -> PoBParseResponse:
     try:
         # Parse based on input type
         if request.pob_code:
-            build = parse_pob_code(request.pob_code, request.game)
+            build = parse_pob_code(request.pob_code, game)
         else:
-            build = parse_pob_xml(request.pob_xml, request.game)  # type: ignore
+            build = parse_pob_xml(request.pob_xml, game)  # type: ignore
 
         # Convert Build domain object to response schema
         response = PoBParseResponse(

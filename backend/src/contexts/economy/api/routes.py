@@ -9,14 +9,26 @@ from src.shared import Game
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/api/v1/item", tags=["economy"])
+router = APIRouter(prefix="/api/v1/{game}/items", tags=["economy"])
+
+
+@router.get("/health", summary="economy context healthcheck")
+async def economy_health(game: Game) -> dict[str, str]:
+    """Economy context health check.
+
+    Args:
+        game: Game context (poe1 or poe2).
+
+    Returns:
+        Health status.
+    """
+    return {"status": "ok", "context": "economy", "game": game.value}
 
 
 class ItemSearchRequest(BaseModel):
     """Request to search for items on Trade API.
 
     Attributes:
-        game: Game context (POE1 or POE2)
         league: League name
         item_type: Base type name (e.g., "Jade Amulet")
         min_life: Minimum life requirement
@@ -24,7 +36,6 @@ class ItemSearchRequest(BaseModel):
         limit: Maximum number of results to return
     """
 
-    game: Game
     league: str
     item_type: str = Field(..., min_length=1)
     min_life: int | None = Field(None, ge=0)
@@ -45,13 +56,14 @@ class ItemSearchResponse(BaseModel):
 
 
 @router.post("/search", response_model=ItemSearchResponse)
-async def search_items(request: ItemSearchRequest) -> ItemSearchResponse:
+async def search_items(game: Game, request: ItemSearchRequest) -> ItemSearchResponse:
     """Search for items on Trade API.
 
     This is a direct proxy to the Trade API with simplified filtering.
     It does NOT perform any ranking or analysis.
 
     Args:
+        game: Game context (poe1 or poe2).
         request: Search request parameters
 
     Returns:
@@ -59,7 +71,7 @@ async def search_items(request: ItemSearchRequest) -> ItemSearchResponse:
     """
     logger.info(
         "Item search request",
-        game=request.game.value,
+        game=game.value,
         league=request.league,
         item_type=request.item_type,
     )
@@ -74,7 +86,7 @@ async def search_items(request: ItemSearchRequest) -> ItemSearchResponse:
     # Execute search
     try:
         items = await search_and_fetch_items(
-            game=request.game,
+            game=game,
             league=request.league,
             query=query,
             limit=request.limit,

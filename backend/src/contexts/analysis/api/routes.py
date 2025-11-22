@@ -7,10 +7,11 @@ from pydantic import BaseModel
 from src.contexts.analysis.services.ranking import (
     rank_upgrades,
 )
+from src.shared import Game
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/api/v1/analysis", tags=["analysis"])
+router = APIRouter(prefix="/api/v1/{game}/analysis", tags=["analysis"])
 
 
 class RankRequest(BaseModel):
@@ -38,10 +39,11 @@ class RankResponse(BaseModel):
 
 
 @router.post("/rank", response_model=RankResponse)
-async def rank_items(request: RankRequest) -> RankResponse:
+async def rank_items(game: Game, request: RankRequest) -> RankResponse:
     """Rank candidate items against a target item.
 
     Args:
+        game: Game context (poe1 or poe2).
         request: Ranking request
 
     Returns:
@@ -49,6 +51,7 @@ async def rank_items(request: RankRequest) -> RankResponse:
     """
     logger.info(
         "Ranking items",
+        game=game.value,
         num_candidates=len(request.candidates),
     )
 
@@ -86,5 +89,13 @@ async def rank_items(request: RankRequest) -> RankResponse:
 
 
 @router.get("/health", summary="analysis context healthcheck")
-async def analysis_health() -> dict[str, str]:
-    return {"status": "ok", "context": "analysis"}
+async def analysis_health(game: Game) -> dict[str, str]:
+    """Analysis context health check.
+
+    Args:
+        game: Game context (poe1 or poe2).
+
+    Returns:
+        Health status.
+    """
+    return {"status": "ok", "context": "analysis", "game": game.value}

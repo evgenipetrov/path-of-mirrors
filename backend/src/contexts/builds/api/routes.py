@@ -34,11 +34,11 @@ from src.shared import Game
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/api/v1/builds", tags=["builds"])
+router = APIRouter(prefix="/api/v1/{game}/builds", tags=["builds"])
 
 
 @router.post("/parse", response_model=PoBParseResponse, status_code=status.HTTP_200_OK)
-async def parse_build(request: PoBParseRequest) -> PoBParseResponse:
+async def parse_build(game: Game, request: PoBParseRequest) -> PoBParseResponse:
     """Parse Path of Building file or import code into standardized Build object.
 
     This endpoint:
@@ -47,10 +47,11 @@ async def parse_build(request: PoBParseRequest) -> PoBParseResponse:
     3. Returns parsed build data + session_id for subsequent requests
 
     The session_id can be used with:
-    - /api/v1/builds/analyze - Get stat weights and priorities
-    - /api/v1/item/search - Find item upgrades (client-side composition)
+    - /api/v1/{game}/builds/analyze - Get stat weights and priorities
+    - /api/v1/{game}/items/search - Find item upgrades (client-side composition)
 
     Args:
+        game: Game context (poe1 or poe2).
         request: PoB parsing request with either XML or import code
 
     Returns:
@@ -68,7 +69,7 @@ async def parse_build(request: PoBParseRequest) -> PoBParseResponse:
         "Parsing build request",
         has_xml=bool(request.pob_xml),
         has_code=bool(request.pob_code),
-        game=request.game,
+        game=game.value,
         code_length=len(request.pob_code) if request.pob_code else 0,
         xml_length=len(request.pob_xml) if request.pob_xml else 0,
     )
@@ -76,9 +77,9 @@ async def parse_build(request: PoBParseRequest) -> PoBParseResponse:
     try:
         # Parse based on input type
         if request.pob_code:
-            build = parse_pob_code(request.pob_code, request.game)
+            build = parse_pob_code(request.pob_code, game)
         else:
-            build = parse_pob_xml(request.pob_xml, request.game)  # type: ignore
+            build = parse_pob_xml(request.pob_xml, game)  # type: ignore
 
         # Optionally derive stats via headless PoB CLI (graceful fallback)
         xml_for_runner = request.pob_xml
@@ -89,7 +90,7 @@ async def parse_build(request: PoBParseRequest) -> PoBParseResponse:
                 logger.warn("pob_decode_failed_for_runner", error=str(exc))
                 xml_for_runner = None
 
-        derived_stats = run_pob(xml_for_runner or "", request.game) if xml_for_runner else {}
+        derived_stats = run_pob(xml_for_runner or "", game) if xml_for_runner else {}
 
         # Store build in Redis session
         session_data = {
@@ -165,7 +166,9 @@ async def parse_build(request: PoBParseRequest) -> PoBParseResponse:
 
 
 @router.post("/analyze", response_model=BuildAnalysisResponse, status_code=status.HTTP_200_OK)
-async def analyze_build_endpoint(request: BuildAnalysisRequest) -> BuildAnalysisResponse:
+async def analyze_build_endpoint(
+    game: Game, request: BuildAnalysisRequest
+) -> BuildAnalysisResponse:
     """Analyze build to calculate stat weights and upgrade priorities.
 
     This endpoint:
@@ -177,6 +180,7 @@ async def analyze_build_endpoint(request: BuildAnalysisRequest) -> BuildAnalysis
     Users can then modify these weights before searching for upgrades.
 
     Args:
+        game: Game context (poe1 or poe2).
         request: Analysis request with session_id
 
     Returns:
@@ -227,7 +231,7 @@ async def analyze_build_endpoint(request: BuildAnalysisRequest) -> BuildAnalysis
         )
 
 
-@router.get("/stats/{game}", response_model=StatDefinitionsResponse, status_code=status.HTTP_200_OK)
+@router.get("/stats", response_model=StatDefinitionsResponse, status_code=status.HTTP_200_OK)
 async def get_canonical_stats(game: Game) -> StatDefinitionsResponse:
     """Get canonical stat definitions for a specific game.
 
@@ -242,7 +246,7 @@ async def get_canonical_stats(game: Game) -> StatDefinitionsResponse:
         List of canonical stat definitions
 
     Example:
-        GET /api/v1/builds/stats/poe1
+        GET /api/v1/poe1/builds/stats
 
         Response:
         {
@@ -283,5 +287,13 @@ async def get_canonical_stats(game: Game) -> StatDefinitionsResponse:
 
 
 @router.get("/health", summary="builds context healthcheck")
-async def builds_health() -> dict[str, str]:
-    return {"status": "ok", "context": "builds"}
+async def builds_health(game: Game) -> dict[str, str]:
+    """Builds context health check.
+
+    Args:
+        game: Game context (poe1 or poe2).
+
+    Returns:
+        Health status.
+    """
+    return {"status": "ok", "context": "builds", "game": game.value}

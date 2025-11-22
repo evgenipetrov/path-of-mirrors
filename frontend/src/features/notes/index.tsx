@@ -4,10 +4,10 @@ import { toast } from 'sonner'
 import { Plus } from 'lucide-react'
 import { useGameContext } from '@/hooks/useGameContext'
 import {
-  useListNotesApiNotesGet,
-  useCreateNoteApiNotesPost,
-  useUpdateNoteApiNotesNoteIdPut,
-  useDeleteNoteApiNotesNoteIdDelete,
+  useListNotesApiV1GameNotesGet,
+  useCreateNoteApiV1GameNotesPost,
+  useUpdateNoteApiV1GameNotesNoteIdPut,
+  useDeleteNoteApiV1GameNotesNoteIdDelete,
   type NoteCreate,
 } from '@/hooks/api'
 import { Button } from '@/components/ui/button'
@@ -42,14 +42,14 @@ export function Notes() {
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null)
 
   // Fetch notes for current game context
-  const { data: notesData, isLoading, error } = useListNotesApiNotesGet({ game })
+  const { data: notesData, isLoading, error } = useListNotesApiV1GameNotesGet({ game })
   const notes = Array.isArray(notesData) ? notesData : []
 
   // Mutations with cache invalidation and toast notifications
-  const createMutation = useCreateNoteApiNotesPost({
+  const createMutation = useCreateNoteApiV1GameNotesPost({
     mutation: {
       onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: ['/api/notes'] })
+        await queryClient.invalidateQueries({ queryKey: [`/api/v1/${game}/notes`] })
         toast.success('Note created successfully')
         setIsFormOpen(false)
       },
@@ -60,10 +60,10 @@ export function Notes() {
     },
   })
 
-  const updateMutation = useUpdateNoteApiNotesNoteIdPut({
+  const updateMutation = useUpdateNoteApiV1GameNotesNoteIdPut({
     mutation: {
       onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: ['/api/notes'] })
+        await queryClient.invalidateQueries({ queryKey: [`/api/v1/${game}/notes`] })
         toast.success('Note updated successfully')
         setEditingNote(null)
         setIsFormOpen(false)
@@ -75,10 +75,10 @@ export function Notes() {
     },
   })
 
-  const deleteMutation = useDeleteNoteApiNotesNoteIdDelete({
+  const deleteMutation = useDeleteNoteApiV1GameNotesNoteIdDelete({
     mutation: {
       onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: ['/api/notes'] })
+        await queryClient.invalidateQueries({ queryKey: [`/api/v1/${game}/notes`] })
         toast.success('Note deleted successfully')
         setDeleteDialogOpen(false)
         setNoteToDelete(null)
@@ -107,15 +107,15 @@ export function Notes() {
 
   const confirmDelete = async () => {
     if (noteToDelete) {
-      await deleteMutation.mutateAsync({ noteId: noteToDelete })
+      await deleteMutation.mutateAsync({ game, noteId: noteToDelete })
     }
   }
 
   const handleSubmit = async (noteData: NoteCreate) => {
     if (editingNote) {
-      await updateMutation.mutateAsync({ noteId: editingNote.id, data: noteData })
+      await updateMutation.mutateAsync({ game, noteId: editingNote.id, data: noteData })
     } else {
-      await createMutation.mutateAsync({ data: noteData })
+      await createMutation.mutateAsync({ game, data: noteData })
     }
   }
 

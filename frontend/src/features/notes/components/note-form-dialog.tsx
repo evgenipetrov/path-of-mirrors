@@ -39,7 +39,6 @@ export function NoteFormDialog({
     onSubmit({
       title,
       content: content || null,
-      game_context: gameContext,
     })
     // Reset form after submit
     setTitle('')

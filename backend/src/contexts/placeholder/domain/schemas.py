@@ -13,7 +13,6 @@ class NoteCreate(BaseModel):
 
     title: str = Field(..., min_length=1, max_length=255, description="Note title")
     content: str | None = Field(None, description="Note content")
-    game_context: Game = Field(..., description="Game context (poe1 or poe2)")
 
 
 class NoteUpdate(BaseModel):
@@ -21,7 +20,6 @@ class NoteUpdate(BaseModel):
 
     title: str | None = Field(None, min_length=1, max_length=255, description="Note title")
     content: str | None = Field(None, description="Note content")
-    game_context: Game | None = Field(None, description="Game context (poe1 or poe2)")
 
 
 class NoteResponse(BaseModel):

@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.infrastructure import get_db
@@ -12,7 +12,20 @@ from ..adapters.postgres_repository import PostgresNoteRepository
 from ..domain.schemas import NoteCreate, NoteResponse, NoteUpdate
 from ..services.note_service import NoteService
 
-router = APIRouter(prefix="/api/notes", tags=["notes"])
+router = APIRouter(prefix="/api/v1/{game}/notes", tags=["notes"])
+
+
+@router.get("/health", summary="notes context healthcheck")
+async def notes_health(game: Game) -> dict[str, str]:
+    """Notes context health check.
+
+    Args:
+        game: Game context (poe1 or poe2).
+
+    Returns:
+        Health status.
+    """
+    return {"status": "ok", "context": "notes", "game": game.value}
 
 
 def get_note_service(db: AsyncSession = Depends(get_db)) -> NoteService:
@@ -35,19 +48,21 @@ def get_note_service(db: AsyncSession = Depends(get_db)) -> NoteService:
     summary="Create a new note",
 )
 async def create_note(
+    game: Game,
     note_data: NoteCreate,
     service: NoteService = Depends(get_note_service),
 ) -> NoteResponse:
     """Create a new note.
 
     Args:
+        game: Game context (poe1 or poe2).
         note_data: Note creation data.
         service: Note service dependency.
 
     Returns:
         NoteResponse: Created note.
     """
-    note = await service.create_note(note_data)
+    note = await service.create_note(note_data, game)
     return NoteResponse.model_validate(note)
 
 
@@ -57,13 +72,13 @@ async def create_note(
     summary="List all notes",
 )
 async def list_notes(
-    game: Game | None = Query(None, description="Filter by game (poe1 or poe2)"),
+    game: Game,
     service: NoteService = Depends(get_note_service),
 ) -> list[NoteResponse]:
-    """List all notes, optionally filtered by game.
+    """List all notes for the specified game.
 
     Args:
-        game: Optional game filter.
+        game: Game context (poe1 or poe2).
         service: Note service dependency.
 
     Returns:
@@ -79,12 +94,14 @@ async def list_notes(
     summary="Get a note by ID",
 )
 async def get_note(
+    game: Game,
     note_id: UUID,
     service: NoteService = Depends(get_note_service),
 ) -> NoteResponse:
     """Get a note by ID.
 
     Args:
+        game: Game context (poe1 or poe2).
         note_id: Note ID.
         service: Note service dependency.
 
@@ -109,6 +126,7 @@ async def get_note(
     summary="Update a note",
 )
 async def update_note(
+    game: Game,
     note_id: UUID,
     note_data: NoteUpdate,
     service: NoteService = Depends(get_note_service),
@@ -116,6 +134,7 @@ async def update_note(
     """Update an existing note.
 
     Args:
+        game: Game context (poe1 or poe2).
         note_id: Note ID.
         note_data: Note update data.
         service: Note service dependency.
@@ -124,9 +143,9 @@ async def update_note(
         NoteResponse: Updated note.
 
     Raises:
-        HTTPException: 404 if note not found.
+        HTTPException: 404 if note not found or wrong game context.
     """
-    note = await service.update_note(note_id, note_data)
+    note = await service.update_note(note_id, note_data, game)
     if not note:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -141,12 +160,14 @@ async def update_note(
     summary="Delete a note",
 )
 async def delete_note(
+    game: Game,
     note_id: UUID,
     service: NoteService = Depends(get_note_service),
 ) -> None:
     """Delete a note.
 
     Args:
+        game: Game context (poe1 or poe2).
         note_id: Note ID.
         service: Note service dependency.
 

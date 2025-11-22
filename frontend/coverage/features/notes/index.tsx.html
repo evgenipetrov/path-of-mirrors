@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">42.22% </span>
+                <span class="strong">43.47% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>19/45</span>
+                <span class='fraction'>20/46</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">41.17% </span>
+                <span class="strong">38.88% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>7/17</span>
+                <span class='fraction'>7/18</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">42.22% </span>
+                <span class="strong">43.47% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>19/45</span>
+                <span class='fraction'>20/46</span>
             </div>
         
             
@@ -270,7 +270,28 @@
 <a name='L205'></a><a href='#L205'>205</a>
 <a name='L206'></a><a href='#L206'>206</a>
 <a name='L207'></a><a href='#L207'>207</a>
-<a name='L208'></a><a href='#L208'>208</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L208'></a><a href='#L208'>208</a>
+<a name='L209'></a><a href='#L209'>209</a>
+<a name='L210'></a><a href='#L210'>210</a>
+<a name='L211'></a><a href='#L211'>211</a>
+<a name='L212'></a><a href='#L212'>212</a>
+<a name='L213'></a><a href='#L213'>213</a>
+<a name='L214'></a><a href='#L214'>214</a>
+<a name='L215'></a><a href='#L215'>215</a>
+<a name='L216'></a><a href='#L216'>216</a>
+<a name='L217'></a><a href='#L217'>217</a>
+<a name='L218'></a><a href='#L218'>218</a>
+<a name='L219'></a><a href='#L219'>219</a>
+<a name='L220'></a><a href='#L220'>220</a>
+<a name='L221'></a><a href='#L221'>221</a>
+<a name='L222'></a><a href='#L222'>222</a>
+<a name='L223'></a><a href='#L223'>223</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -308,6 +329,7 @@
 <span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -387,6 +409,14 @@
 <span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -483,10 +513,10 @@ import { toast } from 'sonner'
 import { Plus } from 'lucide-react'
 import { useGameContext } from '@/hooks/useGameContext'
 import {
-  useListNotesApiNotesGet,
-  useCreateNoteApiNotesPost,
-  useUpdateNoteApiNotesNoteIdPut,
-  useDeleteNoteApiNotesNoteIdDelete,
+  useListNotesApiV1GameNotesGet,
+  useCreateNoteApiV1GameNotesPost,
+  useUpdateNoteApiV1GameNotesNoteIdPut,
+  useDeleteNoteApiV1GameNotesNoteIdDelete,
   type NoteCreate,
 } from '@/hooks/api'
 import { Button } from '@/components/ui/button'
@@ -501,6 +531,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Header } from '@/components/layout/header'
+import { Main } from '@/components/layout/main'
+import { Search } from '@/components/search'
+import { ThemeSwitch } from '@/components/theme-switch'
+import { ConfigDrawer } from '@/components/config-drawer'
+import { ProfileDropdown } from '@/components/profile-dropdown'
 import { NotesTable } from './components/notes-table'
 import { createNotesColumns } from './components/notes-columns'
 import { NoteFormDialog } from './components/note-form-dialog'
@@ -515,13 +551,14 @@ export function Notes() {
   const [noteToDelete, setNoteToDelete] = useState&lt;string | null&gt;(null)
 &nbsp;
   // Fetch notes for current game context
-  const { data: notes = [], isLoading, error } = useListNotesApiNotesGet({ game })
+  const { data: notesData, isLoading, error } = useListNotesApiV1GameNotesGet({ game })
+  const notes = Array.isArray(notesData) ? notesData : <span class="branch-1 cbranch-no" title="branch not covered" >[]</span>
 &nbsp;
   // Mutations with cache invalidation and toast notifications
-  const createMutation = useCreateNoteApiNotesPost({
+  const createMutation = useCreateNoteApiV1GameNotesPost({
     mutation: {
       onSuccess: <span class="fstat-no" title="function not covered" >async () =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        await queryClient.invalidateQueries({ queryKey: ['/api/notes'] })</span>
+<span class="cstat-no" title="statement not covered" >        await queryClient.invalidateQueries({ queryKey: [`/api/v1/${game}/notes`] })</span>
 <span class="cstat-no" title="statement not covered" >        toast.success('Note created successfully')</span>
 <span class="cstat-no" title="statement not covered" >        setIsFormOpen(false)</span>
       },
@@ -532,10 +569,10 @@ export function Notes() {
     },
   })
 &nbsp;
-  const updateMutation = useUpdateNoteApiNotesNoteIdPut({
+  const updateMutation = useUpdateNoteApiV1GameNotesNoteIdPut({
     mutation: {
       onSuccess: <span class="fstat-no" title="function not covered" >async () =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        await queryClient.invalidateQueries({ queryKey: ['/api/notes'] })</span>
+<span class="cstat-no" title="statement not covered" >        await queryClient.invalidateQueries({ queryKey: [`/api/v1/${game}/notes`] })</span>
 <span class="cstat-no" title="statement not covered" >        toast.success('Note updated successfully')</span>
 <span class="cstat-no" title="statement not covered" >        setEditingNote(null)</span>
 <span class="cstat-no" title="statement not covered" >        setIsFormOpen(false)</span>
@@ -547,10 +584,10 @@ export function Notes() {
     },
   })
 &nbsp;
-  const deleteMutation = useDeleteNoteApiNotesNoteIdDelete({
+  const deleteMutation = useDeleteNoteApiV1GameNotesNoteIdDelete({
     mutation: {
       onSuccess: <span class="fstat-no" title="function not covered" >async () =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        await queryClient.invalidateQueries({ queryKey: ['/api/notes'] })</span>
+<span class="cstat-no" title="statement not covered" >        await queryClient.invalidateQueries({ queryKey: [`/api/v1/${game}/notes`] })</span>
 <span class="cstat-no" title="statement not covered" >        toast.success('Note deleted successfully')</span>
 <span class="cstat-no" title="statement not covered" >        setDeleteDialogOpen(false)</span>
 <span class="cstat-no" title="statement not covered" >        setNoteToDelete(null)</span>
@@ -579,15 +616,15 @@ export function Notes() {
 &nbsp;
   const confirmDelete = <span class="fstat-no" title="function not covered" >async () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (noteToDelete) {</span>
-<span class="cstat-no" title="statement not covered" >      await deleteMutation.mutateAsync({ noteId: noteToDelete })</span>
+<span class="cstat-no" title="statement not covered" >      await deleteMutation.mutateAsync({ game, noteId: noteToDelete })</span>
     }
   }
 &nbsp;
   const handleSubmit = <span class="fstat-no" title="function not covered" >async (n</span>oteData: NoteCreate) =&gt; {
 <span class="cstat-no" title="statement not covered" >    if (editingNote) {</span>
-<span class="cstat-no" title="statement not covered" >      await updateMutation.mutateAsync({ noteId: editingNote.id, data: noteData })</span>
+<span class="cstat-no" title="statement not covered" >      await updateMutation.mutateAsync({ game, noteId: editingNote.id, data: noteData })</span>
     } else {
-<span class="cstat-no" title="statement not covered" >      await createMutation.mutateAsync({ data: noteData })</span>
+<span class="cstat-no" title="statement not covered" >      await createMutation.mutateAsync({ game, data: noteData })</span>
     }
   }
 &nbsp;
@@ -609,9 +646,17 @@ export function Notes() {
   }
 &nbsp;
   return (
-    &lt;div className="p-8"&gt;
-      &lt;div className="max-w-7xl mx-auto space-y-6"&gt;
-        {/* Header */}
+    &lt;&gt;
+      &lt;Header&gt;
+        &lt;Search /&gt;
+        &lt;div className="ms-auto flex items-center space-x-4"&gt;
+          &lt;ThemeSwitch /&gt;
+          &lt;ConfigDrawer /&gt;
+          &lt;ProfileDropdown /&gt;
+        &lt;/div&gt;
+      &lt;/Header&gt;
+&nbsp;
+      &lt;Main fixed className="space-y-6"&gt;
         &lt;div className="flex justify-between items-center"&gt;
           &lt;div&gt;
             &lt;h1 className="text-3xl font-bold"&gt;Notes&lt;/h1&gt;
@@ -680,8 +725,8 @@ export function Notes() {
             &lt;/AlertDialogFooter&gt;
           &lt;/AlertDialogContent&gt;
         &lt;/AlertDialog&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
+      &lt;/Main&gt;
+    &lt;/&gt;
   )
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -691,7 +736,7 @@ export function Notes() {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-18T11:17:01.110Z
+                at 2025-11-22T08:58:35.657Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

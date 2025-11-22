@@ -141,6 +141,7 @@ class PoBParseRequest(BaseModel):
     - pob_code: Base64+zlib import code (the long string users paste)
 
     One of these fields must be provided.
+    Game context is provided via URL path parameter.
     """
 
     pob_xml: str | None = Field(
@@ -152,10 +153,6 @@ class PoBParseRequest(BaseModel):
         None,
         description="Path of Building import code (base64 encoded)",
         min_length=1,
-    )
-    game: Game = Field(
-        ...,
-        description="Game context (poe1 or poe2)",
     )
 
 

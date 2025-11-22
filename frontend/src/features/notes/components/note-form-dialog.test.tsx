@@ -103,7 +103,6 @@ describe('NoteFormDialog', () => {
         expect(mockOnSubmit).toHaveBeenCalledWith({
           title: 'New Note',
           content: 'Note content',
-          game_context: 'poe1',
         })
       })
     })
@@ -119,12 +118,11 @@ describe('NoteFormDialog', () => {
         expect(mockOnSubmit).toHaveBeenCalledWith({
           title: 'New Note',
           content: null,
-          game_context: 'poe1',
         })
       })
     })
 
-    it('should use correct game_context from props', async () => {
+    it('should not include game_context in submitted data', async () => {
       const user = userEvent.setup()
       render(<NoteFormDialog {...defaultProps} gameContext="poe2" />)
 
@@ -135,7 +133,6 @@ describe('NoteFormDialog', () => {
         expect(mockOnSubmit).toHaveBeenCalledWith({
           title: 'New Note',
           content: null,
-          game_context: 'poe2',
         })
       })
     })

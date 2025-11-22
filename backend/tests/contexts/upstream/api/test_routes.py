@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from src.main import app
 
 client = TestClient(app)
-REPO_ROOT = Path(__file__).resolve().parents[4]
+REPO_ROOT = Path(__file__).resolve().parents[5]
 SAMPLE_POB_XML = REPO_ROOT / "_samples/data/poe1/pob/Sample build PoE 1.xml"
 if not SAMPLE_POB_XML.exists():
     import pytest
@@ -17,22 +17,21 @@ if not SAMPLE_POB_XML.exists():
 
 
 class TestPoBParseEndpoint:
-    """Test POST /api/v1/pob/parse endpoint."""
+    """Test POST /api/v1/{game}/pob/parse endpoint."""
 
     def test_parse_pob_xml_success(self):
         """Test parsing PoB XML successfully."""
         # Read sample PoB file
-        sample_path = REPO_ROOT / "_samples" / "data/poe1/pob/Sample build PoE 1.xml"
+        sample_path = REPO_ROOT / "_samples/data/poe1/pob/Sample build PoE 1.xml"
 
         with sample_path.open() as f:
             pob_xml = f.read()
 
         # Make API request
         response = client.post(
-            "/api/v1/pob/parse",
+            "/api/v1/poe1/pob/parse",
             json={
                 "pob_xml": pob_xml,
-                "game": "poe1",
             },
         )
 
@@ -55,10 +54,9 @@ class TestPoBParseEndpoint:
     def test_parse_pob_code_invalid_base64(self):
         """Test parsing invalid PoB import code."""
         response = client.post(
-            "/api/v1/pob/parse",
+            "/api/v1/poe1/pob/parse",
             json={
                 "pob_code": "this-is-not-valid-base64!!!",
-                "game": "poe1",
             },
         )
 
@@ -69,10 +67,8 @@ class TestPoBParseEndpoint:
     def test_parse_pob_missing_both_inputs(self):
         """Test error when neither pob_xml nor pob_code is provided."""
         response = client.post(
-            "/api/v1/pob/parse",
-            json={
-                "game": "poe1",
-            },
+            "/api/v1/poe1/pob/parse",
+            json={},
         )
 
         # Should return 400 for missing input
@@ -82,10 +78,9 @@ class TestPoBParseEndpoint:
     def test_parse_pob_invalid_xml(self):
         """Test parsing malformed XML."""
         response = client.post(
-            "/api/v1/pob/parse",
+            "/api/v1/poe1/pob/parse",
             json={
                 "pob_xml": "this is not valid xml",
-                "game": "poe1",
             },
         )
 
@@ -102,10 +97,9 @@ class TestPoBParseEndpoint:
         """
 
         response = client.post(
-            "/api/v1/pob/parse",
+            "/api/v1/poe1/pob/parse",
             json={
                 "pob_xml": invalid_xml,
-                "game": "poe1",
             },
         )
 
@@ -122,10 +116,9 @@ class TestPoBParseEndpoint:
         """
 
         response = client.post(
-            "/api/v1/pob/parse",
+            "/api/v1/poe2/pob/parse",
             json={
                 "pob_xml": pob_xml,
-                "game": "poe2",
             },
         )
 
@@ -144,10 +137,9 @@ class TestPoBParseEndpoint:
         """
 
         response = client.post(
-            "/api/v1/pob/parse",
+            "/api/v1/poe1/pob/parse",
             json={
                 "pob_xml": pob_xml,
-                "game": "poe1",
             },
         )
 

@@ -35,7 +35,7 @@ export function useStatDefinitions(game: Game) {
   return useQuery<StatDefinitionsResponse>({
     queryKey: ['stat-definitions', game],
     queryFn: async () => {
-      const response = await AXIOS_INSTANCE.get<StatDefinitionsResponse>(`/api/v1/builds/stats/${game}`)
+      const response = await AXIOS_INSTANCE.get<StatDefinitionsResponse>(`/api/v1/${game}/builds/stats`)
       return response.data
     },
     staleTime: 5 * 60 * 1000, // 5 minutes - stat definitions rarely change

@@ -6,7 +6,8 @@
 #
 # Options:
 #   --help        Show this help message
-#   --coverage    Run tests with coverage report
+#   --coverage    Run tests with coverage report (default)
+#   --no-coverage Skip coverage collection
 #   --backend     Run backend tests only
 #   --frontend    Run frontend tests only
 
@@ -25,7 +26,7 @@ COMPOSE_FILES="$(select_compose_files "$MODE")"
 # Configuration
 RUN_BACKEND=true
 RUN_FRONTEND=true
-WITH_COVERAGE=false
+WITH_COVERAGE=true
 
 show_help() {
     head -n 11 "$0" | tail -n 9 | sed 's/^# //'
@@ -65,7 +66,7 @@ main() {
 
         if [ "$WITH_COVERAGE" = true ]; then
             log_info "Running with coverage report..."
-            if docker compose $COMPOSE_FILES exec -T backend uv run --extra dev pytest --cov=src --cov-report=term-missing tests/; then
+            if docker compose $COMPOSE_FILES exec -T backend uv run --extra dev pytest --cov=src --cov-report=term-missing --cov-fail-under=70 tests/; then
                 backend_result=$?
                 log_success "Backend tests passed with coverage"
             else
@@ -180,6 +181,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --coverage)
             WITH_COVERAGE=true
+            shift
+            ;;
+        --no-coverage)
+            WITH_COVERAGE=false
             shift
             ;;
         --backend)

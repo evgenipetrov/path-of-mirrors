@@ -17,10 +17,10 @@ vi.mock('@/hooks/api', async () => {
   const actual = await vi.importActual('@/hooks/api')
   return {
     ...actual,
-    useListNotesApiNotesGet: vi.fn(),
-    useCreateNoteApiNotesPost: vi.fn(),
-    useUpdateNoteApiNotesNoteIdPut: vi.fn(),
-    useDeleteNoteApiNotesNoteIdDelete: vi.fn(),
+    useListNotesApiV1GameNotesGet: vi.fn(),
+    useCreateNoteApiV1GameNotesPost: vi.fn(),
+    useUpdateNoteApiV1GameNotesNoteIdPut: vi.fn(),
+    useDeleteNoteApiV1GameNotesNoteIdDelete: vi.fn(),
   }
 })
 
@@ -58,20 +58,20 @@ describe('Notes', () => {
   ]
 
   const defaultMocks = {
-    useListNotesApiNotesGet: {
+    useListNotesApiV1GameNotesGet: {
       data: mockNotes,
       isLoading: false,
       error: null,
     },
-    useCreateNoteApiNotesPost: {
+    useCreateNoteApiV1GameNotesPost: {
       mutateAsync: vi.fn(),
       isPending: false,
     },
-    useUpdateNoteApiNotesNoteIdPut: {
+    useUpdateNoteApiV1GameNotesNoteIdPut: {
       mutateAsync: vi.fn(),
       isPending: false,
     },
-    useDeleteNoteApiNotesNoteIdDelete: {
+    useDeleteNoteApiV1GameNotesNoteIdDelete: {
       mutateAsync: vi.fn(),
       isPending: false,
     },
@@ -85,17 +85,17 @@ describe('Notes', () => {
     vi.clearAllMocks()
 
     // Setup default mocks
-    vi.mocked(apiHooks.useListNotesApiNotesGet).mockReturnValue(
-      defaultMocks.useListNotesApiNotesGet as any
+    vi.mocked(apiHooks.useListNotesApiV1GameNotesGet).mockReturnValue(
+      defaultMocks.useListNotesApiV1GameNotesGet as any
     )
-    vi.mocked(apiHooks.useCreateNoteApiNotesPost).mockReturnValue(
-      defaultMocks.useCreateNoteApiNotesPost as any
+    vi.mocked(apiHooks.useCreateNoteApiV1GameNotesPost).mockReturnValue(
+      defaultMocks.useCreateNoteApiV1GameNotesPost as any
     )
-    vi.mocked(apiHooks.useUpdateNoteApiNotesNoteIdPut).mockReturnValue(
-      defaultMocks.useUpdateNoteApiNotesNoteIdPut as any
+    vi.mocked(apiHooks.useUpdateNoteApiV1GameNotesNoteIdPut).mockReturnValue(
+      defaultMocks.useUpdateNoteApiV1GameNotesNoteIdPut as any
     )
-    vi.mocked(apiHooks.useDeleteNoteApiNotesNoteIdDelete).mockReturnValue(
-      defaultMocks.useDeleteNoteApiNotesNoteIdDelete as any
+    vi.mocked(apiHooks.useDeleteNoteApiV1GameNotesNoteIdDelete).mockReturnValue(
+      defaultMocks.useDeleteNoteApiV1GameNotesNoteIdDelete as any
     )
     vi.mocked(gameContextHook.useGameContext).mockReturnValue(
       defaultMocks.useGameContext
@@ -144,7 +144,7 @@ describe('Notes', () => {
 
   describe('loading state', () => {
     it('should show loading spinner when fetching notes', () => {
-      vi.mocked(apiHooks.useListNotesApiNotesGet).mockReturnValue({
+      vi.mocked(apiHooks.useListNotesApiV1GameNotesGet).mockReturnValue({
         data: [],
         isLoading: true,
         error: null,
@@ -158,7 +158,7 @@ describe('Notes', () => {
 
   describe('error state', () => {
     it('should display error message when fetch fails', () => {
-      vi.mocked(apiHooks.useListNotesApiNotesGet).mockReturnValue({
+      vi.mocked(apiHooks.useListNotesApiV1GameNotesGet).mockReturnValue({
         data: [],
         isLoading: false,
         error: new Error('Network error'),
@@ -173,7 +173,7 @@ describe('Notes', () => {
 
   describe('empty state', () => {
     it('should show empty state when no notes exist', () => {
-      vi.mocked(apiHooks.useListNotesApiNotesGet).mockReturnValue({
+      vi.mocked(apiHooks.useListNotesApiV1GameNotesGet).mockReturnValue({
         data: [],
         isLoading: false,
         error: null,
@@ -203,7 +203,7 @@ describe('Notes', () => {
     it('should pass game context to API call', () => {
       renderNotes()
 
-      expect(apiHooks.useListNotesApiNotesGet).toHaveBeenCalledWith({
+      expect(apiHooks.useListNotesApiV1GameNotesGet).toHaveBeenCalledWith({
         game: 'poe1',
       })
     })
@@ -216,7 +216,7 @@ describe('Notes', () => {
 
       renderNotes()
 
-      expect(apiHooks.useListNotesApiNotesGet).toHaveBeenCalledWith({
+      expect(apiHooks.useListNotesApiV1GameNotesGet).toHaveBeenCalledWith({
         game: 'poe2',
       })
     })
@@ -226,7 +226,7 @@ describe('Notes', () => {
     it('should configure create mutation with success handler', () => {
       renderNotes()
 
-      expect(apiHooks.useCreateNoteApiNotesPost).toHaveBeenCalledWith(
+      expect(apiHooks.useCreateNoteApiV1GameNotesPost).toHaveBeenCalledWith(
         expect.objectContaining({
           mutation: expect.objectContaining({
             onSuccess: expect.any(Function),
@@ -239,7 +239,7 @@ describe('Notes', () => {
     it('should configure update mutation with success handler', () => {
       renderNotes()
 
-      expect(apiHooks.useUpdateNoteApiNotesNoteIdPut).toHaveBeenCalledWith(
+      expect(apiHooks.useUpdateNoteApiV1GameNotesNoteIdPut).toHaveBeenCalledWith(
         expect.objectContaining({
           mutation: expect.objectContaining({
             onSuccess: expect.any(Function),
@@ -252,7 +252,7 @@ describe('Notes', () => {
     it('should configure delete mutation with success handler', () => {
       renderNotes()
 
-      expect(apiHooks.useDeleteNoteApiNotesNoteIdDelete).toHaveBeenCalledWith(
+      expect(apiHooks.useDeleteNoteApiV1GameNotesNoteIdDelete).toHaveBeenCalledWith(
         expect.objectContaining({
           mutation: expect.objectContaining({
             onSuccess: expect.any(Function),

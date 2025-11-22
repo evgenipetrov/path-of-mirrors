@@ -27,11 +27,12 @@ class NoteService:
         """
         self.repository = repository
 
-    async def create_note(self, note_data: NoteCreate) -> Note:
+    async def create_note(self, note_data: NoteCreate, game: Game) -> Note:
         """Create a new note.
 
         Args:
             note_data: Note creation data.
+            game: Game context from path parameter.
 
         Returns:
             Note: Created note.
@@ -39,7 +40,7 @@ class NoteService:
         note = Note(
             title=note_data.title,
             content=note_data.content,
-            game_context=note_data.game_context,
+            game_context=game,
         )
         created_note = await self.repository.create(note)
         logger.info(
@@ -71,18 +72,25 @@ class NoteService:
         """
         return await self.repository.get_all(game)
 
-    async def update_note(self, note_id: UUID, note_data: NoteUpdate) -> Note | None:
+    async def update_note(
+        self, note_id: UUID, note_data: NoteUpdate, game: Game | None = None
+    ) -> Note | None:
         """Update an existing note.
 
         Args:
             note_id: Note ID.
             note_data: Note update data.
+            game: Optional game context from path parameter (for validation).
 
         Returns:
             Note | None: Updated note if found, None otherwise.
         """
         note = await self.repository.get_by_id(note_id)
         if not note:
+            return None
+
+        # Validate game context if provided
+        if game is not None and note.game_context != game:
             return None
 
         # Update only fields that were explicitly provided in the request

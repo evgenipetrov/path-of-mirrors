@@ -68,6 +68,7 @@ class PoBParseRequest(BaseModel):
     - pob_code: Base64+zlib import code (the long string users paste)
 
     One of these fields must be provided.
+    Game context is provided via URL path parameter.
     """
 
     pob_xml: str | None = Field(
@@ -80,10 +81,6 @@ class PoBParseRequest(BaseModel):
         description="Path of Building import code (base64 encoded)",
         min_length=1,
     )
-    game: Game = Field(
-        ...,
-        description="Game context (poe1 or poe2)",
-    )
 
 
 class PoBParseResponse(BaseModel):
@@ -93,13 +90,13 @@ class PoBParseResponse(BaseModel):
     - Character info (class, level, ascendancy)
     - Items (slot-mapped equipment)
     - Build metadata (name, source)
-    - Session ID for subsequent requests
+    - Optional session ID for subsequent requests (only from /builds/parse)
     """
 
-    # Session management
-    session_id: str = Field(
-        ...,
-        description="Temporary session ID for this build (valid for 1 hour)",
+    # Session management (optional - only provided by /builds/parse endpoint)
+    session_id: str | None = Field(
+        None,
+        description="Temporary session ID for this build (valid for 1 hour). Only provided by /builds/parse endpoint.",
     )
 
     # Character info

@@ -2,7 +2,6 @@
   "permissions": {
     "allow": [
       "mcp__playwright",
-      "mcp_shadcn",
       "Bash",
       "Edit",
       "Glob",
@@ -13,10 +12,10 @@
       "WebFetch",
       "Write"
     ],
-    "deny": [
+    "deny": [],
+    "ask": [
       "Bash(sudo:*)",
       "Bash(rm:*)"
-    ],
-    "ask": []
+    ]
   }
 }
